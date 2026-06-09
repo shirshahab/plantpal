@@ -70,6 +70,78 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### How to view the website and app locally
+
+PlantPal is **one Next.js app** on a **single port**. Marketing pages and the product app use route groups — not separate servers.
+
+| What | URL |
+|------|-----|
+| **Website** (marketing homepage) | [http://localhost:3000](http://localhost:3000) |
+| **App** (dashboard) | [http://localhost:3000/dashboard](http://localhost:3000/dashboard) |
+| **Setup checker** | [http://localhost:3000/setup](http://localhost:3000/setup) |
+| **Login** | [http://localhost:3000/login](http://localhost:3000/login) |
+
+**Try the demo:** On the homepage, click **Explore Demo** or **Try Demo** in the header. That loads the demo garden and opens `/dashboard`.
+
+**Navigate between site and app:**
+- From the marketing site → **Try Demo**, **App** in the nav, or **Open App** in the footer → `/dashboard`
+- From the app → **Back to Website** in the sidebar (desktop) or **Website** in the mobile header → `/`
+- From **Settings** → **Marketing site** → **Back to Website**
+
+Other marketing routes: `/features`, `/pricing`, `/waitlist`, `/about`, `/beta`. Onboarding: `/onboarding`.
+
+## Beta Testing
+
+PlantPal is in **beta** — optimized for ~20 early testers. The core flow: land on `/` → **Start Growing** → sign up or demo → onboarding → add first plant → set goals → generate care plan → **Today** tasks → scanner.
+
+### Run locally
+
+```bash
+npm install
+cp .env.local.example .env.local   # add Supabase + OpenAI keys if available
+npm run dev
+```
+
+Open [http://localhost:3000/setup](http://localhost:3000/setup) to verify configuration. Without Supabase, the app runs in local/mock mode with data stored in the browser.
+
+### Deploy for testers
+
+1. Push to GitHub and deploy on [Vercel](https://vercel.com/new)
+2. Set env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `OPENAI_API_KEY` (optional for mock AI)
+3. Run `supabase/FIX_RUN_THIS.sql` in your Supabase SQL editor (includes `beta_feedback` and `waitlist_signups`)
+4. Add your Vercel URL to Supabase Auth redirect URLs
+
+Share these URLs with testers:
+
+| Page | URL |
+|------|-----|
+| Beta invite | `/beta` |
+| Waitlist (beta source) | `/waitlist?source=beta` |
+| Demo garden | Homepage → **Try Demo** |
+| App | `/dashboard` |
+
+### Invite testers
+
+1. Send testers to `/beta` for context, then **Join the beta** → waitlist with `source=beta`
+2. Or share the app URL directly and have them sign up / use demo mode
+3. Ask them to use **Send Feedback** in Settings (or the mobile feedback button)
+
+### What testers should test
+
+- [ ] Homepage → waitlist or demo → onboarding completes
+- [ ] Add first plant (search, scan, or manual path)
+- [ ] First-plant success screen → generate care plan → view Today
+- [ ] Scanner: identify plant, diagnose issue, scan nursery tag
+- [ ] Demo garden: reset, exit, start own garden
+- [ ] Submit feedback from Settings
+
+### Known limitations
+
+- Without Supabase, plants and feedback save locally only (single browser)
+- AI features use mock responses unless `OPENAI_API_KEY` is set
+- Mobile secondary sections (lessons, genome, photo history) are collapsed on small screens — use desktop or **More** for full features
+- Beta feedback is readable only via Supabase dashboard (service role), not in-app
+
 ## Folder Structure
 
 ```

@@ -5,6 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buildLocalInsights } from "@/lib/location/location-service";
 import { useWeather } from "@/lib/hooks/use-weather";
+import { useSubscription } from "@/lib/store/subscription-provider";
+import { UpgradePrompt } from "@/components/subscription/upgrade-prompt";
+import { UPGRADE_COPY } from "@/lib/subscription/types";
 import type { Plant } from "@/lib/types";
 import type { WeatherAlert } from "@/lib/types/phase6";
 
@@ -23,6 +26,20 @@ interface LocalCareCardProps {
 }
 
 export function LocalCareCard({ plants, plant, compact = false }: LocalCareCardProps) {
+  const { canUse } = useSubscription();
+
+  if (!canUse("climate_intelligence")) {
+    const copy = UPGRADE_COPY.climate_intelligence;
+    return (
+      <UpgradePrompt
+        title={copy.title}
+        message={copy.message}
+        lockLabel={copy.lockLabel}
+        compact={compact}
+      />
+    );
+  }
+
   const zip = plant?.zipCode ?? plants[0]?.zipCode ?? "91107";
   const contextPlants = plant ? [plant] : plants;
   const { weather } = useWeather(zip);

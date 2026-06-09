@@ -2,6 +2,10 @@ import type { HealthStatus, LocationType, PlantingType, SunExposure } from "@/li
 
 export type AIResponseSource = "ai" | "mock";
 
+export type IdentificationProvider = "plantid" | "openai" | "mock";
+
+export type CareDifficulty = "Easy" | "Moderate" | "Advanced";
+
 export type PhotoType =
   | "profile"
   | "health_scan"
@@ -9,20 +13,63 @@ export type PhotoType =
   | "nursery_tag"
   | "identification";
 
+export interface IdentificationMatch {
+  common_name: string;
+  scientific_name: string;
+  confidence_score: number;
+}
+
+export interface PhotoQualityAssessment {
+  acceptable: boolean;
+  issues: string[];
+  message?: string;
+}
+
 export interface PlantIdentificationResponse {
   common_name: string;
   scientific_name: string;
   confidence: "high" | "medium" | "low";
+  /** Numeric confidence 0–100 */
+  confidence_score: number;
+  low_confidence: boolean;
+  /** Human-readable summary instead of raw percentage */
+  friendly_headline?: string;
+  /** True when confidence is under 70% or providers disagree */
+  not_fully_confident?: boolean;
+  /** AI or client assessment of photo usability */
+  photo_quality?: PhotoQualityAssessment;
+  /** Up to 3 best matches ranked by confidence */
+  top_matches: IdentificationMatch[];
+  /** Plain-language explanation of the ID */
+  identification_rationale: string;
+  /** Plants often confused with this one */
+  common_lookalikes: string[];
+  /** OpenAI vs Pl@ntNet mismatch */
+  providers_disagree: boolean;
+  /** Pl@ntNet was configured and returned results */
+  plantnet_available: boolean;
+  /** Pl@ntNet API key is configured (may still have no matches) */
+  plantnet_configured?: boolean;
   care_summary: string;
+  light_needs: string;
+  watering_needs: string;
+  toxicity: string;
+  care_difficulty: CareDifficulty;
   toxicity_warning: string | null;
   suggested_location: "indoor" | "outdoor" | "either";
   suggested_sun: "full_sun" | "partial_sun" | "shade";
   database_species_id: string | null;
   source: AIResponseSource;
+  identification_provider: IdentificationProvider;
   plantnet_second_opinion?: {
     species: string;
     commonNames: string[];
     score: number;
+  }[];
+  plantid_suggestions?: {
+    scientificName: string;
+    commonNames: string[];
+    probability: number;
   }[];
 }
 
@@ -56,7 +103,11 @@ export interface AIPhotoAnalyzeResponse {
 }
 
 export interface IdentifyPlantRequest {
-  imageDataUrl: string;
+  /** Primary photo (legacy single-photo clients) */
+  imageDataUrl?: string;
+  /** Up to 3 photos: whole plant, leaf, flower/fruit */
+  imageDataUrls?: string[];
+  photoRoles?: Array<"whole" | "leaf" | "flower">;
 }
 
 export interface ScanTagRequest {

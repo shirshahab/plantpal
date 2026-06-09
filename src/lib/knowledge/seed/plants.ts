@@ -1,4 +1,10 @@
 import type { PlantSpecies, PlantSpeciesType } from "../types";
+import {
+  defaultCompanionPlants,
+  defaultPollinatorValue,
+  defaultFruitingInfo,
+  defaultFloweringInfo,
+} from "../defaults";
 
 const IMG = (seed: string) =>
   `https://images.unsplash.com/photo-${seed}?w=600&h=400&fit=crop&q=80`;
@@ -122,6 +128,13 @@ export function makeSpecies(p: PartialSpecies): PlantSpecies {
       `${p.common_name} (${p.scientific_name}) is a popular ${p.type} valued by home gardeners for its beauty and manageable care requirements.`,
     toxicity: p.toxicity ?? "Varies — verify before pets/children",
     image_url: p.image_url ?? IMG("1416879595882-337324a7f4f9"),
+    secondary_images: p.secondary_images ?? [],
+    companion_plants:
+      p.companion_plants ?? defaultCompanionPlants(p.type, p.common_name),
+    pollinator_value: p.pollinator_value ?? defaultPollinatorValue(p.type),
+    fruiting_info:
+      p.fruiting_info ?? defaultFruitingInfo(p.type, p.common_name),
+    flowering_info: p.flowering_info ?? defaultFloweringInfo(p.type),
     source: p.source ?? "plantpal_seed",
     ...d,
     ...p,

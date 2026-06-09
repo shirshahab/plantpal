@@ -1,8 +1,9 @@
 "use client";
 
-import { use } from "react";
+import { use, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
@@ -36,6 +37,7 @@ import { GenerateCarePlanButton } from "@/components/ai/ai-plant-actions";
 import { LocalCareCard } from "@/components/climate/local-care-card";
 import { useJourney } from "@/lib/store/journey-provider";
 import { PlantGenomeSection } from "@/components/genome/plant-genome-section";
+import { FirstPlantSuccess } from "@/components/plants/first-plant-success";
 
 const healthVariant = {
   healthy: "success" as const,
@@ -48,7 +50,21 @@ export default function PlantDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  return (
+    <Suspense fallback={<LoadingState fullPage message="Loading plant..." />}>
+      <PlantDetailContent params={params} />
+    </Suspense>
+  );
+}
+
+function PlantDetailContent({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
+  const showWelcome = searchParams.get("welcome") === "1";
   const { getPlant, markWatered, loading } = usePlants();
   const { toast } = useToast();
   const { recordWatering } = useEngagement();
@@ -89,6 +105,8 @@ export default function PlantDetailPage({
         <ArrowLeft className="w-4 h-4" />
         Back to garden
       </Link>
+
+      {showWelcome && <FirstPlantSuccess plantId={plant.id} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -167,7 +185,7 @@ export default function PlantDetailPage({
             </CardContent>
           </Card>
 
-          <Card padding="md">
+          <Card padding="md" className="hidden md:block">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">
               Health Notes
             </h2>
@@ -176,18 +194,17 @@ export default function PlantDetailPage({
             </p>
           </Card>
 
-          <PlantLessonsSection plant={plant} />
-
-          <GrowthTimeline plant={plant} />
-
-          <PhotoHistory plantId={plant.id} />
-
-          {isEdiblePlant(plant.species, plant.name) && (
-            <HarvestTracker plant={plant} />
-          )}
+          <div className="hidden md:block space-y-6">
+            <PlantLessonsSection plant={plant} />
+            <GrowthTimeline plant={plant} />
+            <PhotoHistory plantId={plant.id} />
+            {isEdiblePlant(plant.species, plant.name) && (
+              <HarvestTracker plant={plant} />
+            )}
+          </div>
         </div>
 
-        <div>
+        <div className="order-first lg:order-none">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">

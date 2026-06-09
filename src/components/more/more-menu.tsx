@@ -18,6 +18,8 @@ import {
   Tag,
   GraduationCap,
   CalendarDays,
+  Trees,
+  ClipboardList,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
@@ -35,6 +37,7 @@ const sections = [
     title: "Care & Tools",
     items: [
       { href: "/doctor", label: "Plant Doctor", icon: Stethoscope, desc: "Conversational plant help" },
+      { href: "/concierge", label: "Concierge", icon: ClipboardList, desc: "Guided recovery plans" },
       { href: "/scanner", label: "Plant Camera", icon: Scan, desc: "ID, diagnose, scan tags" },
       { href: "/scanner/history", label: "Scanner History", icon: Images, desc: "Past scans & diagnoses" },
       { href: "/database", label: "Plant Database", icon: Database, desc: "183+ species" },
@@ -54,14 +57,16 @@ const sections = [
     title: "Plan & Discover",
     items: [
       { href: "/shop-assistant", label: "Shop Assistant", icon: ShoppingBag, desc: "Find plants to buy" },
+      { href: "/landscape-designer", label: "Landscape Designer", icon: Trees, desc: "AI yard plans & budgets" },
       { href: "/property", label: "Property Mode", icon: Home, desc: "Landscape management" },
-      { href: "/community", label: "Community", icon: Users, desc: "Coming soon" },
+      { href: "/community", label: "Community", icon: Users, desc: "Tips, stories & gardens" },
       { href: "/ar", label: "AR Garden", icon: Sparkles, desc: "Concept preview" },
     ],
   },
   {
     title: "Account",
     items: [
+      { href: "/upgrade", label: "Upgrade", icon: Sparkles, desc: "Plans & limits" },
       { href: "/settings", label: "Settings", icon: Settings, desc: "Profile & preferences" },
       { href: "/setup", label: "Setup checker", icon: Database, desc: "Supabase & API health" },
       { href: "/demo-script", label: "Demo Script", icon: Sparkles, desc: "Live pitch guide" },

@@ -297,5 +297,19 @@ export function buildForecasts(
     );
   }
 
+  if (input.primaryGoalName) {
+    upcomingMilestones.unshift(
+      windowItem(
+        "ms-goal",
+        "milestone",
+        `Goal: ${input.primaryGoalName}`,
+        "Your selected plant goal shapes care missions and genome forecasts.",
+        now,
+        addDays(now, 30),
+        "high"
+      )
+    );
+  }
+
   return { forecast30, forecast90, forecastSeason, upcomingMilestones };
 }

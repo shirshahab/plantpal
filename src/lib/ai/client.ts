@@ -41,6 +41,12 @@ export function requestDoctor(body: DoctorRequest) {
   return post<AIDoctorResponse>("/api/ai/doctor", body);
 }
 
+export function requestConciergePlan(body: import("@/lib/concierge/types").ConciergePlanRequest) {
+  return post<
+    import("@/lib/concierge/types").ConciergePlanData & { title?: string }
+  >("/api/ai/concierge-plan", body);
+}
+
 export function requestGoalPlan(body: GoalPlanRequest) {
   return post<AIGoalPlanResponse>("/api/ai/goal-plan", body);
 }
@@ -59,4 +65,11 @@ export function requestScanTag(body: ScanTagRequest) {
 
 export function requestAnalyzePhoto(body: AnalyzePhotoRequest) {
   return post<AIPhotoAnalyzeResponse>("/api/ai/analyze-photo", body);
+}
+
+export function requestLandscapeDesign(body: import("@/lib/landscape/types").LandscapeDesignRequest) {
+  return post<import("@/lib/landscape/types").LandscapeDesignResponse>(
+    "/api/ai/landscape-designer",
+    body
+  );
 }

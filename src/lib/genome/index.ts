@@ -15,3 +15,9 @@ export {
   type AIGenomeForecastRequest,
   type GenomeForecastProvider,
 } from "./ai-forecast";
+export { genomeToDbPayload, syncGenomeToRemote } from "./sync";
+export {
+  computeWateringConsistency,
+  computeFertilizerConsistency,
+  computePhotoProgress,
+} from "./consistency";

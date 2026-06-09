@@ -18,6 +18,10 @@ import {
 } from "@/lib/supabase/mappers";
 import { inferHardinessZone } from "@/lib/location/location-service";
 import { friendlySaveError } from "@/lib/errors/user-messages";
+import { canAddPlantCount } from "@/lib/billing/account-tiers";
+import { isBetaUnlockAll } from "@/lib/billing/beta-unlock";
+import { loadMockSubscription } from "@/lib/billing/subscription-state";
+import { isDemoMode } from "@/lib/profile/user-profile";
 import { useAuth } from "@/lib/store/auth-provider";
 import type { DbPlant } from "@/lib/types";
 
@@ -110,6 +114,17 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
       input: NewPlantInput,
       photoFile?: File | null
     ): Promise<Plant> => {
+      const bypassLimits = isDemoMode() || isBetaUnlockAll();
+      const sub = loadMockSubscription();
+      if (
+        !canAddPlantCount(sub.tier, plants.length, {
+          betaUnlockAll: isBetaUnlockAll(),
+          bypassLimits,
+        })
+      ) {
+        throw new Error("Free plan limit reached. Upgrade to PlantPal Plus to add more plants.");
+      }
+
       const goals = getGoalsByIds(input.goalIds);
       const careStub: Plant = {
         id: "temp",

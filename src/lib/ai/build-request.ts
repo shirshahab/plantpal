@@ -5,6 +5,7 @@ import type {
   DoctorRequest,
   GoalPlanRequest,
 } from "@/lib/types/ai";
+import type { ConciergePlanRequest } from "@/lib/concierge/types";
 
 export function buildCarePlanRequest(
   plant: Plant,
@@ -44,6 +45,38 @@ export function buildDoctorRequest(
     primaryGoal: primary?.name,
     issue,
     photoUrl: plant.image,
+  };
+}
+
+export function buildConciergeRequest(
+  plant: Plant,
+  issue: string,
+  goals: PlantGoal[],
+  primary: PlantGoal | null,
+  extras?: {
+    imageDataUrl?: string;
+    tasksCompleted?: number;
+    healthScanCount?: number;
+    careHistorySummary?: string;
+  }
+): ConciergePlanRequest {
+  return {
+    plantId: plant.id,
+    nickname: plant.name,
+    species: plant.species,
+    zipCode: plant.zipCode,
+    locationType: plant.locationType,
+    healthStatus: plant.healthStatus,
+    healthNotes: plant.healthNotes,
+    goals: goals.map((g) => g.name),
+    primaryGoal: primary?.name,
+    issue,
+    imageDataUrl: extras?.imageDataUrl,
+    lastWateredAt: plant.lastWateredAt,
+    lastFertilizedAt: plant.lastFertilizedAt,
+    tasksCompleted: extras?.tasksCompleted,
+    healthScanCount: extras?.healthScanCount,
+    careHistorySummary: extras?.careHistorySummary,
   };
 }
 

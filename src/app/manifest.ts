@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { BRAND } from "@/lib/brand/tokens";
+import { BRAND, OFFICIAL_APP_ICON } from "@/lib/brand/tokens";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -20,22 +20,16 @@ export default function manifest(): MetadataRoute.Manifest {
     prefer_related_applications: false,
     icons: [
       {
-        src: "/app-icon.png",
+        src: OFFICIAL_APP_ICON,
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/app-icon.png",
+        src: OFFICIAL_APP_ICON,
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
-      },
-      {
-        src: "/icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-        purpose: "any",
       },
     ],
     shortcuts: [
@@ -43,13 +37,13 @@ export default function manifest(): MetadataRoute.Manifest {
         name: "Today",
         short_name: "Today",
         url: "/today",
-        icons: [{ src: "/icon.svg", sizes: "any" }],
+        icons: [{ src: OFFICIAL_APP_ICON, sizes: "512x512", type: "image/png" }],
       },
       {
         name: "Scan Plant",
         short_name: "Scan",
         url: "/scanner",
-        icons: [{ src: "/icon.svg", sizes: "any" }],
+        icons: [{ src: OFFICIAL_APP_ICON, sizes: "512x512", type: "image/png" }],
       },
     ],
   };

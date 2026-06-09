@@ -2,9 +2,11 @@
  * Nursery price search — SerpAPI Google Shopping when configured, mock otherwise.
  */
 
+import { getSerpApiKey, isSerpApiKeyConfigured } from "@/lib/integrations/env-config";
 import type { PriceSearchItem, PriceSearchResponse } from "@/lib/types/integrations";
 import type { NurserySize } from "@/lib/types/price-checker";
 import { checkPlantPrice } from "@/lib/mock/price-checker";
+import { recordDataSource, recordDataSourceError } from "@/lib/data-sources/runtime";
 
 export interface PlantPriceSearchInput {
   plantName: string;
@@ -75,7 +77,7 @@ function mockPriceItems(input: PlantPriceSearchInput): PriceSearchItem[] {
 }
 
 async function searchSerpApi(input: PlantPriceSearchInput): Promise<PriceSearchItem[]> {
-  const key = process.env.SERPAPI_KEY?.trim();
+  const key = getSerpApiKey();
   if (!key) return [];
 
   try {
@@ -90,11 +92,12 @@ async function searchSerpApi(input: PlantPriceSearchInput): Promise<PriceSearchI
     const res = await fetch(url.toString(), { next: { revalidate: 3600 } });
     if (!res.ok) {
       console.error("[prices] SerpAPI failed:", res.status);
+      recordDataSourceError("serpapi", `HTTP ${res.status}`);
       return [];
     }
 
     const json = (await res.json()) as SerpShoppingResult;
-    return (json.shopping_results ?? []).slice(0, 8).map((item) => ({
+    const items = (json.shopping_results ?? []).slice(0, 8).map((item) => ({
       retailer: item.source ?? "Retailer",
       title: item.title ?? input.plantName,
       price: parsePrice(item.price, item.extracted_price),
@@ -103,8 +106,11 @@ async function searchSerpApi(input: PlantPriceSearchInput): Promise<PriceSearchI
       distanceOrShipping: item.delivery ?? "Check shipping at retailer",
       source: "live" as const,
     }));
+    if (items.length > 0) recordDataSource("serpapi", "real_api");
+    return items;
   } catch (e) {
     console.error("[prices] SerpAPI error:", e);
+    recordDataSourceError("serpapi", e instanceof Error ? e.message : "SerpAPI error");
     return [];
   }
 }
@@ -119,6 +125,7 @@ export async function searchPlantPrices(
     return { query, results: live, source: "live" };
   }
 
+  recordDataSource("serpapi", "mock", { fallback: true });
   return {
     query,
     results: mockPriceItems(input),
@@ -143,5 +150,5 @@ export async function submitPriceReport(_report: unknown): Promise<{ ok: boolean
 }
 
 export function isSerpApiEnabled(): boolean {
-  return Boolean(process.env.SERPAPI_KEY?.trim());
+  return isSerpApiKeyConfigured();
 }

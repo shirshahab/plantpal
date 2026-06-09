@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { User, RotateCcw } from "lucide-react";
+import { User, RotateCcw, Globe } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { BetaBadge } from "@/components/brand/beta-badge";
+import { FeedbackPanel } from "@/components/feedback/feedback-panel";
+import { AccountTierCard } from "@/components/subscription/account-tier-card";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -97,8 +100,17 @@ export default function SettingsPage() {
       <PageHeader
         title="Settings"
         description="Manage your account and app preferences"
-        action={<SyncStatusBadge />}
+        action={
+          <div className="flex items-center gap-2">
+            <BetaBadge />
+            <SyncStatusBadge />
+          </div>
+        }
       />
+
+      <FeedbackPanel />
+
+      <AccountTierCard />
 
       <Card>
         <CardHeader>
@@ -196,6 +208,31 @@ export default function SettingsPage() {
               Explore Demo Garden
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-brand-sage/15 flex items-center justify-center">
+              <Globe className="w-6 h-6 text-brand-primary" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-900">Marketing site</h2>
+              <p className="text-sm text-gray-500">Return to the public PlantPal website</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Link href="/">
+            <Button variant="outline">Back to Website</Button>
+          </Link>
+          <Link href="/features">
+            <Button variant="outline">Features</Button>
+          </Link>
+          <Link href="/waitlist">
+            <Button variant="outline">Join Waitlist</Button>
+          </Link>
         </CardContent>
       </Card>
 

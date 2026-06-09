@@ -36,6 +36,11 @@ export interface PlantSpecies {
   toxicity: string;
   maintenance_level: string;
   image_url: string;
+  secondary_images?: string[];
+  companion_plants: string;
+  pollinator_value: string;
+  fruiting_info: string;
+  flowering_info: string;
   source: string;
 }
 
@@ -44,10 +49,13 @@ export interface SoilType {
   name: string;
   texture: string;
   drainage: string;
+  water_retention: string;
   ph_min: number;
   ph_max: number;
   best_for: string;
   description: string;
+  pros: string;
+  cons: string;
   amendments: string;
 }
 
@@ -58,6 +66,7 @@ export interface Fertilizer {
   npk_ratio: string;
   best_for: string;
   application_frequency: string;
+  usage: string;
   season: string;
   warning_notes: string;
   description: string;
@@ -127,3 +136,15 @@ export const PLANT_TYPE_LABELS: Record<PlantSpeciesType, string> = {
   vine: "Vine",
   grass: "Grass",
 };
+
+export const FERTILIZER_TYPE_LABELS: Record<FertilizerType, string> = {
+  organic: "Organic",
+  synthetic: "Synthetic",
+  slow_release: "Slow release",
+  liquid: "Liquid",
+  granular: "Granular",
+};
+
+export interface ReferenceSearchFilters {
+  query?: string;
+}

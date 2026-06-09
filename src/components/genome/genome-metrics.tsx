@@ -105,6 +105,30 @@ export function TrendPill({
   );
 }
 
+export function ConsistencyBar({
+  label,
+  metric,
+}: {
+  label: string;
+  metric: { score: number; label: string; detail: string };
+}) {
+  const color =
+    metric.score >= 70 ? "bg-green-500" : metric.score >= 45 ? "bg-amber-500" : "bg-red-400";
+
+  return (
+    <div className="rounded-xl bg-white/80 border border-gray-100 px-3 py-2.5">
+      <div className="flex justify-between items-start gap-2 mb-1.5">
+        <p className="text-[10px] uppercase tracking-wide text-gray-400">{label}</p>
+        <span className="text-[10px] font-medium text-gray-600">{metric.label}</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden mb-1.5">
+        <div className={cn("h-full rounded-full", color)} style={{ width: `${metric.score}%` }} />
+      </div>
+      <p className="text-[10px] text-gray-500 leading-relaxed">{metric.detail}</p>
+    </div>
+  );
+}
+
 export function StageBadge({
   label,
   value,

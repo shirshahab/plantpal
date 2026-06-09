@@ -16,6 +16,7 @@ import { requestDoctor } from "@/lib/ai/client";
 import { buildDoctorRequest } from "@/lib/ai/build-request";
 import { friendlyAiError } from "@/lib/errors/user-messages";
 import { AiDoctorDisplay } from "@/components/ai/ai-doctor-display";
+import { FeatureGate } from "@/components/subscription/feature-gate";
 
 export default function DoctorPage() {
   const { plants } = usePlants();
@@ -72,35 +73,37 @@ export default function DoctorPage() {
         </p>
       </Card>
 
-      <Card padding="md" className="space-y-4">
-        <Select
-          label="Select plant"
-          value={plantId}
-          onChange={(e) => setPlantId(e.target.value)}
-          options={[
-            { value: "", label: "Choose a plant…" },
-            ...plants.map((p) => ({ value: p.id, label: p.name })),
-          ]}
-        />
-        <Input
-          label="Describe the issue"
-          placeholder="Yellow leaves on new growth, sticky residue…"
-          value={issue}
-          onChange={(e) => setIssue(e.target.value)}
-        />
-        {error && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
-        )}
-        <Button
-          className="w-full touch-manipulation"
-          loading={loading}
-          disabled={!plantId || !issue.trim()}
-          onClick={handleAsk}
-        >
-          <Stethoscope className="w-5 h-5" />
-          Ask Plant Doctor
-        </Button>
-      </Card>
+      <FeatureGate feature="ai_doctor">
+        <Card padding="md" className="space-y-4">
+          <Select
+            label="Select plant"
+            value={plantId}
+            onChange={(e) => setPlantId(e.target.value)}
+            options={[
+              { value: "", label: "Choose a plant…" },
+              ...plants.map((p) => ({ value: p.id, label: p.name })),
+            ]}
+          />
+          <Input
+            label="Describe the issue"
+            placeholder="Yellow leaves on new growth, sticky residue…"
+            value={issue}
+            onChange={(e) => setIssue(e.target.value)}
+          />
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+          )}
+          <Button
+            className="w-full touch-manipulation"
+            loading={loading}
+            disabled={!plantId || !issue.trim()}
+            onClick={handleAsk}
+          >
+            <Stethoscope className="w-5 h-5" />
+            Ask Plant Doctor
+          </Button>
+        </Card>
+      </FeatureGate>
 
       {report && plant && (
         <Card padding="md" className="space-y-4 border-green-100">

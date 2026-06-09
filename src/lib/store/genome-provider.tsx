@@ -17,7 +17,9 @@ import {
   type GenomeEventType,
   type PlantGenomeState,
 } from "@/lib/genome";
+import { syncGenomeToRemote } from "@/lib/genome/sync";
 import { useEngagement } from "./engagement-provider";
+import { useJourney } from "./journey-provider";
 import { usePhotos } from "./photos-provider";
 import { usePlants } from "./plants-provider";
 import { useTasks } from "./tasks-provider";
@@ -48,6 +50,11 @@ function buildInput(
   photoCount: number,
   healthScanCount: number,
   tasksCompleted: number,
+  tasksMissed: number,
+  missedWaterTasks: number,
+  missedFertilizeTasks: number,
+  careLogs: ReturnType<typeof useTasks>["careLogs"],
+  primaryGoalName: string | null,
   events: ReturnType<typeof getGenomeRecord>["events"],
   weather?: WeatherSlice
 ): GenomeComputeInput {
@@ -60,6 +67,7 @@ function buildInput(
     zipCode: plant.zipCode,
     locationType: plant.locationType,
     lastWateredAt: plant.lastWateredAt,
+    lastFertilizedAt: plant.lastFertilizedAt,
     lastHealthScanAt: plant.lastHealthScanAt ?? null,
     lastGrowthPhotoAt: plant.lastGrowthPhotoAt ?? null,
     growthHeights,
@@ -67,6 +75,11 @@ function buildInput(
     photoCount,
     healthScanCount,
     tasksCompleted,
+    tasksMissed,
+    missedWaterTasks,
+    missedFertilizeTasks,
+    careLogs,
+    primaryGoalName,
     events,
     tempF: weather?.tempF,
     tempHighF: weather?.tempHighF,
@@ -78,7 +91,8 @@ export function GenomeProvider({ children }: { children: React.ReactNode }) {
   const { plants } = usePlants();
   const { getGrowthForPlant } = useEngagement();
   const { getPhotosForPlant } = usePhotos();
-  const { careLogs } = useTasks();
+  const { careLogs, groups } = useTasks();
+  const { getPrimaryGoal } = useJourney();
   const [tick, setTick] = useState(0);
 
   const recordEvent = useCallback(
@@ -102,7 +116,13 @@ export function GenomeProvider({ children }: { children: React.ReactNode }) {
 
       const photos = getPhotosForPlant(plantId);
       const healthScans = photos.filter((p) => p.photoType === "health_scan").length;
-      const tasksCompleted = careLogs.filter((l) => l.plantId === plantId).length;
+      const plantLogs = careLogs.filter((l) => l.plantId === plantId);
+      const tasksCompleted = plantLogs.length;
+
+      const overdue = groups.overdue.filter((t) => t.plantId === plantId);
+      const missedWaterTasks = overdue.filter((t) => t.taskType === "water").length;
+      const missedFertilizeTasks = overdue.filter((t) => t.taskType === "fertilize").length;
+      const primaryGoal = getPrimaryGoal(plantId);
 
       const record = getGenomeRecord(plantId);
       const input = buildInput(
@@ -112,6 +132,11 @@ export function GenomeProvider({ children }: { children: React.ReactNode }) {
         photos.length,
         healthScans || (plant.lastHealthScanAt ? 1 : 0),
         tasksCompleted,
+        overdue.length,
+        missedWaterTasks,
+        missedFertilizeTasks,
+        careLogs,
+        primaryGoal?.name ?? null,
         record.events,
         weather
       );
@@ -122,9 +147,10 @@ export function GenomeProvider({ children }: { children: React.ReactNode }) {
         lastComputedAt: state.computedAt,
         cachedState: state,
       });
+      void syncGenomeToRemote(plant.id, state);
       return state;
     },
-    [plants, getGrowthForPlant, getPhotosForPlant, careLogs, tick]
+    [plants, getGrowthForPlant, getPhotosForPlant, careLogs, groups.overdue, getPrimaryGoal, tick]
   );
 
   const value = useMemo<GenomeContextValue>(

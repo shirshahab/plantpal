@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Sparkles, RotateCcw, LogOut, Sprout } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { isDemoMode, saveUserProfile } from "@/lib/profile/user-profile";
+import { isDemoMode } from "@/lib/profile/user-profile";
+import { seedDemoGarden, exitDemoGarden } from "@/lib/demo/seed-demo-garden";
 import { useState, useEffect } from "react";
 
 export function DemoBanner() {
+  const router = useRouter();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -16,9 +19,21 @@ export function DemoBanner() {
 
   if (!visible) return null;
 
-  function dismiss() {
-    saveUserProfile({ demoMode: false });
+  function handleReset() {
+    seedDemoGarden(loadUserProfileZip());
+    window.location.reload();
+  }
+
+  function handleExit() {
+    exitDemoGarden();
     setVisible(false);
+    router.push("/plants/new");
+  }
+
+  function handleStartOwn() {
+    exitDemoGarden();
+    setVisible(false);
+    router.push("/plants/new");
   }
 
   return (
@@ -30,29 +45,47 @@ export function DemoBanner() {
         <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
           <Sparkles className="w-4 h-4 text-amber-600" />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 text-sm">Demo Garden active</p>
-          <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
-            Pre-loaded Pasadena garden for pitching.{" "}
-            <Link href="/demo-script" className="text-amber-700 underline">
-              View demo script
-            </Link>
-          </p>
-          <Link href="/plants/new">
-            <Button size="sm" variant="outline" className="mt-2 h-8 text-xs">
-              Add your own plant
+        <div className="flex-1 min-w-0 space-y-3">
+          <div>
+            <p className="font-semibold text-gray-900 text-sm">
+              You are viewing a demo garden.
+            </p>
+            <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
+              Sample plants, tasks, and care plans for exploring PlantPal. Your changes
+              won&apos;t affect a real garden until you start your own.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" className="h-8 text-xs touch-manipulation" onClick={handleStartOwn}>
+              <Sprout className="w-3.5 h-3.5" />
+              Start your own garden
             </Button>
+            <Button size="sm" variant="outline" className="h-8 text-xs touch-manipulation" onClick={handleReset}>
+              <RotateCcw className="w-3.5 h-3.5" />
+              Reset demo
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 text-xs touch-manipulation" onClick={handleExit}>
+              <LogOut className="w-3.5 h-3.5" />
+              Exit demo
+            </Button>
+          </div>
+          <Link href="/demo-script" className="text-xs text-amber-700 underline inline-block">
+            View demo script
           </Link>
         </div>
-        <button
-          type="button"
-          onClick={dismiss}
-          className="p-1 rounded-lg hover:bg-amber-100 text-amber-600"
-          aria-label="Dismiss demo banner"
-        >
-          <X className="w-4 h-4" />
-        </button>
       </div>
     </Card>
   );
+}
+
+function loadUserProfileZip(): string {
+  if (typeof window === "undefined") return "91107";
+  try {
+    const raw = localStorage.getItem("plantpal-user-profile");
+    if (!raw) return "91107";
+    const profile = JSON.parse(raw) as { zipCode?: string };
+    return profile.zipCode || "91107";
+  } catch {
+    return "91107";
+  }
 }

@@ -7,6 +7,7 @@ import { Leaf, ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { BetaBadge } from "@/components/brand/beta-badge";
 import { cn } from "@/lib/utils";
 import { saveUserProfile } from "@/lib/profile/user-profile";
 import { seedDemoGarden } from "@/lib/demo/seed-demo-garden";
@@ -63,6 +64,7 @@ export default function OnboardingPage() {
   }
 
   function handleExploreDemo() {
+    persistProfile({ demoMode: true });
     seedDemoGarden(zipCode.trim() || "91107");
     router.push("/dashboard");
     window.location.reload();
@@ -73,9 +75,9 @@ export default function OnboardingPage() {
     router.push("/plants/new");
   }
 
-  function handleSkipToApp() {
+  function handleSkip() {
     persistProfile();
-    router.push("/dashboard");
+    router.push("/plants/new");
   }
 
   return (
@@ -86,11 +88,12 @@ export default function OnboardingPage() {
             <Leaf className="w-4 h-4 text-white" />
           </div>
           <span className="font-semibold text-gray-900">PlantPal</span>
+          <BetaBadge />
         </div>
         {step < 5 && (
           <button
             type="button"
-            onClick={handleSkipToApp}
+            onClick={handleSkip}
             className="text-sm text-gray-400 hover:text-gray-600"
           >
             Skip
@@ -252,34 +255,29 @@ export default function OnboardingPage() {
         {step === 5 && (
           <div className="space-y-5 page-enter">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">You&apos;re all set!</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Let&apos;s add your first plant.
+              </h1>
               <p className="text-gray-500 mt-1 text-sm">
-                Add your first plant or explore a fully loaded demo garden.
+                Your garden is empty until you add a plant — that&apos;s where the magic starts.
               </p>
             </div>
 
-            <Card padding="md" className="border-green-100 bg-green-50/50 space-y-3">
-              <p className="font-semibold text-gray-900">Explore Demo Garden</p>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Pre-loaded with Meyer Lemon, Japanese Maple, Bougainvillea, Avocado, and
-                Fiddle Leaf Fig — plus tasks, AI care plans, scans, and growth photos.
-              </p>
-              <Button className="w-full" size="lg" onClick={handleExploreDemo}>
-                Explore Demo Garden
-              </Button>
-            </Card>
-
-            <Button variant="outline" className="w-full" size="lg" onClick={handleAddPlant}>
-              Add My First Plant
+            <Button className="w-full" size="lg" onClick={handleAddPlant}>
+              Add First Plant
+              <ChevronRight className="w-4 h-4" />
             </Button>
 
-            <button
-              type="button"
-              onClick={handleSkipToApp}
-              className="w-full text-sm text-gray-400 hover:text-gray-600 py-2"
-            >
-              Go to empty garden →
-            </button>
+            <Button variant="outline" className="w-full" size="lg" onClick={handleExploreDemo}>
+              Explore Demo Garden
+            </Button>
+
+            <Card padding="md" className="border-gray-100 bg-gray-50/50">
+              <p className="text-sm text-gray-600 leading-relaxed">
+                The demo garden includes Meyer Lemon, Japanese Maple, Bougainvillea, and more —
+                with tasks, care plans, and scans pre-loaded.
+              </p>
+            </Card>
           </div>
         )}
       </main>

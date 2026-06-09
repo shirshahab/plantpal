@@ -1,6 +1,6 @@
 const CACHE = "plantpal-v2";
 const OFFLINE_URL = "/offline";
-const PRECACHE = [OFFLINE_URL, "/dashboard", "/today", "/icon.svg", "/manifest.webmanifest"];
+const PRECACHE = [OFFLINE_URL, "/dashboard", "/today", "/app-icon.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

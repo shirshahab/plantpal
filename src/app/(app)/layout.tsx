@@ -11,12 +11,16 @@ import { RemindersProvider } from "@/lib/store/reminders-provider";
 import { TasksProvider } from "@/lib/store/tasks-provider";
 import { ToastProvider } from "@/lib/store/toast-provider";
 import { GenomeProvider } from "@/lib/store/genome-provider";
+import { SubscriptionProvider } from "@/lib/store/subscription-provider";
+import { UpgradeModalProvider } from "@/components/billing/upgrade-modal-provider";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <SyncProvider>
         <PlantsProvider>
+        <SubscriptionProvider>
+        <UpgradeModalProvider>
         <JourneyProvider>
           <AiProvider>
             <EngagementProvider>
@@ -36,6 +40,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </EngagementProvider>
           </AiProvider>
         </JourneyProvider>
+        </UpgradeModalProvider>
+        </SubscriptionProvider>
       </PlantsProvider>
       </SyncProvider>
     </AuthProvider>

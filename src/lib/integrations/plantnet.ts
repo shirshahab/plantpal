@@ -4,6 +4,7 @@
  */
 
 import type { PlantNetSuggestion } from "@/lib/types/integrations";
+import { getPlantNetKey, isPlantNetKeyConfigured } from "@/lib/integrations/env-config";
 
 const DEFAULT_PROJECT = "all";
 
@@ -30,14 +31,14 @@ function dataUrlToBlob(dataUrl: string): Blob {
 }
 
 export function isPlantNetEnabled(): boolean {
-  return Boolean(process.env.PLANTNET_API_KEY?.trim());
+  return isPlantNetKeyConfigured();
 }
 
 /** Identify plant from image — returns empty array when key missing or on failure. */
 export async function identifyPlantFromImage(
   params: PlantNetIdentifyParams
 ): Promise<PlantNetSuggestion[]> {
-  const key = process.env.PLANTNET_API_KEY?.trim();
+  const key = getPlantNetKey();
   if (!key) return [];
 
   try {

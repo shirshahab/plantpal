@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, ExternalLink } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { SuitabilityScoreCard } from "@/components/climate/suitability-score-car
 
 export function PlantSpeciesDetailView({ plant }: { plant: PlantSpeciesDetail }) {
   const addHref = `/plants/new?speciesId=${encodeURIComponent(plant.id)}&name=${encodeURIComponent(plant.common_name)}`;
+  const images = [plant.image_url, ...(plant.secondary_images ?? [])].filter(Boolean);
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -27,24 +28,34 @@ export function PlantSpeciesDetailView({ plant }: { plant: PlantSpeciesDetail })
         }
       />
 
-      <div className="relative h-56 sm:h-72 rounded-2xl overflow-hidden bg-green-50">
-        <Image
-          src={plant.image_url}
-          alt={plant.common_name}
-          fill
-          className="object-cover"
-          priority
-          sizes="(max-width: 768px) 100vw, 896px"
-        />
+      <div className={images.length > 1 ? "grid sm:grid-cols-2 gap-3" : ""}>
+        {images.slice(0, 2).map((src, i) => (
+          <div
+            key={src}
+            className={`relative rounded-2xl overflow-hidden bg-green-50 ${
+              i === 0 ? "h-56 sm:h-72 sm:col-span-2" : "h-40"
+            }`}
+          >
+            <Image
+              src={src}
+              alt={i === 0 ? plant.common_name : `${plant.common_name} ${i + 1}`}
+              fill
+              className="object-cover"
+              priority={i === 0}
+              sizes="(max-width: 768px) 100vw, 896px"
+            />
+          </div>
+        ))}
       </div>
 
       <div className="flex flex-wrap gap-2">
         <Badge>{PLANT_TYPE_LABELS[plant.type]}</Badge>
         <Badge variant="info">{plant.family}</Badge>
         <Badge variant="outline">
-          Zone {plant.hardiness_zone_min}–{plant.hardiness_zone_max}
+          USDA Zone {plant.hardiness_zone_min}–{plant.hardiness_zone_max}
         </Badge>
-        <Badge variant="outline">{plant.maintenance_level}</Badge>
+        <Badge variant="outline">{plant.growth_rate} growth</Badge>
+        <Badge variant="outline">{plant.maintenance_level} maintenance</Badge>
       </div>
 
       <SuitabilityScoreCard species={plant} />
@@ -53,44 +64,103 @@ export function PlantSpeciesDetailView({ plant }: { plant: PlantSpeciesDetail })
         <p className="text-gray-600 leading-relaxed">{plant.description}</p>
       </Section>
 
-      <div className="grid sm:grid-cols-3 gap-4">
-        <InfoCard label="Sunlight" value={plant.sunlight} />
-        <InfoCard label="Watering" value={plant.watering} />
-        <InfoCard label="Soil preference" value={plant.soil_preference} />
+      <Section title="Quick facts">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <InfoCard label="Scientific name" value={plant.scientific_name} />
+          <InfoCard label="USDA zones" value={`${plant.hardiness_zone_min}–${plant.hardiness_zone_max}`} />
+          <InfoCard label="Growth rate" value={plant.growth_rate} />
+          <InfoCard label="Mature height" value={plant.mature_height} />
+          <InfoCard label="Mature width" value={plant.mature_width} />
+          <InfoCard label="Toxicity" value={plant.toxicity} />
+        </div>
+      </Section>
+
+      <Section title="Growing requirements">
+        <div className="grid sm:grid-cols-3 gap-4">
+          <InfoCard label="Sun requirements" value={plant.sunlight} />
+          <InfoCard label="Water requirements" value={plant.watering} />
+          <InfoCard label="Soil preferences" value={plant.soil_preference} />
+        </div>
+      </Section>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Section title="Flowering">
+          <p className="text-gray-600 leading-relaxed text-sm">{plant.flowering_info}</p>
+        </Section>
+        <Section title="Fruiting">
+          <p className="text-gray-600 leading-relaxed text-sm">{plant.fruiting_info}</p>
+        </Section>
       </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Section title="Pollinator value">
+          <p className="text-gray-600 leading-relaxed text-sm">{plant.pollinator_value}</p>
+        </Section>
+        <Section title="Companion plants">
+          <p className="text-gray-600 leading-relaxed text-sm">{plant.companion_plants}</p>
+        </Section>
+      </div>
+
+      {plant.soils.length > 0 && (
+        <Section title="Recommended soils">
+          <div className="grid sm:grid-cols-2 gap-3">
+            {plant.soils.map((s) => (
+              <Link key={s.id} href={`/database/soils/${s.id}`}>
+                <Card padding="md" className="hover:shadow-md transition-shadow h-full">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium text-gray-900 text-sm">{s.name}</p>
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{s.drainage} drainage · {s.water_retention}</p>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </Section>
+      )}
 
       {plant.fertilizers.length > 0 && (
         <Section title="Fertilizer recommendations">
-          <ul className="space-y-2">
+          <div className="space-y-2">
             {plant.fertilizers.map((f) => (
-              <li key={f.id} className="text-sm text-gray-600">
-                <span className="font-medium text-gray-900">{f.name}</span>
-                <span className="text-gray-400"> · {f.npk_ratio}</span>
-                <span className="block text-xs text-gray-500 mt-0.5">{f.application_frequency}</span>
-              </li>
+              <Link key={f.id} href={`/database/fertilizers/${f.id}`}>
+                <Card padding="md" className="hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="font-medium text-gray-900 text-sm">{f.name}</span>
+                      <span className="text-gray-400 text-sm"> · NPK {f.npk_ratio}</span>
+                      <p className="text-xs text-gray-500 mt-0.5">{f.application_frequency}</p>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                  </div>
+                </Card>
+              </Link>
             ))}
-          </ul>
+          </div>
         </Section>
       )}
 
       {plant.pests.length > 0 && (
-        <Section title="Pest risks">
+        <Section title="Common pests">
           <div className="space-y-3">
             {plant.pests.map((p) => (
-              <Card key={p.id} padding="md" className="text-sm">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-gray-900">{p.name}</span>
-                  <RiskBadge level={p.risk_level} />
-                </div>
-                <p className="text-gray-500">{p.signs}</p>
-              </Card>
+              <Link key={p.id} href={`/database/pests/${p.id}`}>
+                <Card padding="md" className="hover:shadow-md transition-shadow text-sm">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-gray-900">{p.name}</span>
+                    <RiskBadge level={p.risk_level} />
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 ml-auto" />
+                  </div>
+                  <p className="text-gray-500">{p.signs}</p>
+                </Card>
+              </Link>
             ))}
           </div>
         </Section>
       )}
 
       {plant.diseases.length > 0 && (
-        <Section title="Disease risks">
+        <Section title="Common diseases">
           <div className="space-y-3">
             {plant.diseases.map((d) => (
               <Card key={d.id} padding="md" className="text-sm">
@@ -99,6 +169,9 @@ export function PlantSpeciesDetailView({ plant }: { plant: PlantSpeciesDetail })
                   <RiskBadge level={d.risk_level} />
                 </div>
                 <p className="text-gray-500">{d.symptoms}</p>
+                {d.treatment && (
+                  <p className="text-xs text-green-700 mt-2">Treatment: {d.treatment}</p>
+                )}
               </Card>
             ))}
           </div>

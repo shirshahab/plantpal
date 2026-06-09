@@ -1,12 +1,12 @@
 import OpenAI from "openai";
+import { isOpenAIKeyConfigured, getOpenAIKey } from "@/lib/integrations/env-config";
 
 export function isOpenAIConfigured(): boolean {
-  const key = process.env.OPENAI_API_KEY?.trim() ?? "";
-  return key.length > 10 && !key.includes("paste_");
+  return isOpenAIKeyConfigured();
 }
 
 export function getOpenAIClient(): OpenAI {
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return new OpenAI({ apiKey: getOpenAIKey() });
 }
 
 export async function chatJSON<T>(
@@ -30,12 +30,13 @@ export async function chatJSON<T>(
   return JSON.parse(content) as T;
 }
 
-/** Vision analysis — image as base64 data URL or public URL. */
+/** Vision analysis — one or more base64 data URLs. */
 export async function visionJSON<T>(
   systemPrompt: string,
   userText: string,
-  imageDataUrl: string
+  imageDataUrl: string | string[]
 ): Promise<T> {
+  const urls = Array.isArray(imageDataUrl) ? imageDataUrl : [imageDataUrl];
   const client = getOpenAIClient();
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
@@ -45,13 +46,16 @@ export async function visionJSON<T>(
         role: "user",
         content: [
           { type: "text", text: userText },
-          { type: "image_url", image_url: { url: imageDataUrl, detail: "low" } },
+          ...urls.map((url) => ({
+            type: "image_url" as const,
+            image_url: { url, detail: "low" as const },
+          })),
         ],
       },
     ],
     response_format: { type: "json_object" },
     temperature: 0.35,
-    max_tokens: 1400,
+    max_tokens: 1600,
   });
 
   const content = response.choices[0]?.message?.content;

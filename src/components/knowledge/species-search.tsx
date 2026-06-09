@@ -37,12 +37,20 @@ const WATERING_OPTIONS = [
 
 const SOURCE_LABELS: Record<string, string> = {
   plantpal: "PlantPal database",
-  perenual: "Perenual",
+  perenual: "Perenual plant data",
   ai: "AI suggestion",
+  mock: "Mock fallback",
 };
 
 function SourceBadge({ source }: { source: PlantSearchHit["resultSource"] }) {
-  const variant = source === "perenual" ? "outline" : source === "ai" ? "warning" : "success";
+  const variant =
+    source === "perenual"
+      ? "outline"
+      : source === "ai"
+        ? "warning"
+        : source === "mock"
+          ? "warning"
+          : "success";
   return (
     <Badge variant={variant} className="text-[10px] shrink-0">
       {SOURCE_LABELS[source] ?? source}

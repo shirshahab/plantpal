@@ -1,4 +1,5 @@
-/** Official PlantPal brand tokens — single source of truth for code references. */
+/** Official PlantPal brand assets — always use these paths, never recreate the mark in SVG. */
+export const OFFICIAL_APP_ICON = "/app-icon.png";
 
 export const BRAND = {
   name: "PlantPal",
@@ -23,4 +24,6 @@ export const BRAND = {
     text: "#1F2937",
     textSecondary: "#6B7280",
   },
+  /** Official logo file — Living P squircle (PNG). Use for all UI, favicon, PWA. */
+  officialIcon: OFFICIAL_APP_ICON,
 } as const;

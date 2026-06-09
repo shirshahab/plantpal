@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
+import { BetaBadge } from "@/components/brand/beta-badge";
 import { BRAND } from "@/lib/brand/tokens";
 
 const FOOTER_LINKS = [
   { href: "/features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
+  { href: "/dashboard", label: "Open App" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
 ];
@@ -16,7 +18,10 @@ export function MarketingFooter() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
           <div>
-            <PlantPalLogo size="sm" />
+            <div className="flex items-center gap-2">
+              <PlantPalLogo size="sm" />
+              <BetaBadge />
+            </div>
             <p className="text-sm font-heading font-semibold text-brand-primary mt-3">
               {BRAND.tagline}
             </p>

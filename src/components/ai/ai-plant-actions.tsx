@@ -12,6 +12,8 @@ import { buildCarePlanRequest, buildGoalPlanRequest } from "@/lib/ai/build-reque
 import { friendlyAiError } from "@/lib/errors/user-messages";
 import { AiCarePlanDisplay } from "@/components/ai/ai-care-plan-display";
 import { AiGoalPlanDisplay } from "@/components/ai/ai-goal-plan-display";
+import { CarePlanConfidence } from "@/components/ai/care-plan-confidence";
+import { FeatureGate } from "@/components/subscription/feature-gate";
 
 export function GenerateCarePlanButton({ plant }: { plant: Plant }) {
   const { getPlantGoals, getPrimaryGoal } = useJourney();
@@ -21,6 +23,8 @@ export function GenerateCarePlanButton({ plant }: { plant: Plant }) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  const goals = getPlantGoals(plant.id);
+  const primary = getPrimaryGoal(plant.id);
   const existing = getCarePlan(plant.id);
 
   async function handleGenerate() {
@@ -46,20 +50,23 @@ export function GenerateCarePlanButton({ plant }: { plant: Plant }) {
   }
 
   return (
-    <div className="space-y-4">
-      <Button
-        className="w-full touch-manipulation"
-        variant="secondary"
-        loading={loading}
-        onClick={handleGenerate}
-      >
-        <Sparkles className="w-4 h-4" />
-        Generate Care Plan
-      </Button>
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
-      )}
-      {existing && <AiCarePlanDisplay plan={existing} saved={saved} />}
+    <div className="space-y-4" id="ai-coach">
+      <FeatureGate feature="ai_care_plans">
+        <CarePlanConfidence plant={plant} goals={goals} />
+        <Button
+          className="w-full touch-manipulation"
+          variant="secondary"
+          loading={loading}
+          onClick={handleGenerate}
+        >
+          <Sparkles className="w-4 h-4" />
+          Generate Care Plan
+        </Button>
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+        )}
+        {existing && <AiCarePlanDisplay plan={existing} saved={saved} />}
+      </FeatureGate>
     </div>
   );
 }

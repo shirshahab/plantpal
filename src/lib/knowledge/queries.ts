@@ -6,6 +6,7 @@ import type {
   SpeciesSearchFilters,
 } from "./types";
 import * as mock from "./mock-store";
+import { enrichPlantSpecies } from "./defaults";
 
 export async function searchPlantSpecies(
   filters: SpeciesSearchFilters = {}
@@ -73,7 +74,7 @@ export async function getPlantSpeciesDetail(id: string): Promise<PlantSpeciesDet
     ]);
 
     return {
-      ...(species as PlantSpecies),
+      ...enrichPlantSpecies(species as PlantSpecies),
       care_guide: careRes.data ?? null,
       soils: (soilRes.data ?? []).map((r: { soil_types: unknown }) => r.soil_types).filter(Boolean),
       fertilizers: (fertRes.data ?? [])
@@ -95,4 +96,15 @@ export async function getPlantSpeciesDetail(id: string): Promise<PlantSpeciesDet
   }
 }
 
-export { getSpeciesCount } from "./mock-store";
+export {
+  getSpeciesCount,
+  getSoilCount,
+  getFertilizerCount,
+  getPestCount,
+  searchSoilTypes,
+  getSoilById,
+  searchFertilizers,
+  getFertilizerById,
+  searchPests,
+  getPestById,
+} from "./mock-store";

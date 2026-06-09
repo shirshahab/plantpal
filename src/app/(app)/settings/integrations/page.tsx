@@ -1,47 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  AlertCircle,
-  KeyRound,
-  CloudOff,
-} from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { fetchIntegrationsHealth } from "@/lib/integrations/client";
-import type { IntegrationHealthCard, IntegrationStatus } from "@/lib/types/integrations";
-import { cn } from "@/lib/utils";
-
-const STATUS_CONFIG: Record<
-  IntegrationStatus,
-  { label: string; variant: "success" | "warning" | "outline" | "danger"; icon: React.ElementType }
-> = {
-  connected: { label: "Connected", variant: "success", icon: CheckCircle2 },
-  missing_key: { label: "Missing API key", variant: "warning", icon: KeyRound },
-  error: { label: "Error", variant: "danger", icon: AlertCircle },
-  mock_fallback: { label: "Mock fallback active", variant: "outline", icon: CloudOff },
-};
+import {
+  fetchIntegrationsHealth,
+  type IntegrationsHealthResponse,
+} from "@/lib/integrations/client";
+import {
+  IntegrationHealthCardView,
+  IntegrationHealthSummary,
+} from "@/components/integrations/integration-health-card";
 
 export default function IntegrationsSettingsPage() {
-  const [cards, setCards] = useState<IntegrationHealthCard[]>([]);
+  const [health, setHealth] = useState<IntegrationsHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchIntegrationsHealth();
+      setHealth(data);
+    } catch {
+      setError("Could not load integration status.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchIntegrationsHealth()
-      .then(setCards)
-      .finally(() => setLoading(false));
-  }, []);
+    load();
+  }, [load]);
+
+  const summary = health?.summary;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
         title="Integrations"
-        description="External data sources and API health — keys are never shown here."
+        description="Live API status — keys are never shown, only whether each service is configured and reachable."
         action={
           <Link href="/settings">
             <Button variant="ghost" size="sm">
@@ -52,50 +54,66 @@ export default function IntegrationsSettingsPage() {
         }
       />
 
-      {loading && (
-        <p className="text-sm text-gray-500">Checking integration status…</p>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          {loading ? "Probing APIs…" : "Refresh status"}
+        </Button>
+        <Link href="/setup">
+          <Button size="sm" variant="outline">
+            Setup checker
+          </Button>
+        </Link>
+        <Link href="/debug/data-sources">
+          <Button size="sm" variant="outline">
+            Data sources debug
+          </Button>
+        </Link>
+      </div>
+
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="py-3 text-sm text-red-800">{error}</CardContent>
+        </Card>
+      )}
+
+      {loading && !health && (
+        <p className="text-sm text-gray-500">Running live API probes (may take a few seconds)…</p>
+      )}
+
+      {summary && (
+        <IntegrationHealthSummary
+          total={summary.total}
+          configured={summary.configured}
+          live={summary.live}
+          fallback={summary.fallback}
+        />
       )}
 
       <div className="grid gap-3">
-        {cards.map((item) => {
-          const config = STATUS_CONFIG[item.status];
-          const Icon = config.icon;
-          return (
-            <Card key={item.id}>
-              <CardContent className="flex items-start gap-4 py-4">
-                <div
-                  className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                    item.status === "connected" ? "bg-green-50" : "bg-gray-50"
-                  )}
-                >
-                  <Icon
-                    className={cn(
-                      "w-5 h-5",
-                      item.status === "connected" ? "text-green-600" : "text-gray-500"
-                    )}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <h2 className="font-semibold text-gray-900">{item.name}</h2>
-                    <Badge variant={config.variant}>{config.label}</Badge>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">{item.message}</p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {health?.cards.map((item) => (
+          <IntegrationHealthCardView key={item.id} item={item} />
+        ))}
       </div>
 
       <Card>
-        <CardContent className="py-4 text-sm text-gray-600 space-y-2">
+        <CardContent className="py-4 text-sm text-gray-600 space-y-3">
           <p className="font-medium text-gray-900">Environment variables</p>
           <p>
-            Add keys to <code className="text-xs bg-gray-100 px-1 rounded">.env.local</code> and
-            restart the dev server. See <code className="text-xs bg-gray-100 px-1 rounded">.env.local.example</code>.
+            Add keys to{" "}
+            <code className="text-xs bg-gray-100 px-1 rounded">.env.local</code>, then restart{" "}
+            <code className="text-xs bg-gray-100 px-1 rounded">npm run dev</code>. See{" "}
+            <code className="text-xs bg-gray-100 px-1 rounded">API_SETUP.md</code>.
           </p>
+          <ul className="text-xs font-mono text-gray-500 space-y-1">
+            <li>OPENAI_API_KEY</li>
+            <li>OPENWEATHER_API_KEY + WEATHER_PROVIDER=openweather</li>
+            <li>PERENUAL_API_KEY</li>
+            <li>PLANTNET_API_KEY</li>
+            <li>SERPAPI_KEY</li>
+            <li>NEXT_PUBLIC_SUPABASE_URL</li>
+            <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
+          </ul>
         </CardContent>
       </Card>
     </div>

@@ -7,6 +7,9 @@ import type { WeatherInsights } from "@/lib/types/integrations";
 import { getLocationProfile } from "@/lib/location/location-service";
 import { lookupZipRecord } from "@/lib/location/usda-zones";
 import { getZipProfile } from "@/lib/integrations/zip";
+import { getOpenWeatherKey, isOpenWeatherKeyConfigured } from "@/lib/integrations/env-config";
+import { cacheGet, cacheSet, cacheKey, CACHE_TTL } from "@/lib/api/server-cache";
+import { recordDataSource, recordDataSourceError } from "@/lib/data-sources/runtime";
 
 export type WeatherProvider = "mock" | "openweather" | "weatherapi" | "noaa" | "tomorrow";
 
@@ -15,7 +18,7 @@ export function getWeatherProvider(): WeatherProvider {
   if (p === "openweather" || p === "weatherapi" || p === "noaa" || p === "tomorrow") {
     return p;
   }
-  if (process.env.OPENWEATHER_API_KEY?.trim()) return "openweather";
+  if (isOpenWeatherKeyConfigured()) return "openweather";
   return "mock";
 }
 
@@ -165,7 +168,7 @@ interface OpenWeatherForecast {
 }
 
 async function fetchOpenWeather(zipCode: string): Promise<WeatherInsights | null> {
-  const key = process.env.OPENWEATHER_API_KEY?.trim();
+  const key = getOpenWeatherKey();
   if (!key) return null;
 
   try {
@@ -282,13 +285,28 @@ async function fetchFromProvider(
 /** Primary server-side weather fetch with mock fallback. */
 export async function getWeatherByZip(zipCode: string): Promise<WeatherInsights> {
   const normalized = zipCode.trim().slice(0, 5);
+  const cacheId = cacheKey(["weather", normalized, getWeatherProvider()]);
+  const cached = cacheGet<WeatherInsights>(cacheId);
+  if (cached) return cached;
+
   const provider = getWeatherProvider();
   if (provider !== "mock") {
     const live = await fetchFromProvider(provider, normalized);
-    if (live) return live;
+    if (live) {
+      recordDataSource("openweather", "real_api");
+      cacheSet(cacheId, live, CACHE_TTL.weather);
+      return live;
+    }
+    recordDataSourceError("openweather", "Live provider failed");
+    recordDataSource("openweather", "mock", { fallback: true });
     console.warn("[weather] Live provider failed — using mock fallback for", normalized);
+  } else {
+    recordDataSource("openweather", "mock", { fallback: true });
   }
-  return buildMockWeather(normalized);
+
+  const mock = buildMockWeather(normalized);
+  cacheSet(cacheId, mock, CACHE_TTL.weather);
+  return mock;
 }
 
 export const fetchWeatherForZip = getWeatherByZip;

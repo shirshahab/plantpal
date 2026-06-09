@@ -10,13 +10,20 @@ import {
   Sparkles,
   Plus,
   BookOpen,
-  AlertTriangle,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CameraCapture, fileToDataUrl } from "@/components/scanner/camera-capture";
+import {
+  MultiPhotoCapture,
+  photosToRequest,
+  type CapturedPhoto,
+} from "@/components/scanner/multi-photo-capture";
+import { IdentifyPlantResults } from "@/components/scanner/identify-plant-results";
+import { BadPhotoGuidance } from "@/components/scanner/bad-photo-guidance";
 import {
   requestIdentifyPlant,
   requestScanTag,
@@ -26,7 +33,10 @@ import type {
   AIPhotoAnalyzeResponse,
   PlantIdentificationResponse,
   TagScanResponse,
+  PhotoQualityAssessment,
 } from "@/lib/types/ai";
+import { assessPhotoQualityClient } from "@/lib/scanner/photo-quality";
+import { saveScanToHistory } from "@/lib/scanner/scan-history";
 import { usePlants } from "@/lib/store/plants-provider";
 import { usePhotos } from "@/lib/store/photos-provider";
 import { useEngagement } from "@/lib/store/engagement-provider";
@@ -47,9 +57,14 @@ const TAG_PREFILL_KEY = "plantpal-tag-prefill";
 
 export function CameraHub() {
   const [tab, setTab] = useState<TabId>("identify");
+  const [identifyPhotos, setIdentifyPhotos] = useState<CapturedPhoto[]>([]);
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [clientPhotoQuality, setClientPhotoQuality] = useState<PhotoQualityAssessment | null>(
+    null
+  );
+  const [scanHistoryId, setScanHistoryId] = useState<string | null>(null);
 
   const [identifyResult, setIdentifyResult] = useState<PlantIdentificationResponse | null>(null);
   const [diagnoseResult, setDiagnoseResult] = useState<AIPhotoAnalyzeResponse | null>(null);
@@ -66,12 +81,30 @@ export function CameraHub() {
   const { toast } = useToast();
 
   const selectedPlant = plants.find((p) => p.id === selectedPlantId);
+  const identifyPreview =
+    identifyPhotos.find((p) => p.role === "whole")?.dataUrl ??
+    identifyPhotos[0]?.dataUrl ??
+    null;
 
   function resetResults() {
     setIdentifyResult(null);
     setDiagnoseResult(null);
     setTagResult(null);
     setProgressSaved(false);
+    setClientPhotoQuality(null);
+    setScanHistoryId(null);
+  }
+
+  async function handleIdentifyPhotosChange(photos: CapturedPhoto[]) {
+    setIdentifyPhotos(photos);
+    resetResults();
+    if (photos.length > 0) {
+      const primary = photos.find((p) => p.role === "whole") ?? photos[0];
+      const quality = await assessPhotoQualityClient(primary.dataUrl);
+      setClientPhotoQuality(quality);
+    } else {
+      setClientPhotoQuality(null);
+    }
   }
 
   async function handleFile(f: File) {
@@ -87,15 +120,40 @@ export function CameraHub() {
     resetResults();
   }
 
+  function clearIdentifyPhotos() {
+    setIdentifyPhotos([]);
+    resetResults();
+  }
+
   async function runIdentify() {
-    if (!preview) return;
+    if (identifyPhotos.length === 0) return;
     setLoading(true);
     setIdentifyResult(null);
     try {
-      const res = await requestIdentifyPlant({ imageDataUrl: preview });
+      const { imageDataUrls, photoRoles } = photosToRequest(identifyPhotos);
+      const res = await requestIdentifyPlant({ imageDataUrls, photoRoles });
       if (!res.ok) throw new Error(res.error);
+
+      const entry = saveScanToHistory({
+        photoUrl: identifyPreview ?? imageDataUrls[0],
+        photoUrls: imageDataUrls,
+        result: res.data,
+        friendlyHeadline: res.data.friendly_headline,
+      });
+      setScanHistoryId(entry.id);
       setIdentifyResult(res.data);
-      toast(res.data.source === "ai" ? "Plant identified" : "Demo identification ready");
+
+      const badPhoto =
+        res.data.photo_quality?.acceptable === false ||
+        clientPhotoQuality?.acceptable === false;
+
+      if (badPhoto) {
+        toast("Photo quality is low — try a clearer shot");
+      } else if (res.data.not_fully_confident || res.data.providers_disagree) {
+        toast("Not fully confident — another photo may help");
+      } else {
+        toast(res.data.source === "ai" ? "Plant identified" : "Demo identification ready");
+      }
     } catch (e) {
       toast(friendlyAiError(e instanceof Error ? e.message : undefined, "identification"));
     } finally {
@@ -194,48 +252,112 @@ export function CameraHub() {
   };
 
   const loadingLabels: Record<TabId, string> = {
-    identify: "Identifying plant…",
+    identify: "Analyzing plant…",
     diagnose: "Checking plant health…",
     tag: "Reading tag…",
     progress: "Saving photo…",
   };
 
-  const emptyHints: Record<TabId, string> = {
-    identify: "Snap the whole plant — leaves, stems, and pot help ID",
-    diagnose: "Focus on the problem area — yellow leaves, spots, or pests",
-    tag: "Photograph the nursery tag straight-on",
-    progress: "Same angle as last time for best comparison",
-  };
+  const isIdentify = tab === "identify";
+  const showClientBadPhoto =
+    isIdentify &&
+    !identifyResult &&
+    clientPhotoQuality &&
+    !clientPhotoQuality.acceptable &&
+    identifyPhotos.length > 0;
 
   return (
-    <div className="space-y-5 max-w-lg mx-auto pb-4">
-      <div className="text-center space-y-2 pt-1">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-green-600 text-white shadow-xl shadow-green-600/30">
-          <Sparkles className="w-8 h-8" />
+    <div className="space-y-4 max-w-lg mx-auto pb-6">
+      {isIdentify ? (
+        <>
+          <MultiPhotoCapture
+            photos={identifyPhotos}
+            onChange={handleIdentifyPhotosChange}
+            loading={loading}
+            loadingLabel={loadingLabels.identify}
+          />
+          {showClientBadPhoto && <BadPhotoGuidance quality={clientPhotoQuality} />}
+        </>
+      ) : (
+        <LegacySingleCapture
+          preview={preview}
+          loading={loading}
+          loadingLabel={loadingLabels[tab]}
+          emptyHint={
+            tab === "diagnose"
+              ? "Focus on the problem area — yellow leaves, spots, or pests"
+              : tab === "tag"
+                ? "Photograph the nursery tag straight-on"
+                : "Same angle as last time for best comparison"
+          }
+          onFile={handleFile}
+          onClear={clearCapture}
+        />
+      )}
+
+      {loading && isIdentify && (
+        <div className="flex items-center justify-center gap-2 text-sm text-green-700 py-1">
+          <div className="flex gap-1">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="w-2 h-2 rounded-full bg-green-500 animate-bounce"
+                style={{ animationDelay: `${i * 150}ms` }}
+              />
+            ))}
+          </div>
+          Matching against plant databases…
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Plant Camera</h1>
-        <p className="text-sm text-gray-500">Identify, diagnose, scan tags, track growth</p>
+      )}
+
+      {isIdentify && !identifyResult && (
+        <Button
+          onClick={runIdentify}
+          disabled={identifyPhotos.length === 0 || loading}
+          loading={loading}
+          size="lg"
+          className="w-full h-14 text-base touch-manipulation shadow-lg shadow-green-600/20"
+        >
+          <Camera className="w-5 h-5" />
+          Identify Plant
+          {identifyPhotos.length > 1 && (
+            <span className="text-green-200 text-sm ml-1">({identifyPhotos.length} photos)</span>
+          )}
+        </Button>
+      )}
+
+      <div>
+        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-2 px-1">
+          {isIdentify ? "Other camera tools" : "Camera mode"}
+        </p>
+        <div className="flex gap-1 p-1 bg-gray-100 rounded-2xl overflow-x-auto">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => {
+                setTab(t.id);
+                resetResults();
+              }}
+              className={cn(
+                "flex-1 min-w-[72px] flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[11px] font-medium touch-manipulation transition-colors",
+                tab === t.id ? "bg-white text-green-700 shadow-sm" : "text-gray-500"
+              )}
+            >
+              <t.icon className="w-4 h-4" />
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="flex gap-1 p-1 bg-gray-100 rounded-2xl overflow-x-auto">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => {
-              setTab(t.id);
-              resetResults();
-            }}
-            className={cn(
-              "flex-1 min-w-[72px] flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[11px] font-medium touch-manipulation transition-colors",
-              tab === t.id ? "bg-white text-green-700 shadow-sm" : "text-gray-500"
-            )}
-          >
-            <t.icon className="w-4 h-4" />
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {!isIdentify && (
+        <p className="text-sm text-gray-500 text-center px-2">
+          {tab === "diagnose" && "Snap a problem area for AI health diagnosis"}
+          {tab === "tag" && "Read nursery tags to prefill a new plant"}
+          {tab === "progress" && "Track growth with dated progress photos"}
+        </p>
+      )}
 
       {(tab === "diagnose" || tab === "progress") && plants.length > 0 && (
         <div>
@@ -245,7 +367,7 @@ export function CameraHub() {
           <select
             value={selectedPlantId}
             onChange={(e) => setSelectedPlantId(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm bg-white"
+            className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm bg-white touch-manipulation"
           >
             <option value="">{tab === "progress" ? "Select a plant…" : "No plant selected"}</option>
             {plants.map((p) => (
@@ -256,15 +378,6 @@ export function CameraHub() {
           </select>
         </div>
       )}
-
-      <CameraCapture
-        preview={preview}
-        loading={loading}
-        loadingLabel={loadingLabels[tab]}
-        onFile={handleFile}
-        onClear={clearCapture}
-        emptyHint={emptyHints[tab]}
-      />
 
       {tab === "progress" && preview && (
         <div className="grid grid-cols-2 gap-3">
@@ -284,79 +397,27 @@ export function CameraHub() {
         </div>
       )}
 
-      <Button
-        onClick={handlePrimaryAction}
-        disabled={!preview || loading || (tab === "progress" && !selectedPlantId)}
-        loading={loading}
-        size="lg"
-        className="w-full h-14 text-base touch-manipulation"
-      >
-        {actionLabels[tab]}
-      </Button>
+      {!isIdentify && (
+        <Button
+          onClick={handlePrimaryAction}
+          disabled={!preview || loading || (tab === "progress" && !selectedPlantId)}
+          loading={loading}
+          size="lg"
+          className="w-full h-14 text-base touch-manipulation"
+        >
+          {actionLabels[tab]}
+        </Button>
+      )}
 
-      {identifyResult && tab === "identify" && (
-        <Card padding="md" className="page-enter space-y-4">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">{identifyResult.common_name}</h2>
-              <p className="text-sm text-gray-500 italic">{identifyResult.scientific_name}</p>
-            </div>
-            <Badge variant={identifyResult.confidence === "high" ? "success" : "warning"}>
-              {identifyResult.confidence}
-            </Badge>
-          </div>
-          <p className="text-sm text-gray-700 leading-relaxed">{identifyResult.care_summary}</p>
-          {identifyResult.toxicity_warning && (
-            <p className="text-sm text-amber-800 bg-amber-50 rounded-xl px-3 py-2 flex gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-              {identifyResult.toxicity_warning}
-            </p>
-          )}
-          <div className="flex flex-col gap-2">
-            <Link
-              href={`/plants/new?name=${encodeURIComponent(identifyResult.common_name)}&species=${encodeURIComponent(identifyResult.scientific_name)}&locationType=${identifyResult.suggested_location === "indoor" ? "indoor" : "outdoor"}&sunExposure=${identifyResult.suggested_sun}${identifyResult.database_species_id ? `&speciesId=${identifyResult.database_species_id}` : ""}`}
-            >
-              <Button className="w-full">
-                <Plus className="w-4 h-4" />
-                Add to My Garden
-              </Button>
-            </Link>
-            <Link
-              href={
-                identifyResult.database_species_id
-                  ? `/database/plants/${identifyResult.database_species_id}`
-                  : `/database`
-              }
-            >
-              <Button variant="secondary" className="w-full">
-                View in Database
-              </Button>
-            </Link>
-          </div>
-          <p className="text-xs text-gray-400 text-center">
-            {identifyResult.source === "ai" ? "Powered by AI Vision" : "Demo result — add OPENAI_API_KEY for live ID"}
-          </p>
-          {identifyResult.plantnet_second_opinion &&
-            identifyResult.plantnet_second_opinion.length > 0 && (
-              <div className="pt-3 border-t border-gray-100 space-y-2">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Pl@ntNet second opinion
-                </p>
-                {identifyResult.plantnet_second_opinion.slice(0, 3).map((s) => (
-                  <div
-                    key={s.species}
-                    className="flex items-center justify-between text-sm text-gray-700"
-                  >
-                    <span>
-                      {s.commonNames[0] ?? s.species}
-                      <span className="block text-xs text-gray-400 italic">{s.species}</span>
-                    </span>
-                    <Badge variant="outline">{s.score}%</Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-        </Card>
+      {identifyResult && isIdentify && (
+        <IdentifyPlantResults
+          result={identifyResult}
+          preview={identifyPreview}
+          previews={identifyPhotos.map((p) => p.dataUrl)}
+          clientPhotoQuality={clientPhotoQuality}
+          scanHistoryId={scanHistoryId}
+          onRetake={clearIdentifyPhotos}
+        />
       )}
 
       {diagnoseResult && tab === "diagnose" && (
@@ -446,7 +507,49 @@ export function CameraHub() {
           )}
         </Card>
       )}
+
+      {isIdentify && (
+        <p className="text-center text-xs text-gray-400">
+          <Link href="/scanner/history" className="text-green-600 hover:underline">
+            View scan history →
+          </Link>
+        </p>
+      )}
+
+      {!isIdentify && (
+        <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-1">
+          <Sparkles className="w-3 h-3" />
+          Plant Camera · identify is the default tab
+        </p>
+      )}
     </div>
+  );
+}
+
+function LegacySingleCapture({
+  preview,
+  loading,
+  loadingLabel,
+  emptyHint,
+  onFile,
+  onClear,
+}: {
+  preview: string | null;
+  loading: boolean;
+  loadingLabel: string;
+  emptyHint: string;
+  onFile: (f: File) => void;
+  onClear: () => void;
+}) {
+  return (
+    <CameraCapture
+      preview={preview}
+      loading={loading}
+      loadingLabel={loadingLabel}
+      onFile={onFile}
+      onClear={onClear}
+      emptyHint={emptyHint}
+    />
   );
 }
 

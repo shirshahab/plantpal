@@ -4,6 +4,8 @@
  */
 
 import type { PlantSpecies, PlantSpeciesType } from "@/lib/knowledge/types";
+import { enrichPlantSpecies } from "@/lib/knowledge/defaults";
+import { getPerenualKey, isPerenualKeyConfigured } from "@/lib/integrations/env-config";
 
 const BASE = "https://perenual.com/api/v2";
 
@@ -30,10 +32,6 @@ export interface PerenualCareGuide {
   sunlight?: string;
   pruning?: string;
   soil?: string[];
-}
-
-function hasPerenualKey(): boolean {
-  return Boolean(process.env.PERENUAL_API_KEY?.trim());
 }
 
 function mapCycleToType(cycle?: string, indoor?: number): PlantSpeciesType {
@@ -73,7 +71,7 @@ export function parsePerenualId(speciesId: string): number | null {
 }
 
 function mapSummaryToSpecies(item: PerenualSpeciesSummary): PlantSpecies {
-  return {
+  return enrichPlantSpecies({
     id: perenualExternalId(item.id),
     common_name: item.common_name || "Unknown plant",
     scientific_name: item.scientific_name?.[0] ?? "",
@@ -95,14 +93,14 @@ function mapSummaryToSpecies(item: PerenualSpeciesSummary): PlantSpecies {
       item.default_image?.thumbnail ??
       "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
     source: "perenual",
-  };
+  });
 }
 
 export async function searchPlants(
   query: string,
   page = 1
 ): Promise<PerenualSpeciesSummary[]> {
-  const key = process.env.PERENUAL_API_KEY?.trim();
+  const key = getPerenualKey();
   if (!key || !query.trim()) return [];
 
   try {
@@ -129,7 +127,7 @@ export async function searchPlants(
 export const searchPerenual = searchPlants;
 
 export async function getPlantDetails(id: number): Promise<PlantSpecies | null> {
-  const key = process.env.PERENUAL_API_KEY?.trim();
+  const key = getPerenualKey();
   if (!key) return null;
 
   try {
@@ -177,7 +175,7 @@ export async function getPlantDetails(id: number): Promise<PlantSpecies | null> 
 }
 
 export async function getPlantCareGuide(id: number): Promise<PerenualCareGuide | null> {
-  const key = process.env.PERENUAL_API_KEY?.trim();
+  const key = getPerenualKey();
   if (!key) return null;
 
   try {
@@ -212,5 +210,5 @@ export function mapPerenualResults(items: PerenualSpeciesSummary[]): PlantSpecie
 }
 
 export function isPerenualEnabled(): boolean {
-  return hasPerenualKey();
+  return isPerenualKeyConfigured();
 }

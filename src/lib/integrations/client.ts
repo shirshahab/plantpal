@@ -42,7 +42,7 @@ export async function searchPlantsApi(
     ...s,
     resultSource: "plantpal" as const,
   }));
-  return { results: local, sources: { plantpal: local.length, perenual: 0 } };
+  return { results: local, sources: { plantpal: local.length, perenual: 0, ai: 0, mock: 0 } };
 }
 
 export async function importPlantSpecies(id: string): Promise<PlantSpecies | null> {
@@ -59,12 +59,28 @@ export async function searchPricesApi(input: {
   return json.ok && json.data ? json.data : null;
 }
 
-export async function fetchIntegrationsHealth(): Promise<IntegrationHealthCard[]> {
+export interface IntegrationsHealthResponse {
+  cards: IntegrationHealthCard[];
+  summary?: {
+    total: number;
+    configured: number;
+    live: number;
+    fallback: number;
+    checkedAt: string;
+  };
+}
+
+export async function fetchIntegrationsHealth(): Promise<IntegrationsHealthResponse> {
   try {
-    const res = await fetch("/api/integrations/health");
-    const json = (await res.json()) as ApiResult<IntegrationHealthCard[]>;
-    return json.ok && json.data ? json.data : [];
+    const res = await fetch("/api/integrations/health", { cache: "no-store" });
+    const json = (await res.json()) as ApiResult<IntegrationHealthCard[]> & {
+      summary?: IntegrationsHealthResponse["summary"];
+    };
+    return {
+      cards: json.ok && json.data ? json.data : [],
+      summary: json.summary,
+    };
   } catch {
-    return [];
+    return { cards: [] };
   }
 }

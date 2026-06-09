@@ -20,6 +20,7 @@ const PROTECTED_PREFIXES = [
   "/property",
   "/collection",
   "/community",
+  "/upgrade",
   "/ar",
   "/price-checker",
 ];

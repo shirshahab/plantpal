@@ -2,7 +2,12 @@ import type {
   PlantSpecies,
   PlantSpeciesDetail,
   SpeciesSearchFilters,
+  SoilType,
+  Fertilizer,
+  Pest,
+  ReferenceSearchFilters,
 } from "./types";
+import { enrichPlantSpecies } from "./defaults";
 import {
   PLANT_SPECIES,
   SOIL_TYPES,
@@ -75,11 +80,66 @@ export function getPlantSpeciesDetail(id: string): PlantSpeciesDetail | null {
     return { ...disease, risk_level: r.risk_level, notes: r.notes };
   });
 
-  return { ...species, care_guide, soils, fertilizers, pests, diseases };
+  return { ...enrichPlantSpecies(species), care_guide, soils, fertilizers, pests, diseases };
 }
 
 export function getSpeciesCount(): number {
   return PLANT_SPECIES.length;
+}
+
+function matchesNameQuery(name: string, description: string, query: string): boolean {
+  const q = query.toLowerCase().trim();
+  if (!q) return true;
+  return (
+    name.toLowerCase().includes(q) ||
+    description.toLowerCase().includes(q)
+  );
+}
+
+export function searchSoilTypes(filters: ReferenceSearchFilters = {}): SoilType[] {
+  return SOIL_TYPES.filter((s) =>
+    matchesNameQuery(s.name, `${s.description} ${s.best_for}`, filters.query ?? "")
+  ).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function getSoilById(id: string): SoilType | undefined {
+  return SOIL_TYPES.find((s) => s.id === id);
+}
+
+export function searchFertilizers(filters: ReferenceSearchFilters = {}): Fertilizer[] {
+  return FERTILIZERS.filter((f) =>
+    matchesNameQuery(f.name, `${f.description} ${f.best_for} ${f.type}`, filters.query ?? "")
+  ).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function getFertilizerById(id: string): Fertilizer | undefined {
+  return FERTILIZERS.find((f) => f.id === id);
+}
+
+export function searchPests(filters: ReferenceSearchFilters = {}): Pest[] {
+  return PESTS.filter((p) =>
+    matchesNameQuery(
+      p.name,
+      `${p.description} ${p.affected_plants} ${p.signs}`,
+      filters.query ?? ""
+    )
+  ).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function getPestById(id: string): Pest | undefined {
+  return PESTS.find((p) => p.id === id);
+}
+
+export function getSoilCount(): number {
+  return SOIL_TYPES.length;
+}
+
+export function getFertilizerCount(): number {
+  return FERTILIZERS.length;
+}
+
+export function getPestCount(): number {
+  return PESTS.length;
 }
 
 export { PLANT_SPECIES, SOIL_TYPES, FERTILIZERS, PESTS, DISEASES };

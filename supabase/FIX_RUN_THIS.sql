@@ -709,11 +709,19 @@ CREATE TABLE IF NOT EXISTS plant_genomes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   plant_id UUID NOT NULL UNIQUE REFERENCES plants(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  age_months INTEGER,
+  growth_trend TEXT,
+  health_trend TEXT,
+  recovery_score INTEGER,
+  risk_score INTEGER,
+  fruiting_stage TEXT,
+  blooming_stage TEXT,
+  dormancy_stage TEXT,
+  next_milestone TEXT,
+  forecast JSONB DEFAULT '{}'::jsonb,
   telemetry JSONB NOT NULL DEFAULT '[]'::jsonb,
   computed_state JSONB,
   intelligence_score INTEGER,
-  risk_score INTEGER,
-  recovery_score INTEGER,
   last_computed_at TIMESTAMPTZ,
   version INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
@@ -757,9 +765,238 @@ CREATE POLICY "Anyone can join waitlist" ON waitlist_signups
 
 -- No SELECT/UPDATE/DELETE policies for anon — only service role can read signups.
 
+-- ─── Beta feedback ───────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS beta_feedback (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  email TEXT,
+  route TEXT,
+  feedback_type TEXT DEFAULT 'beta',
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_beta_feedback_created_at ON beta_feedback(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_beta_feedback_user_id ON beta_feedback(user_id);
+
+ALTER TABLE beta_feedback ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can submit beta feedback" ON beta_feedback;
+CREATE POLICY "Anyone can submit beta feedback" ON beta_feedback
+  FOR INSERT WITH CHECK (true);
+
+-- ─── Landscape projects (Phase 21) ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS landscape_projects (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  zip_code TEXT NOT NULL,
+  space_type TEXT NOT NULL CHECK (
+    space_type IN (
+      'front_yard', 'back_yard', 'side_yard', 'patio', 'balcony', 'slope'
+    )
+  ),
+  style_goal TEXT NOT NULL CHECK (
+    style_goal IN (
+      'fruit_garden', 'low_maintenance', 'native_garden', 'tropical',
+      'mediterranean', 'japanese_garden', 'kids_family', 'pollinator',
+      'privacy', 'outdoor_living'
+    )
+  ),
+  budget_range TEXT NOT NULL CHECK (
+    budget_range IN (
+      'under_500', '500_2500', '2500_8000', '8000_plus', 'flexible'
+    )
+  ),
+  photos JSONB NOT NULL DEFAULT '[]'::jsonb,
+  design_result JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_landscape_projects_user_id
+  ON landscape_projects(user_id);
+CREATE INDEX IF NOT EXISTS idx_landscape_projects_updated_at
+  ON landscape_projects(updated_at DESC);
+
+ALTER TABLE landscape_projects ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users read own landscape projects" ON landscape_projects;
+CREATE POLICY "Users read own landscape projects" ON landscape_projects
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users insert own landscape projects" ON landscape_projects;
+CREATE POLICY "Users insert own landscape projects" ON landscape_projects
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users update own landscape projects" ON landscape_projects;
+CREATE POLICY "Users update own landscape projects" ON landscape_projects
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users delete own landscape projects" ON landscape_projects;
+CREATE POLICY "Users delete own landscape projects" ON landscape_projects
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- ─── Concierge plans (Phase 23) ──────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS concierge_plans (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  plant_id UUID NOT NULL REFERENCES plants(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  issue TEXT NOT NULL,
+  severity TEXT NOT NULL CHECK (severity IN ('mild', 'moderate', 'serious')),
+  plan JSONB NOT NULL DEFAULT '{}'::jsonb,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'archived')),
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_concierge_plans_user_id ON concierge_plans(user_id);
+CREATE INDEX IF NOT EXISTS idx_concierge_plans_plant_id ON concierge_plans(plant_id);
+CREATE INDEX IF NOT EXISTS idx_concierge_plans_status ON concierge_plans(status);
+
+ALTER TABLE concierge_plans ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users manage own concierge plans" ON concierge_plans;
+CREATE POLICY "Users manage own concierge plans" ON concierge_plans
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+DROP TRIGGER IF EXISTS concierge_plans_updated_at ON concierge_plans;
+CREATE TRIGGER concierge_plans_updated_at
+  BEFORE UPDATE ON concierge_plans
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+-- ─── Community (Phase 24) — future-ready posts & reactions ───────────────────
+CREATE TABLE IF NOT EXISTS community_posts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL DEFAULT '',
+  post_type TEXT NOT NULL CHECK (
+    post_type IN ('tip', 'question', 'story', 'transformation', 'garden_showcase')
+  ),
+  image_url TEXT,
+  plant_id UUID REFERENCES plants(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS community_reactions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  post_id UUID NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+  reaction_type TEXT NOT NULL CHECK (
+    reaction_type IN ('cheer', 'helpful', 'love', 'wow')
+  ),
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  UNIQUE (user_id, post_id, reaction_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_community_posts_user_id ON community_posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_community_posts_post_type ON community_posts(post_type);
+CREATE INDEX IF NOT EXISTS idx_community_posts_created_at ON community_posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_reactions_post_id ON community_reactions(post_id);
+
+ALTER TABLE community_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE community_reactions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read community posts" ON community_posts;
+CREATE POLICY "Anyone can read community posts" ON community_posts
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users insert own community posts" ON community_posts;
+CREATE POLICY "Users insert own community posts" ON community_posts
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users update own community posts" ON community_posts;
+CREATE POLICY "Users update own community posts" ON community_posts
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users delete own community posts" ON community_posts;
+CREATE POLICY "Users delete own community posts" ON community_posts
+  FOR DELETE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Anyone can read community reactions" ON community_reactions;
+CREATE POLICY "Anyone can read community reactions" ON community_reactions
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users manage own community reactions" ON community_reactions;
+CREATE POLICY "Users manage own community reactions" ON community_reactions
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+DROP TRIGGER IF EXISTS community_posts_updated_at ON community_posts;
+CREATE TRIGGER community_posts_updated_at
+  BEFORE UPDATE ON community_posts
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+-- ─── Product recommendations (Phase 25) — marketplace / affiliate-ready ───────
+CREATE TABLE IF NOT EXISTS product_recommendations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  category TEXT NOT NULL CHECK (
+    category IN (
+      'plants', 'soil', 'fertilizer', 'pots', 'irrigation',
+      'pruning_tools', 'pest_control', 'bonsai_supplies'
+    )
+  ),
+  description TEXT NOT NULL DEFAULT '',
+  best_for TEXT NOT NULL DEFAULT '',
+  price_range TEXT NOT NULL DEFAULT '',
+  affiliate_url TEXT,
+  image_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_product_recommendations_category
+  ON product_recommendations(category);
+
+ALTER TABLE product_recommendations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read product recommendations" ON product_recommendations;
+CREATE POLICY "Anyone can read product recommendations" ON product_recommendations
+  FOR SELECT USING (true);
+
+-- ─── User subscriptions (Phase 26) — billing-ready, mock status first ────────
+CREATE TABLE IF NOT EXISTS user_subscriptions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  tier TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'plus', 'family')),
+  billing_cycle TEXT NOT NULL DEFAULT 'monthly' CHECK (billing_cycle IN ('monthly', 'annual')),
+  status TEXT NOT NULL DEFAULT 'mock' CHECK (
+    status IN ('active', 'trialing', 'canceled', 'expired', 'mock')
+  ),
+  trial_ends_at TIMESTAMPTZ,
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  UNIQUE (user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id ON user_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_tier ON user_subscriptions(tier);
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_status ON user_subscriptions(status);
+
+ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users read own subscription" ON user_subscriptions;
+CREATE POLICY "Users read own subscription" ON user_subscriptions
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users update own subscription" ON user_subscriptions;
+CREATE POLICY "Users update own subscription" ON user_subscriptions
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users insert own subscription" ON user_subscriptions;
+CREATE POLICY "Users insert own subscription" ON user_subscriptions
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP TRIGGER IF EXISTS user_subscriptions_updated_at ON user_subscriptions;
+CREATE TRIGGER user_subscriptions_updated_at
+  BEFORE UPDATE ON user_subscriptions
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
 -- ─── Reload PostgREST schema cache ──────────────────────────────────────────
 NOTIFY pgrst, 'reload schema';
-
--- Done! Verify with:
 -- SELECT table_name FROM information_schema.tables
 -- WHERE table_schema = 'public' AND table_name = 'plants';

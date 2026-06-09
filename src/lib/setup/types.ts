@@ -12,5 +12,11 @@ export interface SetupCheckReport {
   overall: SetupStatus;
   mode: "mock" | "supabase";
   checks: SetupCheckItem[];
+  integrations?: import("@/lib/types/integrations").IntegrationHealthCard[];
+  integrationSummary?: {
+    live: number;
+    configured: number;
+    fallback: number;
+  };
   checkedAt: string;
 }

@@ -12,8 +12,18 @@ export type IntegrationStatus =
 export interface IntegrationHealthCard {
   id: string;
   name: string;
+  /** Env var name(s) — never includes secret values */
+  envVar?: string;
   status: IntegrationStatus;
   message: string;
+  configured: boolean;
+  /** null when key not configured */
+  reachable: boolean | null;
+  /** null when key not configured */
+  authOk: boolean | null;
+  usingLive: boolean;
+  fallbackActive: boolean;
+  checkedAt?: string;
 }
 
 export interface ZipProfile {
@@ -44,7 +54,7 @@ export interface PlantSearchHit extends PlantSpecies {
 
 export interface PlantSearchResponse {
   results: PlantSearchHit[];
-  sources: { plantpal: number; perenual: number };
+  sources: { plantpal: number; perenual: number; ai: number; mock: number };
 }
 
 export interface PlantNetSuggestion {

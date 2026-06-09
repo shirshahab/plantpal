@@ -5,64 +5,99 @@ import {
   parsePerenualId,
   perenualExternalId,
 } from "@/lib/integrations/perenual";
+import { recordDataSource, recordDataSourceError } from "@/lib/data-sources/runtime";
 import type { PlantSpecies } from "@/lib/knowledge/types";
 import { getPlantSpeciesById } from "@/lib/knowledge/mock-store";
 
-/** Persist a Perenual species into plant_species (or return existing mock id). */
+function normalizeScientific(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+/** Persist a Perenual species into plant_species (dedupe by scientific_name). */
 export async function importPerenualSpecies(perenualId: number): Promise<PlantSpecies | null> {
   const species = await getPlantDetails(perenualId);
-  if (!species) return null;
+  if (!species) {
+    recordDataSourceError("perenual", "Could not fetch plant details");
+    return null;
+  }
 
-  const id = perenualExternalId(perenualId);
+  const externalId = perenualExternalId(perenualId);
+  const normalized = {
+    common_name: species.common_name.trim(),
+    scientific_name: species.scientific_name.trim(),
+    family: species.family?.trim() || "Unknown",
+    type: species.type,
+    description:
+      species.description?.trim() ||
+      `${species.common_name} care profile from Perenual.`,
+    sunlight: species.sunlight,
+    watering: species.watering,
+    soil_preference: species.soil_preference,
+    hardiness_zone_min: species.hardiness_zone_min,
+    hardiness_zone_max: species.hardiness_zone_max,
+    mature_height: species.mature_height,
+    mature_width: species.mature_width,
+    growth_rate: species.growth_rate,
+    toxicity: species.toxicity,
+    maintenance_level: species.maintenance_level,
+    image_url: species.image_url,
+    source: "perenual" as const,
+  };
 
   if (!isSupabaseConfigured()) {
-    return { ...species, id, source: "perenual" };
+    recordDataSource("perenual", "real_api");
+    return { ...species, ...normalized, id: externalId };
   }
 
   try {
     const supabase = await createClient();
-    const { data: existing } = await supabase
+
+    if (normalized.scientific_name) {
+      const { data: byScientific } = await supabase
+        .from("plant_species")
+        .select("*")
+        .ilike("scientific_name", normalized.scientific_name)
+        .maybeSingle();
+
+      if (byScientific) {
+        recordDataSource("supabase", "supabase");
+        return byScientific as PlantSpecies;
+      }
+    }
+
+    const { data: byCommon } = await supabase
       .from("plant_species")
       .select("*")
-      .eq("id", id)
+      .ilike("common_name", normalized.common_name)
+      .eq("source", "perenual")
       .maybeSingle();
 
-    if (existing) return existing as PlantSpecies;
+    if (byCommon) {
+      recordDataSource("supabase", "supabase");
+      return byCommon as PlantSpecies;
+    }
 
     const { data, error } = await supabase
       .from("plant_species")
-      .insert({
-        id,
-        common_name: species.common_name,
-        scientific_name: species.scientific_name,
-        family: species.family || "Unknown",
-        type: species.type,
-        description: species.description || `${species.common_name} care profile from Perenual.`,
-        sunlight: species.sunlight,
-        watering: species.watering,
-        soil_preference: species.soil_preference,
-        hardiness_zone_min: species.hardiness_zone_min,
-        hardiness_zone_max: species.hardiness_zone_max,
-        mature_height: species.mature_height,
-        mature_width: species.mature_width,
-        growth_rate: species.growth_rate,
-        toxicity: species.toxicity,
-        maintenance_level: species.maintenance_level,
-        image_url: species.image_url,
-        source: "perenual",
-      })
+      .insert(normalized)
       .select("*")
       .single();
 
     if (error) {
       console.error("[import-species] Supabase insert failed:", error.message);
-      return { ...species, id, source: "perenual" };
+      recordDataSourceError("supabase", error.message);
+      recordDataSource("perenual", "real_api", { fallback: true });
+      return { ...species, ...normalized, id: externalId };
     }
 
+    recordDataSource("supabase", "supabase");
+    recordDataSource("perenual", "real_api");
     return data as PlantSpecies;
   } catch (e) {
+    const msg = e instanceof Error ? e.message : "Import failed";
     console.error("[import-species] error:", e);
-    return { ...species, id, source: "perenual" };
+    recordDataSourceError("supabase", msg);
+    return { ...species, ...normalized, id: externalId };
   }
 }
 

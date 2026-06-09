@@ -89,6 +89,7 @@ export interface PlantGenomeState {
   computedAt: string;
   version: number;
   ageDays: number;
+  ageMonths: number;
   ageLabel: string;
   lifeStage: LifeStage;
   growthTrend: PlantGenomeTrend;
@@ -99,6 +100,12 @@ export interface PlantGenomeState {
   riskScore: number;
   recoveryScore: number;
   intelligenceScore: number;
+  wateringConsistency: ConsistencyMetric;
+  fertilizerConsistency: ConsistencyMetric;
+  photoProgress: ConsistencyMetric;
+  missedTasksCount: number;
+  primaryGoalName: string | null;
+  nextMilestone: string | null;
   forecast30: ForecastItem[];
   forecast90: ForecastItem[];
   forecastSeason: ForecastItem[];
@@ -107,11 +114,18 @@ export interface PlantGenomeState {
     photoCount: number;
     growthMeasurements: number;
     tasksCompleted: number;
+    tasksMissed: number;
     healthScans: number;
     lastEvolvedAt: string | null;
   };
   speciesBaseline: SpeciesGenomeBaseline;
   source: GenomeComputeSource;
+}
+
+export interface ConsistencyMetric {
+  score: number;
+  label: string;
+  detail: string;
 }
 
 export interface GenomeEvent {
@@ -139,6 +153,7 @@ export interface GenomeComputeInput {
   zipCode: string;
   locationType: "indoor" | "outdoor";
   lastWateredAt: string | null;
+  lastFertilizedAt: string | null;
   lastHealthScanAt: string | null;
   lastGrowthPhotoAt: string | null;
   growthHeights: number[];
@@ -146,6 +161,11 @@ export interface GenomeComputeInput {
   photoCount: number;
   healthScanCount: number;
   tasksCompleted: number;
+  tasksMissed: number;
+  missedWaterTasks: number;
+  missedFertilizeTasks: number;
+  careLogs: import("@/lib/types/tasks").PlantCareLog[];
+  primaryGoalName: string | null;
   events: GenomeEvent[];
   tempF?: number;
   tempHighF?: number;

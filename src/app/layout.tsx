@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { OFFICIAL_APP_ICON } from "@/lib/brand/tokens";
 import "./globals.css";
 
 const inter = Inter({
@@ -23,14 +24,15 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "PlantPal",
-    startupImage: "/app-icon.png",
+    startupImage: OFFICIAL_APP_ICON,
   },
   formatDetection: {
     telephone: false,
   },
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/app-icon.png", type: "image/png" }],
-    apple: "/app-icon.png",
+    icon: OFFICIAL_APP_ICON,
+    shortcut: OFFICIAL_APP_ICON,
+    apple: OFFICIAL_APP_ICON,
   },
 };
 

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getPlantSpeciesDetail } from "@/lib/knowledge/queries";
 import { PlantSpeciesDetailView } from "@/components/knowledge/plant-species-detail";
+import { DatabaseNav } from "@/components/knowledge/database-nav";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -14,5 +15,10 @@ export default async function PlantSpeciesPage({ params }: PageProps) {
     notFound();
   }
 
-  return <PlantSpeciesDetailView plant={plant} />;
+  return (
+    <div className="space-y-6">
+      <DatabaseNav />
+      <PlantSpeciesDetailView plant={plant} />
+    </div>
+  );
 }

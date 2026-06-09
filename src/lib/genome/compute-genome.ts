@@ -10,6 +10,11 @@ import type {
 } from "./types";
 import { resolveSpeciesBaseline } from "./species-baseline";
 import { buildForecasts } from "./forecast";
+import {
+  computeFertilizerConsistency,
+  computePhotoProgress,
+  computeWateringConsistency,
+} from "./consistency";
 
 const GENOME_VERSION = 1;
 
@@ -80,6 +85,7 @@ function computeHealthTrend(
   healthScanCount: number,
   lastHealthScanAt: string | null,
   tasksCompleted: number,
+  tasksMissed: number,
   lastWateredAt: string | null
 ): PlantGenomeTrend {
   let score = healthStatus === "healthy" ? 75 : healthStatus === "needs_attention" ? 50 : 25;
@@ -102,6 +108,12 @@ function computeHealthTrend(
   if (tasksCompleted >= 3 && healthStatus !== "critical") {
     score += 8;
     if (direction === "stable" && healthStatus === "healthy") direction = "rising";
+  }
+
+  // Penalize missed care tasks in health trend
+  if (tasksMissed >= 2) {
+    score -= 10;
+    if (direction === "stable") direction = "declining";
   }
 
   if (healthStatus === "critical") direction = "declining";
@@ -203,6 +215,11 @@ function computeRiskScore(input: GenomeComputeInput, baseline: ReturnType<typeof
 
   if (input.healthScanCount === 0 && input.healthStatus !== "healthy") risk += 10;
   if (input.photoCount === 0) risk += 5;
+  if (input.tasksMissed >= 2) risk += 12;
+  if (input.missedWaterTasks >= 1) risk += 10;
+  if (input.weatherAlerts?.some((a) => a.severity === "warning" || a.severity === "alert")) {
+    risk += 8;
+  }
 
   return Math.max(0, Math.min(100, Math.round(risk)));
 }
@@ -268,6 +285,7 @@ export function computePlantGenome(
     input.healthScanCount,
     input.lastHealthScanAt,
     input.tasksCompleted,
+    input.tasksMissed,
     input.lastWateredAt
   );
 
@@ -281,11 +299,35 @@ export function computePlantGenome(
 
   const forecasts = buildForecasts(input, baseline, riskScore, now);
 
+  const plantLogs = input.careLogs.filter((l) => l.plantId === input.plantId);
+  const wateringConsistency = computeWateringConsistency(
+    input.lastWateredAt,
+    plantLogs,
+    input.missedWaterTasks,
+    now
+  );
+  const fertilizerConsistency = computeFertilizerConsistency(
+    input.lastFertilizedAt,
+    plantLogs,
+    input.missedFertilizeTasks,
+    now
+  );
+  const photoProgress = computePhotoProgress(
+    input.photoCount,
+    input.growthEntryCount,
+    input.lastGrowthPhotoAt,
+    input.healthScanCount,
+    now
+  );
+
+  const nextMilestone = forecasts.upcomingMilestones[0]?.title ?? forecasts.forecast30[0]?.title ?? null;
+
   return {
     plantId: input.plantId,
     computedAt: now.toISOString(),
     version: GENOME_VERSION,
     ageDays,
+    ageMonths: Math.max(0, Math.round(ageDays / 30)),
     ageLabel: formatAgeLabel(ageDays),
     lifeStage: inferLifeStage(ageDays, baseline),
     growthTrend,
@@ -296,11 +338,18 @@ export function computePlantGenome(
     riskScore,
     recoveryScore,
     intelligenceScore,
+    wateringConsistency,
+    fertilizerConsistency,
+    photoProgress,
+    missedTasksCount: input.tasksMissed,
+    primaryGoalName: input.primaryGoalName,
+    nextMilestone,
     ...forecasts,
     telemetrySummary: {
       photoCount: input.photoCount,
       growthMeasurements: input.growthEntryCount,
       tasksCompleted: input.tasksCompleted,
+      tasksMissed: input.tasksMissed,
       healthScans: input.healthScanCount,
       lastEvolvedAt: lastEvolvedAt(input.events),
     },

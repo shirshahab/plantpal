@@ -89,17 +89,21 @@ Code reference: `src/lib/brand/tokens.ts`
 
 ---
 
-## Logo — The Living P
+## Logo — The Living P (official asset)
 
-A modern, geometric letter **P** where the upper portion subtly transforms into a leaf.
+The official logo is a **PNG squircle** — white Living P (stem + leaf bowl + vein) on green.
 
-- Minimal, geometric, scalable
-- No cartoon plants, gradients, or generic leaf logos
-- Works as app icon, website logo, social avatar, print, monochrome
+**Always use the official file.** Do not recreate the mark in SVG or Lucide icons.
 
-Component: `src/components/brand/plantpal-logo.tsx`  
-App icon (PNG): `public/app-icon.png`  
-App icon (SVG): `public/icon.svg`
+| Asset | Path |
+|-------|------|
+| App icon / favicon source | `public/app-icon.png` |
+| Next.js favicon (auto) | `src/app/icon.png` |
+| Apple touch icon | `src/app/apple-icon.png` |
+| Code constant | `OFFICIAL_APP_ICON` in `src/lib/brand/tokens.ts` |
+| React component | `PlantPalIconTile` / `PlantPalLogo` in `src/components/brand/plantpal-logo.tsx` |
+
+Minimal, geometric, scalable. No cartoon plants, gradients, or generic leaf substitutes.
 
 ---
 

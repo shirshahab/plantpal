@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { isMockMode } from "@/lib/supabase/config";
+import { PlantPalLogo } from "@/components/brand/plantpal-logo";
+import { BRAND } from "@/lib/brand/tokens";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -63,15 +64,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50/30 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-brand-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-green-600 flex items-center justify-center shadow-lg shadow-green-600/20">
-              <Leaf className="w-6 h-6 text-white" />
-            </div>
+          <Link href="/" className="inline-flex flex-col items-center gap-2 mb-6">
+            <PlantPalLogo size="lg" />
+            <span className="text-sm font-medium text-brand-primary font-heading">{BRAND.tagline}</span>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="font-heading text-3xl font-bold text-brand-text">
             {mode === "login" ? "Welcome back" : "Create account"}
           </h1>
           <p className="text-gray-500 mt-2">

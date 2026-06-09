@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/sidebar";
 import { BottomNav } from "@/components/mobile/bottom-nav";
 import { MobileHeader } from "@/components/mobile/mobile-header";
 import { MockModeBadge } from "@/components/mock-mode-badge";
+import { FloatingFeedbackButton } from "@/components/feedback/feedback-panel";
 import { PwaRegister } from "@/components/pwa-register";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -23,6 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
       <BottomNav />
       <MockModeBadge />
+      <FloatingFeedbackButton />
     </div>
   );
 }

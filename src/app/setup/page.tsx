@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import {
-  Leaf,
   CheckCircle2,
   AlertTriangle,
   XCircle,
@@ -15,6 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { SetupCheckItem, SetupCheckReport, SetupStatus } from "@/lib/setup/types";
 import { cn } from "@/lib/utils";
+import { PlantPalLogo } from "@/components/brand/plantpal-logo";
+import {
+  IntegrationHealthCardView,
+  IntegrationHealthSummary,
+} from "@/components/integrations/integration-health-card";
 
 const STATUS_ICON: Record<SetupStatus, React.ElementType> = {
   ok: CheckCircle2,
@@ -93,8 +97,8 @@ export default function SetupPage() {
             Back to app
           </Link>
           <div className="flex items-center gap-2">
-            <Leaf className="w-4 h-4 text-green-600" />
-            <span className="font-semibold text-gray-900">Setup</span>
+            <PlantPalLogo showWordmark={false} size="sm" />
+            <span className="font-heading font-semibold text-brand-text">Setup</span>
           </div>
         </div>
       </header>
@@ -112,8 +116,11 @@ export default function SetupPage() {
             <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
             {loading ? "Checking…" : report ? "Re-run checks" : "Run checks"}
           </Button>
-          <Link href="/debug/supabase">
-            <Button variant="outline" size="sm">Advanced debug</Button>
+          <Link href="/debug/data-sources">
+            <Button variant="outline" size="sm">Data sources debug</Button>
+          </Link>
+          <Link href="/settings/integrations">
+            <Button variant="outline" size="sm">Integrations</Button>
           </Link>
           <Link href="/qa">
             <Button variant="outline" size="sm">QA checklist</Button>
@@ -155,6 +162,35 @@ export default function SetupPage() {
                 <CheckRow key={check.id} check={check} />
               ))}
             </div>
+
+            {report.integrations && report.integrations.length > 0 && (
+              <section className="space-y-3 pt-2">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">API integrations</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Live probes — configured, reachable, live data vs fallback.
+                  </p>
+                </div>
+                {report.integrationSummary && (
+                  <IntegrationHealthSummary
+                    total={report.integrations.length}
+                    configured={report.integrationSummary.configured}
+                    live={report.integrationSummary.live}
+                    fallback={report.integrationSummary.fallback}
+                  />
+                )}
+                <div className="grid gap-3">
+                  {report.integrations.map((item) => (
+                    <IntegrationHealthCardView key={item.id} item={item} />
+                  ))}
+                </div>
+                <Link href="/settings/integrations">
+                  <Button variant="outline" size="sm" className="w-full">
+                    Open integrations settings
+                  </Button>
+                </Link>
+              </section>
+            )}
           </>
         )}
 

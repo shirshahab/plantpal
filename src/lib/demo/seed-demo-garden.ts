@@ -307,3 +307,24 @@ export function seedDemoGarden(zipCode = "91107"): boolean {
 export function exitDemoMode(): void {
   saveUserProfile({ demoMode: false });
 }
+
+/** Clear demo garden data and turn off demo mode. */
+export function exitDemoGarden(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("plantpal-plants", "[]");
+    localStorage.removeItem("plantpal-growth");
+    localStorage.removeItem("plantpal-genomes");
+    localStorage.removeItem("plantpal-photo-history");
+    localStorage.removeItem("plantpal-user-plant-goals");
+    localStorage.removeItem("plantpal-plant-missions");
+    localStorage.removeItem("plantpal-plant-milestones");
+    localStorage.removeItem("plantpal-ai-care-plans");
+    localStorage.removeItem("plantpal-ai-goal-plans");
+    localStorage.removeItem("plantpal-task-states");
+    saveUserProfile({ demoMode: false });
+  } catch (e) {
+    console.error("[demo] exit failed:", e);
+    exitDemoMode();
+  }
+}

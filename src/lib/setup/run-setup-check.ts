@@ -12,6 +12,7 @@ import {
 } from "@/lib/supabase/config";
 import { probeTable } from "@/lib/supabase/diagnostics";
 import type { SetupCheckItem, SetupCheckReport, SetupStatus } from "./types";
+import { getIntegrationsHealth } from "@/lib/integrations/health";
 
 const REQUIRED_TABLES = [
   "profiles",
@@ -97,8 +98,17 @@ export async function runSetupCheck(
       )
     );
     if (error) {
+      const sessionMissing = /session missing/i.test(error.message);
       checks.push(
-        item("auth-error", "Auth session", "fail", error.message, "Clear cookies and sign in again.")
+        item(
+          "auth-error",
+          "Auth session",
+          sessionMissing ? "warn" : "fail",
+          error.message,
+          sessionMissing
+            ? "Sign in at /login to test cloud save — not required for API integrations."
+            : "Clear cookies and sign in again."
+        )
       );
     }
   } else {
@@ -235,10 +245,50 @@ export async function runSetupCheck(
     )
   );
 
+  const integrations = await getIntegrationsHealth();
+  const liveCount = integrations.filter((i) => i.usingLive).length;
+  const fallbackCount = integrations.filter((i) => i.fallbackActive).length;
+
+  if (liveCount === integrations.length) {
+    checks.push(
+      item(
+        "integrations-live",
+        "All integrations live",
+        "ok",
+        `${liveCount}/${integrations.length} services using live data.`
+      )
+    );
+  } else if (liveCount > 0) {
+    checks.push(
+      item(
+        "integrations-live",
+        "Integration status",
+        "warn",
+        `${liveCount}/${integrations.length} live — ${fallbackCount} using fallback. See /settings/integrations.`
+      )
+    );
+  } else {
+    checks.push(
+      item(
+        "integrations-live",
+        "Integration status",
+        "warn",
+        "No live APIs verified — mock fallbacks active. Add keys to .env.local and restart dev server.",
+        "Open /settings/integrations after restarting npm run dev."
+      )
+    );
+  }
+
   return {
     overall: worstStatus(checks),
     mode: mock ? "mock" : "supabase",
     checks,
+    integrations,
+    integrationSummary: {
+      live: liveCount,
+      configured: integrations.filter((i) => i.configured).length,
+      fallback: fallbackCount,
+    },
     checkedAt: new Date().toISOString(),
   };
 }

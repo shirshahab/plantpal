@@ -11,6 +11,7 @@ import {
   XCircle,
   GraduationCap,
   Sparkles,
+  ShoppingBag,
 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
@@ -20,9 +21,12 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { checkPlantPrice } from "@/lib/mock/price-checker";
 import { requestPriceCheck } from "@/lib/ai/client";
+import { searchPricesApi } from "@/lib/integrations/client";
 import { useAiResults } from "@/lib/store/ai-provider";
 import { AiPriceCheckDisplay } from "@/components/ai/ai-price-check-display";
+import { DataSourceBadge, dataSourceFromPrice } from "@/components/data-source/data-source-badge";
 import type { AIPriceCheckResponse } from "@/lib/types/ai";
+import type { PriceSearchResponse } from "@/lib/types/integrations";
 import type {
   NurserySize,
   StoreType,
@@ -33,6 +37,9 @@ import type {
 import { useToast } from "@/lib/store/toast-provider";
 import { friendlyAiError } from "@/lib/errors/user-messages";
 import { cn } from "@/lib/utils";
+import { ProductCard } from "@/components/marketplace/product-card";
+import { BuyingGuidesTeaser } from "@/components/marketplace/buying-guides-panel";
+import { BUYING_GUIDES, getRelatedProductsForPlant } from "@/lib/marketplace";
 
 const SIZE_OPTIONS: { value: NurserySize; label: string }[] = [
   { value: "4 inch", label: "4 inch" },
@@ -85,6 +92,7 @@ export function PriceCheckerPanel() {
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<PriceCheckResult | null>(null);
   const [aiResult, setAiResult] = useState<AIPriceCheckResponse | null>(null);
+  const [shoppingResults, setShoppingResults] = useState<PriceSearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,17 +106,28 @@ export function PriceCheckerPanel() {
     if (!plantName.trim()) return;
     setLoading(true);
     setError(null);
+    setShoppingResults(null);
 
     const parsedPrice = priceAsked ? parseFloat(priceAsked.replace(/[^0-9.]/g, "")) : undefined;
+    const zip = zipCode.trim() || "91107";
 
-    const res = await requestPriceCheck({
-      plantName: plantName.trim(),
-      size,
-      zipCode: zipCode.trim() || "91107",
-      storeType,
-      condition,
-      priceAsked: Number.isFinite(parsedPrice) ? parsedPrice : undefined,
-    });
+    const [res, prices] = await Promise.all([
+      requestPriceCheck({
+        plantName: plantName.trim(),
+        size,
+        zipCode: zip,
+        storeType,
+        condition,
+        priceAsked: Number.isFinite(parsedPrice) ? parsedPrice : undefined,
+      }),
+      searchPricesApi({
+        plantName: plantName.trim(),
+        size,
+        zipCode: zip,
+      }),
+    ]);
+
+    if (prices) setShoppingResults(prices);
 
     if (res.ok) {
       setAiResult(res.data);
@@ -125,7 +144,7 @@ export function PriceCheckerPanel() {
         checkPlantPrice({
           plantName: plantName.trim(),
           size,
-          zipCode: zipCode.trim() || "91107",
+          zipCode: zip,
           storeType,
           condition,
           hasPhoto: !!preview,
@@ -137,16 +156,25 @@ export function PriceCheckerPanel() {
     setLoading(false);
   }
 
-  function handleQuickCheck() {
+  async function handleQuickCheck() {
     if (!plantName.trim()) return;
     setLoading(true);
     setError(null);
+    const zip = zipCode.trim() || "91107";
+
+    const prices = await searchPricesApi({
+      plantName: plantName.trim(),
+      size,
+      zipCode: zip,
+    });
+    setShoppingResults(prices);
+
     setTimeout(() => {
       setResult(
         checkPlantPrice({
           plantName: plantName.trim(),
           size,
-          zipCode: zipCode.trim() || "91107",
+          zipCode: zip,
           storeType,
           condition,
           hasPhoto: !!preview,
@@ -171,7 +199,25 @@ export function PriceCheckerPanel() {
       <PageHeader
         title="Plant Price Checker"
         description="Know if a plant is worth buying before you bring it home."
+        action={
+          <Link href="/shop-assistant">
+            <Button variant="secondary" size="sm" className="touch-manipulation">
+              <ShoppingBag className="w-4 h-4" />
+              Shop Assistant
+            </Button>
+          </Link>
+        }
       />
+
+      <Card padding="md" className="bg-amber-50/50 border-amber-100">
+        <p className="text-sm text-gray-700 leading-relaxed">
+          Check fair price ranges first — then use{" "}
+          <Link href="/shop-assistant" className="text-green-700 font-medium hover:underline">
+            Shop Assistant
+          </Link>{" "}
+          for buying guides on soil, fertilizer, and tools.
+        </p>
+      </Card>
 
       {!result && !aiResult ? (
         <Card padding="md" className="space-y-4">
@@ -271,13 +317,18 @@ export function PriceCheckerPanel() {
         </Card>
       ) : aiResult ? (
         <Card padding="md" className="space-y-4">
+          {shoppingResults && (
+            <LiveShoppingSection results={shoppingResults} />
+          )}
           <AiPriceCheckDisplay result={aiResult} />
+          <MarketplaceExtras plantName={plantName} />
           <Button
             variant="outline"
             className="w-full"
             onClick={() => {
               setAiResult(null);
               setResult(null);
+              setShoppingResults(null);
             }}
           >
             Check another plant
@@ -286,7 +337,12 @@ export function PriceCheckerPanel() {
       ) : result ? (
         <PriceCheckerResults
           result={result!}
-          onReset={() => setResult(null)}
+          plantName={plantName}
+          shoppingResults={shoppingResults}
+          onReset={() => {
+            setResult(null);
+            setShoppingResults(null);
+          }}
           reportOpen={reportOpen}
           setReportOpen={setReportOpen}
           reportStore={reportStore}
@@ -304,8 +360,88 @@ export function PriceCheckerPanel() {
   );
 }
 
+function MarketplaceExtras({ plantName }: { plantName: string }) {
+  const { guide, products } = getRelatedProductsForPlant(plantName);
+  const teaserGuides = guide
+    ? [guide, ...BUYING_GUIDES.filter((g) => g.id !== guide.id)].slice(0, 4)
+    : BUYING_GUIDES.slice(0, 4);
+
+  return (
+    <div className="space-y-4 pt-2 border-t border-gray-100">
+      <BuyingGuidesTeaser
+        guides={teaserGuides}
+        onViewAll={undefined}
+      />
+      <Link
+        href="/shop-assistant"
+        className="block text-center text-sm text-green-600 hover:underline touch-manipulation"
+      >
+        Open Shop Assistant for all guides & products →
+      </Link>
+      {products.length > 0 && (
+        <div>
+          <p className="text-sm font-semibold text-gray-900 mb-3">Related supplies</p>
+          <div className="space-y-3">
+            {products.map((p) => (
+              <ProductCard key={p.id} product={p} compact />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LiveShoppingSection({ results }: { results: PriceSearchResponse }) {
+  return (
+    <section className="space-y-3 pb-4 border-b border-gray-100">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-gray-900">Shopping results</h2>
+        <DataSourceBadge source={dataSourceFromPrice(results.source)} />
+      </div>
+      <p className="text-xs text-gray-500">Query: {results.query}</p>
+      <div className="space-y-2">
+        {results.results.map((item, i) => (
+          <Card key={`${item.retailer}-${i}`} padding="md" className="text-sm">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium text-gray-900 truncate">{item.title}</p>
+                <p className="text-xs text-gray-500">{item.retailer} · {item.size}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="font-bold text-gray-900">
+                  {item.price > 0 ? `$${item.price.toFixed(2)}` : "See site"}
+                </p>
+                <DataSourceBadge
+                  source={dataSourceFromPrice(item.source)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            {item.url && item.url !== "#" && (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-green-700 hover:underline mt-2 inline-block"
+              >
+                View at retailer →
+              </a>
+            )}
+            {item.distanceOrShipping && (
+              <p className="text-xs text-gray-400 mt-1">{item.distanceOrShipping}</p>
+            )}
+          </Card>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function PriceCheckerResults({
   result,
+  plantName,
+  shoppingResults,
   onReset,
   reportOpen,
   setReportOpen,
@@ -320,6 +456,8 @@ function PriceCheckerResults({
   onReportSubmit,
 }: {
   result: PriceCheckResult;
+  plantName: string;
+  shoppingResults: PriceSearchResponse | null;
   onReset: () => void;
   reportOpen: boolean;
   setReportOpen: (v: boolean) => void;
@@ -335,6 +473,8 @@ function PriceCheckerResults({
 }) {
   return (
     <div className="space-y-4 page-enter">
+      {shoppingResults && <LiveShoppingSection results={shoppingResults} />}
+
       {result.correction && (
         <Card padding="md" className="bg-blue-50 border-blue-100">
           <p className="text-sm text-blue-800">
@@ -369,6 +509,9 @@ function PriceCheckerResults({
       </Section>
 
       <Section title="Estimated Fair Price">
+        <div className="flex items-center gap-2 mb-2">
+          <DataSourceBadge source="estimated_price" />
+        </div>
         <p className="text-2xl font-bold text-gray-900">
           ${result.fairRange[0]} – ${result.fairRange[1]}
         </p>
@@ -466,6 +609,8 @@ function PriceCheckerResults({
           </Card>
         )}
       </Section>
+
+      <MarketplaceExtras plantName={plantName} />
 
       <Button variant="secondary" className="w-full touch-manipulation" onClick={onReset}>
         Check another plant

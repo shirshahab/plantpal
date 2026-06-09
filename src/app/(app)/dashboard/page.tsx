@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, AlertTriangle, Target } from "lucide-react";
+import { ArrowRight, Plus, ScanLine, Sparkles, AlertTriangle, Target } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { PlantCard } from "@/components/plant-card";
-import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
@@ -21,6 +20,8 @@ import { useEducation } from "@/lib/store/education-provider";
 import { LESSONS } from "@/lib/education/lessons";
 import { usePullToRefresh } from "@/lib/hooks/use-pull-to-refresh";
 import { useToast } from "@/lib/store/toast-provider";
+import { seedDemoGarden } from "@/lib/demo/seed-demo-garden";
+import { loadUserProfile } from "@/lib/profile/user-profile";
 
 export default function DashboardPage() {
   const { plants, loading, refreshPlants } = usePlants();
@@ -35,6 +36,52 @@ export default function DashboardPage() {
 
   if (loading) {
     return <DashboardSkeleton />;
+  }
+
+  if (plants.length === 0) {
+    return (
+      <div className="space-y-6" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <PageHeader title="My Garden" description="Your garden at a glance" />
+        <InstallPrompt />
+        <DemoBanner />
+        <Card padding="lg" className="text-center border-green-100 bg-gradient-to-b from-green-50/80 to-white">
+          <div className="w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto text-3xl">
+            🌱
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mt-4">Start your garden.</h2>
+          <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto leading-relaxed">
+            Add your first plant to unlock daily tasks, care plans, and local climate tips.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
+            <Link href="/plants/new">
+              <Button size="lg" className="w-full sm:w-auto touch-manipulation">
+                <Plus className="w-4 h-4" />
+                Add First Plant
+              </Button>
+            </Link>
+            <Link href="/scanner">
+              <Button variant="secondary" size="lg" className="w-full sm:w-auto touch-manipulation">
+                <ScanLine className="w-4 h-4" />
+                Scan Plant
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto touch-manipulation"
+              onClick={() => {
+                const profile = loadUserProfile();
+                seedDemoGarden(profile.zipCode || "91107");
+                window.location.reload();
+              }}
+            >
+              <Sparkles className="w-4 h-4" />
+              Explore Demo Garden
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   const healthIssues = plants.filter(
@@ -71,7 +118,7 @@ export default function DashboardPage() {
       <InstallPrompt />
       <DemoBanner />
 
-      {plants.length > 0 && <GardenScoreCard plants={plants} />}
+      <GardenScoreCard plants={plants} />
 
       {tasksReady && topTasks.length > 0 && (
         <section>
@@ -142,7 +189,7 @@ export default function DashboardPage() {
       )}
 
       {nextLesson && (
-        <Card padding="md">
+        <Card padding="md" className="hidden md:block">
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
             Continue learning
           </p>
@@ -156,35 +203,22 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      <CareLevelCard compact />
+      <div className="hidden md:block">
+        <CareLevelCard compact />
+      </div>
 
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-gray-900">Your Plants</h2>
-          {plants.length > 0 && (
-            <Link href="/plants" className="text-sm text-green-600 font-medium touch-manipulation py-2">
-              See all
-            </Link>
-          )}
+          <Link href="/plants" className="text-sm text-green-600 font-medium touch-manipulation py-2">
+            See all
+          </Link>
         </div>
-
-        {plants.length === 0 ? (
-          <EmptyState
-            icon="🪴"
-            title="Add your first plant"
-            description="Start with one plant — PlantPal will build your care schedule, daily tasks, and local weather advice."
-            actionLabel="Add Your First Plant"
-            actionHref="/plants/new"
-            secondaryLabel="Explore Demo Garden"
-            secondaryHref="/onboarding"
-          />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-            {plants.slice(0, 6).map((plant) => (
-              <PlantCard key={plant.id} plant={plant} />
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          {plants.slice(0, 6).map((plant) => (
+            <PlantCard key={plant.id} plant={plant} />
+          ))}
+        </div>
       </section>
     </div>
   );

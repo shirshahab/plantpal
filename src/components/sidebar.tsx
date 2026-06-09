@@ -11,9 +11,13 @@ import {
   LogOut,
   GraduationCap,
   LayoutGrid,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/store/auth-provider";
+import { PlantPalLogo } from "@/components/brand/plantpal-logo";
+import { BetaBadge } from "@/components/brand/beta-badge";
+import { BRAND } from "@/lib/brand/tokens";
 
 const navItems = [
   { href: "/dashboard", label: "Garden", icon: LayoutDashboard },
@@ -53,10 +57,12 @@ export function Sidebar() {
       return (
         pathname === "/more" ||
         pathname.startsWith("/doctor") ||
+        pathname.startsWith("/concierge") ||
         pathname.startsWith("/achievements") ||
         pathname.startsWith("/gallery") ||
         pathname.startsWith("/harvest") ||
         pathname.startsWith("/shop-assistant") ||
+        pathname.startsWith("/landscape-designer") ||
         pathname.startsWith("/property") ||
         pathname.startsWith("/collection") ||
         pathname.startsWith("/community") ||
@@ -72,12 +78,13 @@ export function Sidebar() {
   return (
     <aside className="fixed top-0 left-0 h-full w-72 bg-white border-r border-gray-100 flex flex-col">
       <div className="flex items-center gap-3 px-6 py-8">
-        <div className="w-10 h-10 rounded-2xl bg-green-600 flex items-center justify-center shadow-sm shadow-green-600/20">
-          <Leaf className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h1 className="text-lg font-semibold text-gray-900">PlantPal</h1>
-          <p className="text-xs text-gray-500">Your plant companion</p>
+        <PlantPalLogo size="md" />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-[10px] font-medium text-brand-primary leading-none">{BRAND.tagline}</p>
+            <BetaBadge />
+          </div>
+          <p className="text-xs text-brand-text-secondary mt-1 truncate">Smart plant care coach</p>
         </div>
       </div>
 
@@ -107,7 +114,14 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="px-3 pb-6">
+      <div className="px-3 pb-6 space-y-1">
+        <Link
+          href="/"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-brand-sage/15 hover:text-brand-primary transition-all duration-200 touch-manipulation"
+        >
+          <Globe className="w-5 h-5 text-brand-primary/70" />
+          Back to Website
+        </Link>
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 w-full touch-manipulation"
