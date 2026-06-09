@@ -14,7 +14,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { SpeciesSearchPanel } from "@/components/knowledge/species-search";
+import { SpeciesAutocomplete } from "@/components/plants/species-autocomplete";
+import {
+  buildSpeciesSelection,
+  isUuid,
+  type SpeciesSelection,
+} from "@/lib/plants/species-selection";
+import {
+  buildBaseCareFromSpecies,
+  CARE_SOURCE_LABELS,
+} from "@/lib/plants/species-care";
+import type { PlantSearchHit } from "@/lib/types/integrations";
 import { usePlants } from "@/lib/store/plants-provider";
 import { useSubscription } from "@/lib/store/subscription-provider";
 import { UpgradePrompt } from "@/components/subscription/upgrade-prompt";
@@ -23,7 +35,8 @@ import { UPGRADE_COPY } from "@/lib/subscription/types";
 import { useToast } from "@/lib/store/toast-provider";
 import { friendlySaveError } from "@/lib/errors/user-messages";
 import { DEFAULT_PLANT_IMAGE } from "@/lib/plants";
-import { getPlantSpeciesById } from "@/lib/knowledge";
+import { getPlantSpeciesById, PLANT_TYPE_LABELS } from "@/lib/knowledge";
+import type { PlantSpeciesType } from "@/lib/knowledge";
 import { loadUserProfile, markFirstPlantAdded } from "@/lib/profile/user-profile";
 import { trackEvent } from "@/lib/analytics/track";
 import type { LocationType, PlantingType, SunExposure } from "@/lib/types";
@@ -35,7 +48,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LocalMatchCheck } from "@/components/climate/local-match-check";
 import { GoalPicker } from "@/components/journey/goal-picker";
-import { PlaceholderPickerCard, getPreviewImageUrl } from "@/components/plants/plant-image";
+import { PlaceholderPickerCard } from "@/components/plants/plant-image";
 import {
   PlantSizeFieldsForm,
   parseSizeFormValues,
@@ -75,6 +88,7 @@ export function AddPlantWizard() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [speciesId, setSpeciesId] = useState<string | null>(null);
   const [speciesImage, setSpeciesImage] = useState<string | null>(null);
+  const [speciesSelection, setSpeciesSelection] = useState<SpeciesSelection | null>(null);
   const [goalIds, setGoalIds] = useState<string[]>([DEFAULT_GOAL_ID]);
   const [primaryGoalId, setPrimaryGoalId] = useState<string | null>(DEFAULT_GOAL_ID);
   const [photoStatus, setPhotoStatus] = useState<PhotoStatus>("needs_photo");
@@ -214,6 +228,22 @@ export function AddPlantWizard() {
       if (found) {
         setSpeciesId(id);
         setSpeciesImage(found.image_url);
+        setSpeciesSelection({
+          speciesId: isUuid(id) ? id : null,
+          commonName: found.common_name,
+          scientificName: found.scientific_name,
+          plantType: found.type,
+          sunlight: found.sunlight,
+          watering: found.watering,
+          soilPreference: found.soil_preference,
+          hardinessZoneMin: found.hardiness_zone_min ?? null,
+          hardinessZoneMax: found.hardiness_zone_max ?? null,
+          careSummary: found.description,
+          imageUrl: found.image_url || null,
+          toxicity: found.toxicity,
+          baseCare: buildBaseCareFromSpecies(found, null, "plantpal"),
+          dataSource: "plantpal",
+        });
         setEntryMode("search");
         setForm((p) => ({
           ...p,
@@ -248,8 +278,10 @@ export function AddPlantWizard() {
     setAddPhotoLater(true);
     setPhotoFile(null);
     setPreview(null);
-    const inferred = inferPlaceholderType(form.species, form.name);
-    setPlaceholderType(inferred);
+    // With a species image we keep showing it; otherwise fall back to a placeholder
+    setPlaceholderType(
+      speciesImage ? null : inferPlaceholderType(form.species, form.name)
+    );
     setPhotoStatus("needs_photo");
   }
 
@@ -261,20 +293,59 @@ export function AddPlantWizard() {
     setPreview(null);
   }
 
-  function handleSpeciesSelect(
+  function inferSunFromText(sunlight: string): SunExposure | null {
+    const s = sunlight.toLowerCase();
+    if (!s) return null;
+    if (s.includes("full sun")) return "full_sun";
+    if (s.includes("partial") || s.includes("indirect")) return "partial_sun";
+    if (s.includes("shade")) return "shade";
+    return null;
+  }
+
+  function applySelection(sel: SpeciesSelection) {
+    setSpeciesSelection(sel);
+    setSpeciesId(sel.speciesId);
+    setSpeciesImage(sel.imageUrl);
+    if (sel.imageUrl) setPlaceholderType(null);
+    setForm((p) => ({
+      ...p,
+      name: p.name.trim() ? p.name : sel.commonName,
+      species: sel.scientificName || sel.commonName,
+      locationType:
+        sel.plantType === "indoor" || sel.plantType === "succulent"
+          ? "indoor"
+          : p.locationType,
+      sunExposure: inferSunFromText(sel.sunlight) ?? p.sunExposure,
+    }));
+  }
+
+  function clearSelection() {
+    setSpeciesSelection(null);
+    setSpeciesId(null);
+    setSpeciesImage(null);
+  }
+
+  async function handleSpeciesSelect(
     id: string,
     commonName: string,
     scientificName: string,
-    imageUrl: string
+    imageUrl: string,
+    hit?: PlantSearchHit
   ) {
-    setSpeciesId(id);
-    setSpeciesImage(imageUrl);
     setEntryMode("search");
-    setForm((p) => ({
-      ...p,
-      name: commonName,
-      species: scientificName,
-    }));
+    if (hit) {
+      const sel = await buildSpeciesSelection(hit);
+      applySelection({
+        ...sel,
+        speciesId: sel.speciesId ?? (isUuid(id) ? id : null),
+        imageUrl: sel.imageUrl ?? imageUrl ?? null,
+      });
+      setForm((p) => ({ ...p, name: commonName }));
+    } else {
+      setSpeciesId(id);
+      setSpeciesImage(imageUrl);
+      setForm((p) => ({ ...p, name: commonName, species: scientificName }));
+    }
     setStep(2);
   }
 
@@ -311,14 +382,18 @@ export function AddPlantWizard() {
       const inferred = inferPlaceholderType(form.species, form.name);
       const effectivePlaceholder = placeholderType ?? inferred;
       const hasRealPhoto = !!(photoFile || (preview && (fromScanPhoto || photoStatus === "real_photo")));
+      // Species reference image beats generic placeholders
+      const usingSpeciesImage = !hasRealPhoto && !!speciesImage && !placeholderType;
       const status: PhotoStatus = hasRealPhoto
         ? "real_photo"
-        : addPhotoLater
+        : usingSpeciesImage || addPhotoLater
           ? "needs_photo"
           : "placeholder";
       const image = hasRealPhoto
         ? preview || speciesImage || DEFAULT_PLANT_IMAGE
-        : getPlaceholderImageUrl(effectivePlaceholder);
+        : usingSpeciesImage && speciesImage
+          ? speciesImage
+          : getPlaceholderImageUrl(effectivePlaceholder);
       const size = parseSizeFormValues(sizeForm);
       const effectiveGoals = goalIds.length > 0 ? goalIds : [DEFAULT_GOAL_ID];
       const effectivePrimary = primaryGoalId ?? effectiveGoals[0];
@@ -330,7 +405,11 @@ export function AddPlantWizard() {
           goalIds: effectiveGoals,
           primaryGoalId: effectivePrimary,
           photoStatus: status,
-          placeholderImageType: hasRealPhoto ? null : effectivePlaceholder,
+          placeholderImageType:
+            hasRealPhoto || usingSpeciesImage ? null : effectivePlaceholder,
+          plantSpeciesId:
+            speciesSelection?.speciesId ?? (isUuid(speciesId) ? speciesId : null),
+          speciesCare: speciesSelection?.baseCare ?? null,
           ...size,
         },
         photoFile
@@ -366,11 +445,11 @@ export function AddPlantWizard() {
     }
   }, [atPlantLimit, showUpgradeModal]);
 
-  const displayImage = getPreviewImageUrl(
-    preview,
-    placeholderType,
-    speciesImage
-  );
+  // Image priority: user photo → species image → explicit placeholder
+  const displayImage =
+    preview ??
+    speciesImage ??
+    (placeholderType ? getPlaceholderImageUrl(placeholderType) : null);
 
   return (
     <div className="max-w-lg mx-auto pb-28 md:pb-8">
@@ -477,11 +556,18 @@ export function AddPlantWizard() {
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-900">Search plant</h2>
             <p className="text-sm text-gray-500">Common or scientific name.</p>
-            {speciesId && (
-              <Card padding="md" className="bg-green-50 border-green-100">
-                <p className="text-sm font-medium text-green-800">{form.name}</p>
-                <p className="text-xs text-green-600 italic">{form.species}</p>
-              </Card>
+            {speciesSelection ? (
+              <SelectedSpeciesCard
+                selection={speciesSelection}
+                onClear={clearSelection}
+              />
+            ) : (
+              speciesId && (
+                <Card padding="md" className="bg-green-50 border-green-100">
+                  <p className="text-sm font-medium text-green-800">{form.name}</p>
+                  <p className="text-xs text-green-600 italic">{form.species}</p>
+                </Card>
+              )
             )}
             <SpeciesSearchPanel compact onSelect={handleSpeciesSelect} />
           </div>
@@ -490,20 +576,32 @@ export function AddPlantWizard() {
         {step === 1 && entryMode === "manual" && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-900">Plant name</h2>
-            <Input
-              id="species"
-              name="species"
-              label="Species"
-              placeholder="Meyer Lemon or Citrus × meyeri"
-              value={form.species}
-              onChange={handleChange}
-              className="text-base py-3"
-            />
+            <p className="text-sm text-gray-500">
+              Start typing and pick your plant — we&apos;ll fill in its photo and care.
+            </p>
+            {speciesSelection ? (
+              <SelectedSpeciesCard
+                selection={speciesSelection}
+                onClear={() => {
+                  clearSelection();
+                  setForm((p) => ({ ...p, species: "" }));
+                }}
+              />
+            ) : (
+              <SpeciesAutocomplete
+                value={form.species}
+                onTextChange={(text) => {
+                  setForm((p) => ({ ...p, species: text }));
+                  if (speciesSelection) clearSelection();
+                }}
+                onSelect={applySelection}
+              />
+            )}
             <Input
               id="name-default"
               name="name"
               label="Nickname (optional)"
-              placeholder="Kitchen lemon tree"
+              placeholder={speciesSelection?.commonName || "Kitchen lemon tree"}
               value={form.name}
               onChange={handleChange}
               className="text-base py-3"
@@ -515,7 +613,9 @@ export function AddPlantWizard() {
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-900">Photo & nickname</h2>
             <p className="text-sm text-gray-500">
-              Snap a photo now, pick a placeholder, or add one later.
+              {speciesImage
+                ? "We'll use the species photo until you add your own."
+                : "Snap a photo now or add one later."}
             </p>
 
             {displayImage && (
@@ -588,21 +688,24 @@ export function AddPlantWizard() {
               Add now, photo later
             </Button>
 
-            <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                Or use a placeholder
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {PLACEHOLDER_OPTIONS.map((opt) => (
-                  <PlaceholderPickerCard
-                    key={opt.id}
-                    type={opt.id}
-                    selected={placeholderType === opt.id}
-                    onSelect={() => selectPlaceholder(opt.id)}
-                  />
-                ))}
+            {/* Generic placeholders only when there's no species image or photo */}
+            {!speciesImage && !preview && (
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                  Or use a temporary placeholder
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {PLACEHOLDER_OPTIONS.map((opt) => (
+                    <PlaceholderPickerCard
+                      key={opt.id}
+                      type={opt.id}
+                      selected={placeholderType === opt.id}
+                      onSelect={() => selectPlaceholder(opt.id)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -716,6 +819,17 @@ export function AddPlantWizard() {
                   .map((g) => g.name)
                   .join(" · ")}
               </p>
+              {speciesSelection && (
+                <div className="pt-2 mt-1 border-t border-gray-200 space-y-1">
+                  <p className="text-xs text-gray-600">
+                    {speciesSelection.baseCare.wateringInstructions}
+                  </p>
+                  <p className="text-[11px] text-gray-400">
+                    Base care: {CARE_SOURCE_LABELS[speciesSelection.baseCare.source]} ·
+                    adjusted for your ZIP and goals
+                  </p>
+                </div>
+              )}
             </Card>
             {error && (
               <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl whitespace-pre-wrap">
@@ -763,5 +877,80 @@ export function AddPlantWizard() {
         )}
       </div>
     </div>
+  );
+}
+
+function SelectedSpeciesCard({
+  selection,
+  onClear,
+}: {
+  selection: SpeciesSelection;
+  onClear: () => void;
+}) {
+  const typeLabel =
+    PLANT_TYPE_LABELS[selection.plantType as PlantSpeciesType] ?? selection.plantType;
+  const facts: { label: string; value: string }[] = [];
+  if (selection.sunlight) facts.push({ label: "Sun", value: selection.sunlight });
+  if (selection.watering) facts.push({ label: "Water", value: selection.watering });
+  if (selection.soilPreference) facts.push({ label: "Soil", value: selection.soilPreference });
+  if (selection.hardinessZoneMin != null && selection.hardinessZoneMax != null) {
+    facts.push({
+      label: "Zones",
+      value: `${selection.hardinessZoneMin}–${selection.hardinessZoneMax}`,
+    });
+  }
+  if (selection.toxicity) facts.push({ label: "Toxicity", value: selection.toxicity });
+
+  return (
+    <Card padding="md" className="bg-green-50/60 border-green-100 space-y-3">
+      <div className="flex items-start gap-3">
+        {selection.imageUrl && (
+          <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-green-100">
+            <Image
+              src={selection.imageUrl}
+              alt={selection.commonName}
+              fill
+              className="object-cover"
+              sizes="64px"
+              unoptimized
+            />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-semibold text-gray-900">{selection.commonName}</p>
+            {typeLabel && (
+              <Badge variant="success" className="text-[10px]">
+                {typeLabel}
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 italic">{selection.scientificName}</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">
+            Care data: {CARE_SOURCE_LABELS[selection.baseCare.source]}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClear}
+          className="text-xs font-medium text-green-700 shrink-0 touch-manipulation"
+        >
+          Change
+        </button>
+      </div>
+      {facts.length > 0 && (
+        <div className="space-y-1">
+          {facts.slice(0, 4).map((f) => (
+            <p key={f.label} className="text-xs text-gray-600">
+              <span className="font-medium text-gray-700">{f.label}: </span>
+              {f.value}
+            </p>
+          ))}
+        </div>
+      )}
+      {selection.careSummary && (
+        <p className="text-xs text-gray-500 line-clamp-2">{selection.careSummary}</p>
+      )}
+    </Card>
   );
 }

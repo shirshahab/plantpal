@@ -83,9 +83,13 @@ export function mapDbPlantToPlant(row: DbPlant): Plant {
     createdAt: row.created_at,
     photoStatus: photo.photoStatus,
     placeholderImageType: photo.placeholderImageType,
+    plantSpeciesId: row.plant_species_id ?? null,
     ...mapSizeFields(row),
   };
 }
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function mapPlantInputToDb(
   input: {
@@ -110,6 +114,7 @@ export function mapPlantInputToDb(
     purchasePrice?: number | null;
     purchaseStore?: string | null;
     notes?: string;
+    plantSpeciesId?: string | null;
   },
   userId: string,
   care: {
@@ -119,8 +124,12 @@ export function mapPlantInputToDb(
   }
 ): Omit<DbPlant, "id" | "created_at" | "updated_at"> {
   const photoStatus = input.photoStatus ?? "needs_photo";
+  // Persist real photos and species reference images (http URLs);
+  // SVG placeholder data URLs are reconstructed from placeholder_image_type.
   const storedPhotoUrl =
-    photoStatus === "real_photo" ? input.image : null;
+    photoStatus === "real_photo" || input.image.startsWith("http")
+      ? input.image
+      : null;
 
   return {
     user_id: userId,
@@ -156,6 +165,10 @@ export function mapPlantInputToDb(
     purchase_date: input.purchaseDate ?? null,
     purchase_price: input.purchasePrice ?? null,
     purchase_store: input.purchaseStore ?? null,
+    plant_species_id:
+      input.plantSpeciesId && UUID_RE.test(input.plantSpeciesId)
+        ? input.plantSpeciesId
+        : null,
   };
 }
 

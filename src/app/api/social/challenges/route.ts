@@ -4,37 +4,10 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { SocialChallenge } from "@/lib/social/types";
 import { CHALLENGE_TEMPLATES } from "@/lib/social/constants";
 
-function templateToChallenge(
-  tpl: (typeof CHALLENGE_TEMPLATES)[number],
-  id: string,
-  progress = 0
-): SocialChallenge {
-  const endsAt = new Date();
-  endsAt.setDate(endsAt.getDate() + 14);
-  return {
-    id,
-    scope: "personal",
-    groupId: null,
-    title: tpl.title,
-    description: tpl.description,
-    challengeType: tpl.challengeType,
-    target: tpl.target,
-    unit: tpl.unit,
-    rewardXp: tpl.rewardXp,
-    rewardBadge: tpl.rewardBadge,
-    startsAt: new Date().toISOString(),
-    endsAt: endsAt.toISOString(),
-    progress,
-    completedAt: progress >= tpl.target ? new Date().toISOString() : null,
-  };
-}
-
 export async function GET() {
+  // No fake "active" challenges — only show challenges the user actually joined.
   if (!isSupabaseConfigured()) {
-    const demo = CHALLENGE_TEMPLATES.slice(0, 2).map((t, i) =>
-      templateToChallenge(t, `demo-challenge-${i}`, i === 0 ? 3 : 0)
-    );
-    return NextResponse.json({ ok: true, challenges: demo, storage: "local" as const });
+    return NextResponse.json({ ok: true, challenges: [], storage: "local" as const });
   }
 
   const supabase = await createClient();
@@ -43,8 +16,7 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const demo = CHALLENGE_TEMPLATES.slice(0, 1).map((t) => templateToChallenge(t, "demo-1", 2));
-    return NextResponse.json({ ok: true, challenges: demo, storage: "demo" as const });
+    return NextResponse.json({ ok: true, challenges: [], storage: "demo" as const });
   }
 
   const { data: participations } = await supabase
@@ -86,14 +58,6 @@ export async function GET() {
       completedAt: p.completed_at,
     };
   });
-
-  if (challenges.length === 0) {
-    return NextResponse.json({
-      ok: true,
-      challenges: [templateToChallenge(CHALLENGE_TEMPLATES[0], "suggested-1", 2)],
-      storage: "suggested" as const,
-    });
-  }
 
   return NextResponse.json({ ok: true, challenges });
 }

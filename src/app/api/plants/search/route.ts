@@ -3,6 +3,7 @@ import { searchPlantSpecies as searchInternal } from "@/lib/knowledge/queries";
 import { searchPlants, mapPerenualResults, isPerenualEnabled } from "@/lib/integrations/perenual";
 import { suggestPlantFromOpenAI } from "@/lib/ai/plant-search-suggestion";
 import { searchPlantSpecies as searchMock } from "@/lib/knowledge/mock-store";
+import { suggestSpeciesCorrection } from "@/lib/knowledge/fuzzy-match";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { cacheGet, cacheSet, cacheKey, CACHE_TTL } from "@/lib/api/server-cache";
 import { checkRateLimit, getClientKey, RATE_LIMITS } from "@/lib/api/rate-limit";
@@ -117,7 +118,7 @@ export async function POST(request: Request) {
 
     let mockHits: PlantSearchHit[] = [];
     const allSoFar = [...internalHits, ...perenualHits, ...aiHits];
-    if (allSoFar.length === 0 && query.length >= 2) {
+    if (allSoFar.length === 0 && query.length >= 1) {
       mockHits = searchMock({
         query,
         type: body.type,
@@ -132,7 +133,27 @@ export async function POST(request: Request) {
       }
     }
 
-    const results = [...internalHits, ...perenualHits, ...aiHits, ...mockHits].slice(0, limit);
+    const queryLower = query.toLowerCase();
+    const rank = (hit: PlantSearchHit): number => {
+      if (!queryLower) return 1;
+      const common = hit.common_name.toLowerCase();
+      const scientific = (hit.scientific_name ?? "").toLowerCase();
+      if (common.startsWith(queryLower) || scientific.startsWith(queryLower)) return 0;
+      if (common.includes(queryLower) || scientific.includes(queryLower)) return 1;
+      return 2;
+    };
+    const results = [...internalHits, ...perenualHits, ...aiHits, ...mockHits]
+      .sort((a, b) => rank(a) - rank(b))
+      .slice(0, limit);
+
+    const didYouMean =
+      query.length >= 4
+        ? suggestSpeciesCorrection(
+            query,
+            results.map((r) => r.common_name)
+          )
+        : null;
+
     const response: PlantSearchResponse = {
       results,
       sources: {
@@ -141,6 +162,7 @@ export async function POST(request: Request) {
         ai: aiHits.length,
         mock: mockHits.length,
       },
+      didYouMean,
     };
 
     cacheSet(cacheId, response, CACHE_TTL.plantSearch);

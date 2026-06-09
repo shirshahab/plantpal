@@ -25,6 +25,14 @@ export const PLANTPAL_STORAGE_KEYS = [
   "plantpal-qa-checklist",
   "plantpal-founder-mode",
   "plantpal-scan-history",
+  "plantpal-garden-map",
+  "plantpal-tasks",
+  "plantpal-academy",
+  "plantpal-social-feed",
+  "plantpal-social-friends",
+  "plantpal-social-requests",
+  "plantpal-social-challenges",
+  "plantpal-social-notifications",
   PROFILE_STORAGE_KEY,
 ] as const;
 

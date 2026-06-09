@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
-import { MOCK_GALLERY } from "@/lib/mock/gallery";
+import type { GalleryItem } from "@/lib/types/phase6";
 import { useEngagement } from "@/lib/store/engagement-provider";
 import { usePlants } from "@/lib/store/plants-provider";
 
@@ -35,7 +35,7 @@ export default function GalleryPage() {
     })
     .filter(Boolean);
 
-  const items = [...(fromGrowth as typeof MOCK_GALLERY), ...MOCK_GALLERY];
+  const items = fromGrowth as GalleryItem[];
   const hasUserGrowth = fromGrowth.length > 0;
 
   return (
@@ -45,7 +45,7 @@ export default function GalleryPage() {
         description="Plant transformations worth sharing."
       />
 
-      {!hasUserGrowth && plants.length === 0 ? (
+      {!hasUserGrowth ? (
         <EmptyState
           icon="📸"
           title="No progress photos yet"

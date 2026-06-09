@@ -9,8 +9,6 @@ import {
   useState,
 } from "react";
 import type { GrowthEntry, HarvestEntry, PlantRarity } from "@/lib/types/phase6";
-import { MOCK_GROWTH_ENTRIES } from "@/lib/mock/growth";
-import { MOCK_HARVEST_ENTRIES } from "@/lib/mock/harvest";
 import {
   ACHIEVEMENT_DEFINITIONS,
   buildAchievements,
@@ -81,15 +79,22 @@ export function EngagementProvider({ children }: { children: React.ReactNode }) 
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setGrowthEntries(loadJson(KEYS.growth, MOCK_GROWTH_ENTRIES));
-    setHarvestEntries(loadJson(KEYS.harvest, MOCK_HARVEST_ENTRIES));
+    // Filter out legacy demo entries that were auto-seeded for early users
+    const isLegacyDemoId = (id: string) =>
+      /^(growth|harvest)-\d+$/.test(id);
+    setGrowthEntries(
+      loadJson<GrowthEntry[]>(KEYS.growth, []).filter((e) => !isLegacyDemoId(e.id))
+    );
+    setHarvestEntries(
+      loadJson<HarvestEntry[]>(KEYS.harvest, []).filter((e) => !isLegacyDemoId(e.id))
+    );
     setUnlocked(loadJson(KEYS.achievements, {}));
     setSavedTipIds(loadJson(KEYS.savedTips, []));
     setRarityMap(loadJson(KEYS.rarity, {}));
     setStats(
       loadJson(KEYS.stats, {
         scans: 0,
-        wateringStreak: 3,
+        wateringStreak: 0,
         firstPlantDate: null,
       })
     );

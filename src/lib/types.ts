@@ -58,8 +58,23 @@ export interface DbPlant {
   purchase_date: string | null;
   purchase_price: number | null;
   purchase_store: string | null;
+  plant_species_id?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** Source of a plant's base care data. */
+export type SpeciesCareSource = "plantpal" | "perenual" | "ai" | "fallback";
+
+/** Species-specific base care passed from the add flow into care plan generation. */
+export interface SpeciesCareInput {
+  waterFrequencyDays: number;
+  fertilizeFrequencyWeeks: number;
+  pruneSchedule: string;
+  wateringInstructions: string;
+  fertilizingInstructions: string;
+  pruningInstructions: string;
+  source: SpeciesCareSource;
 }
 
 export interface Plant {
@@ -100,12 +115,15 @@ export interface Plant {
   purchaseDate: string | null;
   purchasePrice: number | null;
   purchaseStore: string | null;
+  plantSpeciesId?: string | null;
 }
 
 export interface NewPlantInput {
   name: string;
   species: string;
   image: string;
+  plantSpeciesId?: string | null;
+  speciesCare?: SpeciesCareInput | null;
   locationType: LocationType;
   plantingType: PlantingType;
   zipCode: string;

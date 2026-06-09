@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
@@ -12,6 +12,10 @@ import { DashboardTopTasks } from "@/components/dashboard/top-tasks-section";
 import { DashboardSeasonalAlert } from "@/components/dashboard/seasonal-alert-section";
 import { DashboardContinueLearning } from "@/components/dashboard/continue-learning-section";
 import { DashboardQuickActions } from "@/components/dashboard/quick-actions-section";
+import { DashboardNeedsAttention } from "@/components/dashboard/needs-attention-section";
+import { DashboardTrending } from "@/components/dashboard/trending-section";
+import { DashboardSuggestions } from "@/components/dashboard/suggestions-section";
+import { DailyLessonCard } from "@/components/academy/daily-lesson-card";
 import { DashboardActivityFeed } from "@/components/social/dashboard-activity-feed";
 import { DashboardActiveChallenge } from "@/components/social/dashboard-active-challenge";
 import { DashboardEmptyState } from "@/components/dashboard/empty-state";
@@ -25,12 +29,18 @@ import { useTasks } from "@/lib/store/tasks-provider";
 import { useMoat } from "@/lib/store/moat-provider";
 import { usePullToRefresh } from "@/lib/hooks/use-pull-to-refresh";
 import { useToast } from "@/lib/store/toast-provider";
+import { loadUserProfile } from "@/lib/profile/user-profile";
 
 export function DashboardHome() {
   const { plants, loading, refreshPlants } = usePlants();
   const { topTasks, completeTask, skipTask, snoozeTask, ready: tasksReady } = useTasks();
   const { gardenHealth, seasonalTasks, ready: moatReady } = useMoat();
   const { toast } = useToast();
+  const [profileZip, setProfileZip] = useState("");
+
+  useEffect(() => {
+    setProfileZip(loadUserProfile().zipCode);
+  }, []);
 
   const { refreshing, onTouchStart, onTouchEnd } = usePullToRefresh(async () => {
     await refreshPlants();
@@ -43,6 +53,8 @@ export function DashboardHome() {
     if (hour < 17) return "Good afternoon";
     return "Good evening";
   }, []);
+
+  const zipCode = profileZip || plants[0]?.zipCode || "";
 
   if (loading || !moatReady) {
     return <DashboardSkeleton />;
@@ -81,7 +93,13 @@ export function DashboardHome() {
       <InstallPrompt />
 
       <div className="flex flex-col gap-5">
+        {/* 1. Weather / local alert */}
+        <DashboardSeasonalAlert plants={plants} seasonalTasks={seasonalTasks} />
+
+        {/* 2. Garden score */}
         <DashboardHealthScore health={gardenHealth} plants={plants} />
+
+        {/* 3. Today's tasks */}
         <DashboardTopTasks
           tasks={topTasks}
           ready={tasksReady}
@@ -99,10 +117,24 @@ export function DashboardHome() {
             </Link>
           </Card>
         ) : null}
-        <DashboardSeasonalAlert plants={plants} seasonalTasks={seasonalTasks} />
+
+        {/* 4. Plants needing attention */}
+        <DashboardNeedsAttention plants={plants} />
+
+        {/* 5. Friends & family feed */}
         <DashboardActivityFeed />
         <DashboardActiveChallenge />
+
+        {/* 6. Today's lesson + academy progress */}
+        <DailyLessonCard />
         <DashboardContinueLearning />
+
+        {/* 7. Trending near you */}
+        <DashboardTrending zipCode={zipCode} plants={plants} />
+
+        {/* 8. Suggestions */}
+        <DashboardSuggestions />
+
         <DashboardQuickActions />
       </div>
     </div>

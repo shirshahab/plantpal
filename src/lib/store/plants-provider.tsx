@@ -162,7 +162,8 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
         careStub,
         goals,
         input.zipCode,
-        "healthy"
+        "healthy",
+        input.speciesCare ?? null
       );
       const care = {
         waterFrequencyDays: carePlan.waterFrequencyDays,
@@ -181,9 +182,11 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
           : input.image;
 
       if (isMockMode) {
+        const { speciesCare: _speciesCare, ...inputFields } = input;
+        void _speciesCare;
         const plant: Plant = {
           id: crypto.randomUUID(),
-          ...input,
+          ...inputFields,
           image: displayImage,
           ...care,
           ...DEFAULT_SIZE_FIELDS,

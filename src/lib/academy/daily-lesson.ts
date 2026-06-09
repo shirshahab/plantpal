@@ -42,20 +42,54 @@ function weakestPathLesson(completed: string[]): string | null {
   return worst?.id ?? null;
 }
 
+const HEALTH_LESSON_IDS = ["yellow-leaves", "overwatering-signs", "aphids"];
+
+function pickFromList(list: string[], dayKey: string, salt: number): string {
+  let hash = 0;
+  const seed = `${dayKey}-${salt}`;
+  for (let i = 0; i < seed.length; i++) hash += seed.charCodeAt(i);
+  return list[hash % list.length]!;
+}
+
 /** Deterministic daily pick — same lesson all day for a user. */
 export function pickDailyLesson(
   completedLessons: string[],
   plants: Plant[],
-  dayKey = new Date().toISOString().slice(0, 10)
+  dayKey = new Date().toISOString().slice(0, 10),
+  options?: { hasHealthSignals?: boolean }
 ): string | null {
-  const candidates = new Set<string>();
+  const available = (id: string) =>
+    !completedLessons.includes(id) && !!getAcademyLessonById(id);
 
-  for (const id of plantsSuggestLessonIds(plants)) {
-    if (!completedLessons.includes(id) && getAcademyLessonById(id)) candidates.add(id);
+  // No plants yet → start with the beginner path, in order
+  if (plants.length === 0) {
+    const beginner = ACADEMY_PATHS.find((p) => p.id === "beginner-gardening");
+    const next = beginner?.lessonIds.find(available);
+    if (next) return next;
   }
 
+  // Recent scans / health issues → plant health lessons first
+  if (options?.hasHealthSignals) {
+    const healthPath = ACADEMY_PATHS.find((p) => p.id === "plant-health");
+    const healthCandidates = [
+      ...HEALTH_LESSON_IDS.filter(available),
+      ...(healthPath?.lessonIds.filter(available) ?? []),
+    ];
+    if (healthCandidates.length > 0) {
+      return pickFromList([...new Set(healthCandidates)], dayKey, completedLessons.length);
+    }
+  }
+
+  // Plant-specific lessons (citrus, bonsai, indoor, fruit…) take priority
+  const plantSpecific = [...new Set(plantsSuggestLessonIds(plants).filter(available))];
+  if (plantSpecific.length > 0) {
+    return pickFromList(plantSpecific, dayKey, completedLessons.length);
+  }
+
+  // Then seasonal topics + weakest path + everything else
+  const candidates = new Set<string>();
   for (const id of SEASON_TOPICS[currentSeason()] ?? []) {
-    if (!completedLessons.includes(id) && getAcademyLessonById(id)) candidates.add(id);
+    if (available(id)) candidates.add(id);
   }
 
   const weak = weakestPathLesson(completedLessons);
@@ -63,15 +97,11 @@ export function pickDailyLesson(
 
   for (const path of ACADEMY_PATHS) {
     for (const id of path.lessonIds) {
-      if (!completedLessons.includes(id) && getAcademyLessonById(id)) candidates.add(id);
+      if (available(id)) candidates.add(id);
     }
   }
 
   const list = [...candidates];
   if (list.length === 0) return null;
-
-  let hash = 0;
-  const seed = `${dayKey}-${completedLessons.length}`;
-  for (let i = 0; i < seed.length; i++) hash += seed.charCodeAt(i);
-  return list[hash % list.length]!;
+  return pickFromList(list, dayKey, completedLessons.length);
 }

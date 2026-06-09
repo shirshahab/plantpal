@@ -16,7 +16,7 @@ import {
   addZone,
   createGardenSpace,
   getGardenSpaces,
-  seedGardenMapIfEmpty,
+  purgeDemoGardenMap,
   updateGardenSpace,
 } from "@/lib/moat/garden-map-storage";
 import { calculateGardenMapHealth, type GardenHealthBreakdown } from "@/lib/moat/garden-health";
@@ -83,7 +83,7 @@ export function MoatProvider({ children }: { children: React.ReactNode }) {
   const [zipCode, setZipCode] = useState("");
 
   const refreshSpaces = useCallback(() => {
-    seedGardenMapIfEmpty();
+    purgeDemoGardenMap();
     setSpaces(getGardenSpaces());
   }, []);
 

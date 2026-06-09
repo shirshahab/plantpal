@@ -1,4 +1,4 @@
-import type { Plant } from "@/lib/types";
+import type { Plant, SpeciesCareInput } from "@/lib/types";
 import type {
   GoalBasedCarePlan,
   PlantGoal,
@@ -48,9 +48,10 @@ export function generateGoalBasedCarePlan(
   plant: Plant,
   goals: PlantGoal[],
   zipCode: string,
-  healthStatus: Plant["healthStatus"]
+  healthStatus: Plant["healthStatus"],
+  speciesBaseCare?: SpeciesCareInput | null
 ): GoalBasedCarePlan {
-  const base = defaultCareForSpecies(plant.species);
+  const base = speciesBaseCare ?? defaultCareForSpecies(plant.species);
   let waterDays = base.waterFrequencyDays;
   let fertWeeks = base.fertilizeFrequencyWeeks;
   let pruneSchedule = base.pruneSchedule;

@@ -62,7 +62,13 @@ export function SpeciesSearchPanel({
   onSelect,
   compact = false,
 }: {
-  onSelect?: (id: string, commonName: string, scientificName: string, imageUrl: string) => void;
+  onSelect?: (
+    id: string,
+    commonName: string,
+    scientificName: string,
+    imageUrl: string,
+    hit?: PlantSearchHit
+  ) => void;
   compact?: boolean;
 }) {
   const [query, setQuery] = useState("");
@@ -113,7 +119,7 @@ export function SpeciesSearchPanel({
       if (imported) id = imported.id;
     }
 
-    onSelect(id, hit.common_name, hit.scientific_name, hit.image_url);
+    onSelect(id, hit.common_name, hit.scientific_name, hit.image_url, hit);
   }
 
   return (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -8,12 +9,25 @@ import { useAcademy } from "@/lib/store/academy-provider";
 import { usePlants } from "@/lib/store/plants-provider";
 import { pickDailyLesson } from "@/lib/academy/daily-lesson";
 import { getAcademyLessonById } from "@/lib/academy/lessons";
+import { getScanHistory } from "@/lib/scanner/scan-history";
 
 export function DailyLessonCard() {
   const { progress } = useAcademy();
   const { plants } = usePlants();
 
-  const dailyId = pickDailyLesson(progress.completedLessons, plants);
+  const [hasScans, setHasScans] = useState(false);
+  useEffect(() => {
+    setHasScans(getScanHistory().length > 0);
+  }, []);
+
+  const hasHealthSignals =
+    plants.some((p) => p.healthStatus !== "healthy") || hasScans;
+  const dailyId = pickDailyLesson(
+    progress.completedLessons,
+    plants,
+    undefined,
+    { hasHealthSignals }
+  );
   const lesson = dailyId ? getAcademyLessonById(dailyId) : null;
 
   if (!lesson || progress.completedLessons.includes(lesson.id)) return null;

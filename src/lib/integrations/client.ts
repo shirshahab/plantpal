@@ -33,7 +33,7 @@ export async function fetchWeatherByZip(zipCode: string): Promise<WeatherInsight
 }
 
 export async function searchPlantsApi(
-  filters: SpeciesSearchFilters = {}
+  filters: SpeciesSearchFilters & { limit?: number } = {}
 ): Promise<PlantSearchResponse> {
   const json = await post<PlantSearchResponse>("/api/plants/search", filters);
   if (json.ok && json.data) return json.data;
@@ -47,6 +47,17 @@ export async function searchPlantsApi(
 
 export async function importPlantSpecies(id: string): Promise<PlantSpecies | null> {
   const json = await post<PlantSpecies>("/api/plants/import", { id });
+  return json.ok && json.data ? json.data : null;
+}
+
+export interface PlantDetailsResponse {
+  species: PlantSpecies & Record<string, unknown>;
+  careGuide: Record<string, unknown> | null;
+  source: "perenual" | "plantpal";
+}
+
+export async function fetchPlantDetailsApi(id: string): Promise<PlantDetailsResponse | null> {
+  const json = await post<PlantDetailsResponse>("/api/plants/details", { id });
   return json.ok && json.data ? json.data : null;
 }
 

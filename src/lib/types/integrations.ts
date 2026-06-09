@@ -55,6 +55,8 @@ export interface PlantSearchHit extends PlantSpecies {
 export interface PlantSearchResponse {
   results: PlantSearchHit[];
   sources: { plantpal: number; perenual: number; ai: number; mock: number };
+  /** Suggested correction for a likely-misspelled query. */
+  didYouMean?: string | null;
 }
 
 export interface PlantNetSuggestion {
