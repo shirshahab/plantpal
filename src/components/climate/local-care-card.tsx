@@ -26,9 +26,9 @@ interface LocalCareCardProps {
 }
 
 export function LocalCareCard({ plants, plant, compact = false }: LocalCareCardProps) {
-  const { canUse } = useSubscription();
+  const { canUse, betaUnlockAll } = useSubscription();
 
-  if (!canUse("climate_intelligence")) {
+  if (!betaUnlockAll && !canUse("climate_intelligence")) {
     const copy = UPGRADE_COPY.climate_intelligence;
     return (
       <UpgradePrompt

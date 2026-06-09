@@ -275,6 +275,7 @@ export function CameraHub() {
             onChange={handleIdentifyPhotosChange}
             loading={loading}
             loadingLabel={loadingLabels.identify}
+            onLimitError={(message) => toast(message)}
           />
           {showClientBadPhoto && <BadPhotoGuidance quality={clientPhotoQuality} />}
         </>

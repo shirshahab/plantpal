@@ -5,21 +5,31 @@ import {
   getAuthUserId,
   requireString,
 } from "@/lib/ai/route-utils";
+import {
+  handleAnalysisRouteError,
+  parseJsonBody,
+} from "@/lib/ai/parse-request-body";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { dataUrlToBlob } from "@/lib/storage/plant-photos";
 import { uploadPlantPhotoServer } from "@/lib/storage/plant-photos-server";
+import { formatBytes } from "@/lib/scanner/upload-limits";
+
+export const dynamic = "force-dynamic";
+
+const ROUTE = "api/ai/scan-tag";
 
 export async function POST(request: Request) {
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return aiError("Invalid JSON body");
+  const parsed = await parseJsonBody(request, ROUTE);
+  if (!parsed.ok) {
+    return parsed.response;
   }
 
+  const { body, payloadBytes } = parsed.data;
   const imageDataUrl = requireString(body, "imageDataUrl");
   if (!imageDataUrl) return aiError("imageDataUrl is required");
+
+  console.info(`[${ROUTE}] scanning tag, payload ${formatBytes(payloadBytes)}`);
 
   try {
     const result = await scanNurseryTag(imageDataUrl);
@@ -46,6 +56,6 @@ export async function POST(request: Request) {
 
     return aiSuccess(result, saved);
   } catch (e) {
-    return aiError(e instanceof Error ? e.message : "Tag scan failed", 500);
+    return handleAnalysisRouteError(ROUTE, e, payloadBytes);
   }
 }

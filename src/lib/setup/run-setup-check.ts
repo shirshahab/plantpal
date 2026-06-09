@@ -11,6 +11,7 @@ import {
   maskAnonKey,
 } from "@/lib/supabase/config";
 import { probeTable } from "@/lib/supabase/diagnostics";
+import { probePlantPhotosBucket } from "@/lib/supabase/storage-probe";
 import type { SetupCheckItem, SetupCheckReport, SetupStatus } from "./types";
 import { getIntegrationsHealth } from "@/lib/integrations/health";
 
@@ -122,6 +123,8 @@ export async function runSetupCheck(
     );
   }
 
+  let storageDebug: SetupCheckReport["storageDebug"];
+
   if (supabase && isSupabaseConfigured()) {
     const tableResults = await Promise.all(
       REQUIRED_TABLES.map((t) => probeTable(supabase, t))
@@ -143,19 +146,17 @@ export async function runSetupCheck(
       );
     }
 
-    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-    const hasBucket = buckets?.some((b) => b.id === "plant-photos") ?? false;
+    const bucketProbe = await probePlantPhotosBucket(supabase, { url });
+    storageDebug = bucketProbe.debug;
     checks.push(
       item(
         "storage-bucket",
         "Storage: plant-photos",
-        hasBucket ? "ok" : bucketError ? "warn" : "fail",
-        hasBucket
-          ? "Bucket exists"
-          : bucketError
-            ? `Could not list buckets: ${bucketError.message}`
-            : "Bucket plant-photos not found.",
-        hasBucket
+        bucketProbe.exists ? "ok" : "fail",
+        bucketProbe.exists
+          ? `Bucket verified via ${bucketProbe.debug.checkMethod}.`
+          : bucketProbe.debug.storageError ?? "Bucket plant-photos not found.",
+        bucketProbe.exists
           ? undefined
           : "Run the storage section in supabase/FIX_RUN_THIS.sql."
       )
@@ -283,6 +284,7 @@ export async function runSetupCheck(
     overall: worstStatus(checks),
     mode: mock ? "mock" : "supabase",
     checks,
+    storageDebug,
     integrations,
     integrationSummary: {
       live: liveCount,

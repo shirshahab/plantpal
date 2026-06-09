@@ -5,6 +5,8 @@ import Image from "next/image";
 import { Camera, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { compressImageFile } from "@/lib/scanner/compress-image";
+import { SCAN_UPLOAD_LIMIT_LABEL } from "@/lib/scanner/upload-limits";
 
 interface CameraCaptureProps {
   preview: string | null;
@@ -100,15 +102,12 @@ export function CameraCapture({
         className="hidden"
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
+
+      <p className="text-xs text-center text-gray-500">{SCAN_UPLOAD_LIMIT_LABEL}</p>
     </>
   );
 }
 
 export function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (ev) => resolve(ev.target?.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  return compressImageFile(file);
 }

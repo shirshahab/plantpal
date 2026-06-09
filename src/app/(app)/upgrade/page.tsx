@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { BetaAccessBanner } from "@/components/billing/beta-access-banner";
 import { PlanCards } from "@/components/subscription/plan-cards";
 import { PlanComparisonTable } from "@/components/billing/plan-comparison-table";
 import { useSubscription } from "@/lib/store/subscription-provider";
@@ -36,6 +37,8 @@ export default function UpgradePage() {
             : "Choose the plan that fits your garden. Billing is not active yet — this is a preview."
         }
       />
+
+      {betaUnlockAll && <BetaAccessBanner />}
 
       {!betaUnlockAll && !canAddPlant() && plantLimit !== null && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-center">

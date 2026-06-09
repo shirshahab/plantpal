@@ -3,7 +3,7 @@
  * Resets on server restart; sufficient for beta / single-instance deploys.
  */
 
-import { isBetaUnlockAll } from "@/lib/billing/beta-unlock";
+import { isBetaUnlocked } from "@/lib/billing/beta-unlock";
 
 interface Bucket {
   count: number;
@@ -24,7 +24,7 @@ export function checkRateLimit(
   windowMs: number,
   options?: { bypass?: boolean }
 ): RateLimitResult {
-  if (options?.bypass || isBetaUnlockAll()) {
+  if (options?.bypass || isBetaUnlocked()) {
     return { allowed: true, remaining: max, resetAt: Date.now() + windowMs };
   }
 

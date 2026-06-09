@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { SetupCheckItem, SetupCheckReport, SetupStatus } from "@/lib/setup/types";
+import type { SetupCheckItem, SetupCheckReport, SetupStatus, SetupStorageDebug } from "@/lib/setup/types";
 import { cn } from "@/lib/utils";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
 import {
@@ -63,6 +63,49 @@ function CheckRow({ check }: { check: SetupCheckItem }) {
             </p>
           )}
         </div>
+      </div>
+    </Card>
+  );
+}
+
+function StorageDebugPanel({ debug }: { debug: SetupStorageDebug }) {
+  const bucketList =
+    debug.bucketsReturned.length > 0
+      ? debug.bucketsReturned.join(", ")
+      : "(empty — anon key cannot list buckets)";
+
+  return (
+    <Card padding="sm" className="border-gray-200 bg-gray-50/80">
+      <div className="space-y-2 text-xs text-gray-700">
+        <p className="font-medium text-gray-900">Storage debug</p>
+        <dl className="grid gap-1.5 sm:grid-cols-[auto_1fr]">
+          <dt className="text-gray-500">Project host</dt>
+          <dd className="font-mono">{debug.projectHost ?? "(unknown)"}</dd>
+          <dt className="text-gray-500">Check method</dt>
+          <dd className="font-mono break-all">{debug.checkMethod}</dd>
+          <dt className="text-gray-500">Storage error</dt>
+          <dd className="font-mono break-all">{debug.storageError ?? "(none)"}</dd>
+          <dt className="text-gray-500">Buckets returned</dt>
+          <dd className="font-mono break-all">{bucketList}</dd>
+        </dl>
+        {(debug.details.publicProbeMessage || debug.details.getBucketError) && (
+          <dl className="grid gap-1.5 sm:grid-cols-[auto_1fr] pt-1 border-t border-gray-200">
+            {debug.details.getBucketError && (
+              <>
+                <dt className="text-gray-500">getBucket error</dt>
+                <dd className="font-mono break-all">{debug.details.getBucketError}</dd>
+              </>
+            )}
+            {debug.details.publicProbeMessage && (
+              <>
+                <dt className="text-gray-500">Public probe</dt>
+                <dd className="font-mono break-all">
+                  HTTP {debug.details.publicProbeStatus ?? "?"} — {debug.details.publicProbeMessage}
+                </dd>
+              </>
+            )}
+          </dl>
+        )}
       </div>
     </Card>
   );
@@ -162,6 +205,10 @@ export default function SetupPage() {
                 <CheckRow key={check.id} check={check} />
               ))}
             </div>
+
+            {report.storageDebug && (
+              <StorageDebugPanel debug={report.storageDebug} />
+            )}
 
             {report.integrations && report.integrations.length > 0 && (
               <section className="space-y-3 pt-2">

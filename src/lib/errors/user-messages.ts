@@ -40,23 +40,50 @@ export function friendlySaveError(error: ErrorLike | string): string {
 /** User-facing message for AI API failures shown in UI. */
 export function friendlyAiError(error: string | undefined, feature = "AI"): string {
   if (!error) {
-    return `OpenAI is not connected yet. Showing smart mock result for this ${feature} request.`;
+    return `We couldn't analyze those photos. Please try again.`;
   }
 
   const lower = error.toLowerCase();
+
+  if (
+    lower.includes("too large") ||
+    lower.includes("entity too large") ||
+    lower.includes("unexpected token") ||
+    lower.includes("not valid json")
+  ) {
+    return "Photos are too large. Try again with smaller images.";
+  }
+
+  if (
+    lower.includes("couldn't analyze") ||
+    lower.includes("please try again")
+  ) {
+    return error;
+  }
+
+  if (lower.includes("maximum") && lower.includes("photo")) {
+    return error;
+  }
+
   if (lower.includes("openai") || lower.includes("api key") || lower.includes("401")) {
-    return `OpenAI is not connected yet. Add OPENAI_API_KEY to .env.local and restart the dev server. Showing smart mock result.`;
+    return `We couldn't analyze those photos. Please try again.`;
   }
 
-  if (lower.includes("invalid json")) {
-    return "The request was invalid. Please refresh and try again.";
+  if (lower.includes("invalid json") || lower.includes("invalid request")) {
+    return "Photos are too large. Try again with smaller images.";
   }
 
-  if (lower.includes("identification failed") || lower.includes("care plan")) {
+  if (lower.includes("identification failed") || lower.includes("photo analysis failed")) {
+    return "We couldn't analyze those photos. Please try again.";
+  }
+
+  if (lower.includes("care plan")) {
     return `${error} — showing smart mock result instead.`;
   }
 
-  return error;
+  return error.length > 120
+    ? "We couldn't analyze those photos. Please try again."
+    : error;
 }
 
 /** Short toast-friendly AI status when mock is used intentionally. */

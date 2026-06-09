@@ -6,7 +6,12 @@ import { Camera, ImageIcon, X, Leaf, Flower2, TreeDeciduous } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { fileToDataUrl } from "@/components/scanner/camera-capture";
+import { compressImageFile } from "@/lib/scanner/compress-image";
+import {
+  SCAN_UPLOAD_LIMIT_LABEL,
+  totalDataUrlBytes,
+  validatePhotoPayload,
+} from "@/lib/scanner/upload-limits";
 
 export type PhotoRole = "whole" | "leaf" | "flower";
 
@@ -47,6 +52,7 @@ interface MultiPhotoCaptureProps {
   loading?: boolean;
   loadingLabel?: string;
   activePreview?: string | null;
+  onLimitError?: (message: string) => void;
 }
 
 export function MultiPhotoCapture({
@@ -55,6 +61,7 @@ export function MultiPhotoCapture({
   loading = false,
   loadingLabel = "Analyzing…",
   activePreview,
+  onLimitError,
 }: MultiPhotoCaptureProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const pendingRole = useRef<PhotoRole>("whole");
@@ -72,11 +79,17 @@ export function MultiPhotoCapture({
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
-    const dataUrl = await fileToDataUrl(file);
+    const dataUrl = await compressImageFile(file);
     const role = pendingRole.current;
     const next = photos.filter((p) => p.role !== role);
     next.push({ role, dataUrl });
-    onChange(next.sort((a, b) => slotIndex(a.role) - slotIndex(b.role)));
+    const sorted = next.sort((a, b) => slotIndex(a.role) - slotIndex(b.role));
+    const limitError = validatePhotoPayload(sorted.map((p) => p.dataUrl));
+    if (limitError) {
+      onLimitError?.(limitError);
+      return;
+    }
+    onChange(sorted);
   }
 
   function removePhoto(role: PhotoRole) {
@@ -221,7 +234,15 @@ export function MultiPhotoCapture({
         <p className="text-xs text-center text-gray-500">
           {photos.length} of 3 photos added
           {photos.length < 3 && " — add leaf or flower shots for better accuracy"}
+          {" · "}
+          {SCAN_UPLOAD_LIMIT_LABEL}
+          {" · "}
+          {(totalDataUrlBytes(photos.map((p) => p.dataUrl)) / (1024 * 1024)).toFixed(1)} MB used
         </p>
+      )}
+
+      {photos.length === 0 && (
+        <p className="text-xs text-center text-gray-500">{SCAN_UPLOAD_LIMIT_LABEL}</p>
       )}
     </>
   );
@@ -237,6 +258,10 @@ export function photosToRequest(photos: CapturedPhoto[]): {
   imageDataUrls: string[];
   photoRoles: PhotoRole[];
 } {
+  const limitError = validatePhotoPayload(photos.map((p) => p.dataUrl));
+  if (limitError) {
+    throw new Error(limitError);
+  }
   return {
     imageDataUrls: photos.map((p) => p.dataUrl),
     photoRoles: photos.map((p) => p.role),

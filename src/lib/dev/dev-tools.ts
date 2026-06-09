@@ -28,6 +28,7 @@ export const PLANTPAL_STORAGE_KEYS = [
   "plantpal-waitlist-signups",
   "plantpal-install-dismissed",
   "plantpal-qa-checklist",
+  "plantpal-founder-mode",
   PROFILE_STORAGE_KEY,
   DEMO_MODE_KEY,
 ] as const;

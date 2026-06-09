@@ -8,10 +8,25 @@ export interface SetupCheckItem {
   fix?: string;
 }
 
+export interface SetupStorageDebug {
+  projectHost: string | null;
+  checkMethod: string;
+  storageError: string | null;
+  bucketsReturned: string[];
+  details: {
+    listBucketsError: string | null;
+    getBucketError: string | null;
+    publicProbeStatus: number | null;
+    publicProbeMessage: string | null;
+    usedServiceRole: boolean;
+  };
+}
+
 export interface SetupCheckReport {
   overall: SetupStatus;
   mode: "mock" | "supabase";
   checks: SetupCheckItem[];
+  storageDebug?: SetupStorageDebug;
   integrations?: import("@/lib/types/integrations").IntegrationHealthCard[];
   integrationSummary?: {
     live: number;

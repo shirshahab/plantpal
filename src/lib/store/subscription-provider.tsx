@@ -17,7 +17,11 @@ import {
   getPlantLimit,
   plantsRemaining as calcPlantsRemaining,
 } from "@/lib/billing/account-tiers";
-import { isBetaUnlockAll } from "@/lib/billing/beta-unlock";
+import {
+  ACCESS_OVERRIDE_EVENT,
+  isBetaUnlocked,
+  isFounderModeEnabled,
+} from "@/lib/billing/beta-unlock";
 import {
   loadMockSubscription,
   setMockTier,
@@ -30,7 +34,9 @@ interface SubscriptionContextValue {
   subscription: UserSubscription;
   setTier: (tier: AccountTier, billingCycle?: UserSubscription["billingCycle"]) => void;
   bypassLimits: boolean;
+  /** True when beta env or founder mode grants full access */
   betaUnlockAll: boolean;
+  founderMode: boolean;
   canUse: (feature: BillingFeature | string) => boolean;
   canAddPlant: () => boolean;
   plantLimit: number | null;
@@ -43,18 +49,34 @@ const SubscriptionContext = createContext<SubscriptionContextValue | null>(null)
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [subscription, setSubscription] = useState<UserSubscription>(() => loadMockSubscription());
   const [bypassLimits, setBypassLimits] = useState(false);
-  const [betaUnlockAll] = useState(() => isBetaUnlockAll());
+  const [accessRevision, setAccessRevision] = useState(0);
   const { plants } = usePlants();
-
-  const tier = subscription.tier;
 
   useEffect(() => {
     setSubscription(loadMockSubscription());
     setBypassLimits(isDemoMode());
   }, []);
 
+  useEffect(() => {
+    const refresh = () => setAccessRevision((n) => n + 1);
+    window.addEventListener(ACCESS_OVERRIDE_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(ACCESS_OVERRIDE_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+
+  const betaUnlockAll = useMemo(() => isBetaUnlocked(), [accessRevision]);
+  const founderMode = useMemo(() => isFounderModeEnabled(), [accessRevision]);
+
+  const tier = subscription.tier;
+
   const accessOptions = useMemo(
-    () => ({ betaUnlockAll, bypassLimits }),
+    () => ({
+      betaUnlockAll: betaUnlockAll || bypassLimits,
+      bypassLimits: bypassLimits || betaUnlockAll,
+    }),
     [betaUnlockAll, bypassLimits]
   );
 
@@ -83,13 +105,25 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setTier,
       bypassLimits,
       betaUnlockAll,
+      founderMode,
       canUse,
       canAddPlant,
       plantLimit: getPlantLimit(tier, accessOptions),
       plantsRemaining: calcPlantsRemaining(tier, plants.length, accessOptions),
       plantCount: plants.length,
     }),
-    [tier, subscription, setTier, bypassLimits, betaUnlockAll, canUse, canAddPlant, plants.length, accessOptions]
+    [
+      tier,
+      subscription,
+      setTier,
+      bypassLimits,
+      betaUnlockAll,
+      founderMode,
+      canUse,
+      canAddPlant,
+      plants.length,
+      accessOptions,
+    ]
   );
 
   return (

@@ -24,11 +24,7 @@ export function FeatureGate({
 }: FeatureGateProps) {
   const { canUse, betaUnlockAll } = useSubscription();
 
-  if (canUse(feature)) {
-    return <>{children}</>;
-  }
-
-  if (betaUnlockAll) {
+  if (betaUnlockAll || canUse(feature)) {
     return <>{children}</>;
   }
 

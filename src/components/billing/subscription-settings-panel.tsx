@@ -1,20 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, Crown, Lock, Check } from "lucide-react";
+import { Sparkles, Crown, Check } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BetaAccessBanner } from "@/components/billing/beta-access-banner";
 import { FeatureLockLabel } from "@/components/billing/feature-lock-label";
 import { useSubscription } from "@/lib/store/subscription-provider";
 import { buildSubscriptionPlans } from "@/lib/subscription/plans";
 import { TIER_LABELS } from "@/lib/subscription/types";
-import { isBetaUnlockAll } from "@/lib/billing/beta-unlock";
+import { getEffectivePlanLabel, isBetaUnlockAll } from "@/lib/billing/beta-unlock";
 import type { BillingFeature } from "@/lib/billing/feature-gates";
 
 const FEATURE_STATUS_ROWS: { feature: BillingFeature; label: string }[] = [
   { feature: "ai_doctor", label: "AI Doctor" },
   { feature: "ai_care_plan", label: "AI Care Plans" },
+  { feature: "plant_scanner", label: "Plant Scanner" },
   { feature: "price_checker", label: "Price Checker" },
   { feature: "climate_intelligence", label: "Climate Intelligence" },
   { feature: "plant_genome", label: "Plant Genome" },
@@ -32,9 +34,11 @@ export function SubscriptionSettingsPanel() {
     canUse,
     subscription,
     betaUnlockAll,
+    founderMode,
   } = useSubscription();
 
   const plan = buildSubscriptionPlans(subscription.billingCycle).find((p) => p.id === tier);
+  const planLabel = getEffectivePlanLabel(TIER_LABELS[tier], betaUnlockAll);
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -48,25 +52,24 @@ export function SubscriptionSettingsPanel() {
               <h2 className="font-semibold text-gray-900">Subscription</h2>
               <p className="text-sm text-gray-500">
                 {betaUnlockAll
-                  ? "Beta access — all features unlocked"
+                  ? "Beta Access Enabled — all features unlocked"
                   : "Preview mode — no billing yet"}
               </p>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
+          {betaUnlockAll && <BetaAccessBanner />}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="rounded-xl bg-gray-50 px-4 py-3">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Current plan</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Plan</p>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant={tier === "free" ? "outline" : "success"}>{TIER_LABELS[tier]}</Badge>
-                {betaUnlockAll && (
-                  <Badge variant="outline" className="text-amber-700 border-amber-200">
-                    Beta Plus
-                  </Badge>
-                )}
+                <Badge variant={betaUnlockAll || tier !== "free" ? "success" : "outline"}>
+                  {planLabel}
+                </Badge>
               </div>
-              {plan && plan.price !== "$0" && (
+              {!betaUnlockAll && plan && plan.price !== "$0" && (
                 <p className="text-sm text-gray-600 mt-2">
                   {plan.price}
                   {plan.period}
@@ -80,9 +83,9 @@ export function SubscriptionSettingsPanel() {
               <p className="text-xs text-gray-500 uppercase tracking-wide">Plants used</p>
               <p className="text-lg font-semibold text-gray-900 mt-1">
                 {plantCount}
-                {plantLimit !== null ? ` / ${plantLimit}` : " · Unlimited"}
+                {plantLimit !== null && !betaUnlockAll ? ` / ${plantLimit}` : " · Unlimited"}
               </p>
-              {plantsRemaining !== null && plantsRemaining > 0 && (
+              {plantsRemaining !== null && plantsRemaining > 0 && !betaUnlockAll && (
                 <p className="text-xs text-gray-500 mt-1">{plantsRemaining} remaining on Free</p>
               )}
             </div>
@@ -133,10 +136,11 @@ export function SubscriptionSettingsPanel() {
             </Link>
           )}
 
-          {isBetaUnlockAll() && (
-            <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
-              <Lock className="w-3 h-3 inline mr-1" />
-              BETA_UNLOCK_ALL is enabled — upgrade prompts are hidden for testers.
+          {betaUnlockAll && (
+            <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 leading-relaxed">
+              {founderMode && !isBetaUnlockAll()
+                ? "Founder Mode is enabled — full access stored locally for testing."
+                : "BETA_UNLOCK_ALL is enabled — upgrade prompts are hidden for testers."}
             </p>
           )}
         </CardContent>

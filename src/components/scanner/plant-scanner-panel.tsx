@@ -105,6 +105,7 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
         onChange={handlePhotosChange}
         loading={loading}
         loadingLabel="Analyzing plant with AI…"
+        onLimitError={(message) => toast(message)}
       />
 
       {showBadPhoto && <BadPhotoGuidance quality={clientPhotoQuality} />}

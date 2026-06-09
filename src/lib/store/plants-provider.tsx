@@ -19,7 +19,7 @@ import {
 import { inferHardinessZone } from "@/lib/location/location-service";
 import { friendlySaveError } from "@/lib/errors/user-messages";
 import { canAddPlantCount } from "@/lib/billing/account-tiers";
-import { isBetaUnlockAll } from "@/lib/billing/beta-unlock";
+import { isBetaUnlocked } from "@/lib/billing/beta-unlock";
 import { loadMockSubscription } from "@/lib/billing/subscription-state";
 import { isDemoMode } from "@/lib/profile/user-profile";
 import { useAuth } from "@/lib/store/auth-provider";
@@ -114,11 +114,11 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
       input: NewPlantInput,
       photoFile?: File | null
     ): Promise<Plant> => {
-      const bypassLimits = isDemoMode() || isBetaUnlockAll();
+      const bypassLimits = isDemoMode() || isBetaUnlocked();
       const sub = loadMockSubscription();
       if (
         !canAddPlantCount(sub.tier, plants.length, {
-          betaUnlockAll: isBetaUnlockAll(),
+          betaUnlockAll: isBetaUnlocked(),
           bypassLimits,
         })
       ) {

@@ -10,6 +10,10 @@ import {
   aiSuccess,
   getAuthUserId,
 } from "@/lib/ai/route-utils";
+import {
+  handleAnalysisRouteError,
+  parseJsonBody,
+} from "@/lib/ai/parse-request-body";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { dataUrlToBlob } from "@/lib/storage/plant-photos";
@@ -21,6 +25,12 @@ import {
   RATE_LIMITS,
 } from "@/lib/api/rate-limit";
 import { recordDataSource } from "@/lib/data-sources/runtime";
+import { formatBytes } from "@/lib/scanner/upload-limits";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+const ROUTE = "api/ai/identify-plant";
 
 function parseImages(body: Record<string, unknown>): {
   urls: string[];
@@ -64,19 +74,22 @@ export async function POST(request: Request) {
     return aiError("Too many scans — wait a minute and try again.", 429);
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return aiError("Invalid JSON body");
+  const parsed = await parseJsonBody(request, ROUTE);
+  if (!parsed.ok) {
+    return parsed.response;
   }
 
+  const { body, payloadBytes } = parsed.data;
   const { urls, roles } = parseImages(body);
   if (urls.length === 0) {
     return aiError("At least one image (imageDataUrl or imageDataUrls) is required");
   }
 
   const primaryUrl = urls[0];
+
+  console.info(
+    `[${ROUTE}] analyzing ${urls.length} photo(s), payload ${formatBytes(payloadBytes)}`
+  );
 
   try {
     const result = await identifyPlantFromPhoto(urls, roles);
@@ -134,6 +147,6 @@ export async function POST(request: Request) {
     return aiSuccess(enriched, saved);
   } catch (e) {
     recordDataSource("openai", "mock", { fallback: true, error: "Identification failed" });
-    return aiError(e instanceof Error ? e.message : "Identification failed", 500);
+    return handleAnalysisRouteError(ROUTE, e, payloadBytes);
   }
 }

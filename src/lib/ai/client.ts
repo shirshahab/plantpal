@@ -15,20 +15,56 @@ import type {
   ScanTagRequest,
   TagScanResponse,
 } from "@/lib/types/ai";
+import {
+  FRIENDLY_ANALYSIS_FAILED,
+  FRIENDLY_PAYLOAD_TOO_LARGE,
+} from "@/lib/ai/messages";
+
+function friendlyNonJsonError(status: number, bodyText: string): string {
+  if (
+    status === 413 ||
+    /request entity too large/i.test(bodyText) ||
+    /payload too large/i.test(bodyText)
+  ) {
+    return FRIENDLY_PAYLOAD_TOO_LARGE;
+  }
+  return FRIENDLY_ANALYSIS_FAILED;
+}
 
 async function post<T>(path: string, body: unknown): Promise<AIApiResponse<T>> {
-  const res = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    return { ok: false, error: FRIENDLY_ANALYSIS_FAILED };
+  }
 
-  const json = (await res.json()) as AIApiResponse<T>;
+  const contentType = res.headers.get("content-type") ?? "";
+  const text = await res.text();
+
+  if (!contentType.includes("application/json")) {
+    return { ok: false, error: friendlyNonJsonError(res.status, text) };
+  }
+
+  let json: AIApiResponse<T>;
+  try {
+    json = JSON.parse(text) as AIApiResponse<T>;
+  } catch {
+    return { ok: false, error: friendlyNonJsonError(res.status, text) };
+  }
+
   if (!res.ok && json.ok === false) {
     return json;
   }
   if (!res.ok) {
-    return { ok: false, error: `Request failed (${res.status})` };
+    return {
+      ok: false,
+      error: json.ok === false ? json.error : friendlyNonJsonError(res.status, text),
+    };
   }
   return json;
 }
