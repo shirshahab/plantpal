@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fafbf8;
+  --foreground: #1f2937;
+  --brand-primary: #2d6a4f;
+  --brand-sage: #95b89b;
+  --brand-growth: #74c365;
+  --brand-bg: #fafbf8;
+  --brand-text: #1f2937;
+  --brand-text-secondary: #6b7280;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-sage: var(--brand-sage);
+  --color-brand-growth: var(--brand-growth);
+  --color-brand-bg: var(--brand-bg);
+  --color-brand-text: var(--brand-text);
+  --color-brand-text-secondary: var(--brand-text-secondary);
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-plus-jakarta);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+
+.font-heading {
+  font-family: var(--font-heading), var(--font-sans), system-ui, sans-serif;
+}
+
+.safe-top {
+  padding-top: var(--safe-top);
+}
+
+.safe-bottom {
+  padding-bottom: var(--safe-bottom);
+}
+
+.page-enter {
+  animation: pageEnter 0.25s ease-out;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast-enter {
+  animation: toastEnter 0.3s ease-out;
+}
+
+@keyframes toastEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.touch-manipulation {
+  touch-action: manipulation;
+}

@@ -1,0 +1,33 @@
+-- PlantPal Phase 6 Schema (future)
+-- Run when moving engagement features from localStorage to Supabase
+
+-- CREATE TABLE IF NOT EXISTS plant_growth_entries (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   plant_id UUID NOT NULL REFERENCES plants(id) ON DELETE CASCADE,
+--   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+--   photo_url TEXT,
+--   height_inches DECIMAL(5,1),
+--   note TEXT,
+--   entry_date TIMESTAMPTZ NOT NULL,
+--   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+-- );
+
+-- CREATE TABLE IF NOT EXISTS plant_harvest_entries (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   plant_id UUID NOT NULL REFERENCES plants(id) ON DELETE CASCADE,
+--   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+--   crop_name TEXT NOT NULL,
+--   quantity DECIMAL(10,2) NOT NULL,
+--   unit TEXT NOT NULL,
+--   harvest_date TIMESTAMPTZ NOT NULL,
+--   notes TEXT,
+--   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+-- );
+
+-- CREATE TABLE IF NOT EXISTS user_achievements (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+--   achievement_id TEXT NOT NULL,
+--   unlocked_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+--   UNIQUE (user_id, achievement_id)
+-- );
