@@ -22,9 +22,9 @@ export function checkRateLimit(
   key: string,
   max: number,
   windowMs: number,
-  options?: { bypass?: boolean }
+  options?: { bypass?: boolean; request?: Request }
 ): RateLimitResult {
-  if (options?.bypass || isBetaUnlocked()) {
+  if (options?.bypass || isBetaUnlocked(options?.request)) {
     return { allowed: true, remaining: max, resetAt: Date.now() + windowMs };
   }
 

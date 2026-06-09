@@ -18,7 +18,8 @@ export async function POST(request: Request) {
   const burst = checkRateLimit(
     `plant-search:${getClientKey(request)}`,
     RATE_LIMITS.plantSearchBurst,
-    RATE_LIMITS.plantSearchBurstWindowMs
+    RATE_LIMITS.plantSearchBurstWindowMs,
+    { request }
   );
   if (!burst.allowed) {
     return NextResponse.json(

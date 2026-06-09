@@ -22,7 +22,11 @@ export type XpEventType =
   | "daily_login"
   | "task_completed"
   | "price_check_completed"
-  | "daily_mission_completed";
+  | "daily_mission_completed"
+  | "weekly_mission_completed"
+  | "family_challenge_completed"
+  | "seasonal_task_completed"
+  | "garden_map_updated";
 
 export type BadgeCategory =
   | "milestone"

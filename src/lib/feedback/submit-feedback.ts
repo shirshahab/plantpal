@@ -1,8 +1,11 @@
 import type { BetaFeedbackInput } from "./types";
-import { FEEDBACK_STORAGE_KEY } from "./types";
+import { FEEDBACK_STORAGE_KEY, getCategoryLabel } from "./types";
 
 function buildMessage(input: BetaFeedbackInput): string {
   const parts: string[] = [];
+  if (input.category) {
+    parts.push(`Category: ${getCategoryLabel(input.category)}`);
+  }
   if (input.tried?.trim()) parts.push(`What I tried: ${input.tried.trim()}`);
   if (input.confused?.trim()) parts.push(`What confused me: ${input.confused.trim()}`);
   if (input.improvement?.trim()) parts.push(`What would help: ${input.improvement.trim()}`);
@@ -31,8 +34,8 @@ export async function submitBetaFeedback(
   input: BetaFeedbackInput
 ): Promise<{ ok: boolean; storage: "supabase" | "local"; error?: string }> {
   const message = buildMessage(input);
-  if (!message.trim()) {
-    return { ok: false, storage: "local", error: "Please share at least one field." };
+  if (!input.category && !input.tried?.trim() && !input.confused?.trim() && !input.improvement?.trim()) {
+    return { ok: false, storage: "local", error: "Pick a type or add a note." };
   }
 
   try {

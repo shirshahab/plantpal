@@ -193,6 +193,7 @@ export interface CarePlanRequest {
   goals: string[];
   primaryGoal?: string;
   season?: string;
+  sizeContext?: string;
 }
 
 export interface DoctorRequest {

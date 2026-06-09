@@ -20,65 +20,94 @@ import {
   CalendarDays,
   Trees,
   ClipboardList,
+  Map,
+  Palette,
+  Heart,
+  CalendarRange,
+  Target,
+  Store,
+  Activity,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
+import { useSubscription } from "@/lib/store/subscription-provider";
 
-const sections = [
-  {
-    title: "Daily Care",
-    items: [
-      { href: "/today", label: "Today", icon: Sparkles, desc: "Your daily command center" },
-      { href: "/calendar", label: "Calendar", icon: CalendarDays, desc: "Monthly care schedule" },
-      { href: "/academy", label: "Academy", icon: GraduationCap, desc: "Learn & earn XP" },
-    ],
-  },
-  {
-    title: "Care & Tools",
-    items: [
-      { href: "/doctor", label: "Plant Doctor", icon: Stethoscope, desc: "Conversational plant help" },
-      { href: "/concierge", label: "Concierge", icon: ClipboardList, desc: "Guided recovery plans" },
-      { href: "/scanner", label: "Plant Camera", icon: Scan, desc: "ID, diagnose, scan tags" },
-      { href: "/scanner/history", label: "Scanner History", icon: Images, desc: "Past scans & diagnoses" },
-      { href: "/database", label: "Plant Database", icon: Database, desc: "183+ species" },
-      { href: "/price-checker", label: "Price Checker", icon: Tag, desc: "Is this plant fairly priced?" },
-    ],
-  },
-  {
-    title: "Track & Celebrate",
-    items: [
-      { href: "/achievements", label: "Achievements", icon: Trophy, desc: "Badges & milestones" },
-      { href: "/gallery", label: "Before & After", icon: Images, desc: "Plant transformations" },
-      { href: "/harvest", label: "Harvest Log", icon: Wheat, desc: "Track edible yields" },
-      { href: "/collection", label: "Rare Collection", icon: Gem, desc: "Collector mode" },
-    ],
-  },
-  {
-    title: "Plan & Discover",
-    items: [
-      { href: "/shop-assistant", label: "Shop Assistant", icon: ShoppingBag, desc: "Find plants to buy" },
-      { href: "/landscape-designer", label: "Landscape Designer", icon: Trees, desc: "AI yard plans & budgets" },
-      { href: "/property", label: "Property Mode", icon: Home, desc: "Landscape management" },
-      { href: "/community", label: "Community", icon: Users, desc: "Tips, stories & gardens" },
-      { href: "/ar", label: "AR Garden", icon: Sparkles, desc: "Concept preview" },
-    ],
-  },
-  {
-    title: "Account",
-    items: [
-      { href: "/upgrade", label: "Upgrade", icon: Sparkles, desc: "Plans & limits" },
-      { href: "/settings", label: "Settings", icon: Settings, desc: "Profile & preferences" },
-      { href: "/setup", label: "Setup checker", icon: Database, desc: "Supabase & API health" },
-      { href: "/demo-script", label: "Demo Script", icon: Sparkles, desc: "Live pitch guide" },
-      { href: "/qa", label: "QA Checklist", icon: Trophy, desc: "Manual test checklist" },
-    ],
-  },
-];
+function buildSections(hideUpgrade: boolean) {
+  return [
+    {
+      title: "PlantPal OS",
+      items: [
+        { href: "/garden-map", label: "My Garden Map", icon: Map, desc: "Digital twin · zones & health" },
+        { href: "/design-studio", label: "Design Studio", icon: Palette, desc: "AI yard concepts & shopping lists" },
+        { href: "/seasonal", label: "Seasonal Engine", icon: CalendarRange, desc: "Location-aware care tasks" },
+        { href: "/missions", label: "Missions", icon: Target, desc: "Daily goals · streaks · XP" },
+        { href: "/family", label: "PlantPal Family", icon: Heart, desc: "Family XP & leaderboard" },
+        { href: "/marketplace", label: "Marketplace", icon: Store, desc: "Plants, soil, tools & more" },
+      ],
+    },
+    {
+      title: "Daily Care",
+      items: [
+        { href: "/today", label: "Today", icon: Sparkles, desc: "Your daily command center" },
+        { href: "/calendar", label: "Calendar", icon: CalendarDays, desc: "Monthly care schedule" },
+        { href: "/academy", label: "Academy", icon: GraduationCap, desc: "Learn & earn XP" },
+      ],
+    },
+    {
+      title: "Care & Tools",
+      items: [
+        { href: "/doctor", label: "Plant Doctor", icon: Stethoscope, desc: "Conversational plant help" },
+        { href: "/concierge", label: "Concierge", icon: ClipboardList, desc: "Guided recovery plans" },
+        { href: "/scanner", label: "Plant Camera", icon: Scan, desc: "ID, diagnose, scan tags" },
+        { href: "/scanner/history", label: "Scanner History", icon: Images, desc: "Past scans & diagnoses" },
+        { href: "/database", label: "Plant Database", icon: Database, desc: "183+ species" },
+        { href: "/price-checker", label: "Price Checker", icon: Tag, desc: "Is this plant fairly priced?" },
+      ],
+    },
+    {
+      title: "Track & Celebrate",
+      items: [
+        { href: "/achievements", label: "Achievements", icon: Trophy, desc: "Badges & milestones" },
+        { href: "/gallery", label: "Before & After", icon: Images, desc: "Plant transformations" },
+        { href: "/harvest", label: "Harvest Log", icon: Wheat, desc: "Track edible yields" },
+        { href: "/collection", label: "Rare Collection", icon: Gem, desc: "Collector mode" },
+        { href: "/activity", label: "Garden Activity", icon: Activity, desc: "Recent scans, care & badges" },
+      ],
+    },
+    {
+      title: "Plan & Discover",
+      items: [
+        { href: "/shop-assistant", label: "Shop Assistant", icon: ShoppingBag, desc: "Find plants to buy" },
+        { href: "/landscape-designer", label: "Landscape Designer", icon: Trees, desc: "AI yard plans & budgets" },
+        { href: "/property", label: "Property Mode", icon: Home, desc: "Landscape management" },
+        { href: "/community", label: "Community", icon: Users, desc: "Tips, stories & gardens" },
+        { href: "/ar", label: "AR Garden", icon: Sparkles, desc: "Concept preview" },
+      ],
+    },
+    {
+      title: "Account",
+      items: [
+        { href: "/beta-start", label: "Beta Start", icon: Sparkles, desc: "Welcome & onboarding for testers" },
+        { href: "/tester-guide", label: "Tester Guide", icon: Target, desc: "5-step beta testing checklist" },
+        ...(hideUpgrade
+          ? []
+          : [{ href: "/upgrade", label: "Upgrade", icon: Sparkles, desc: "Plans & limits" }]),
+        { href: "/settings", label: "Settings", icon: Settings, desc: "Profile & preferences" },
+        { href: "/setup", label: "Setup checker", icon: Database, desc: "Supabase & API health" },
+        { href: "/demo-script", label: "Demo Script", icon: Sparkles, desc: "Live pitch guide" },
+        { href: "/qa", label: "QA Checklist", icon: Trophy, desc: "Manual test checklist" },
+      ],
+    },
+  ];
+}
 
 export function MoreMenuPage() {
+  const { betaUnlockAll } = useSubscription();
+  const sections = buildSections(betaUnlockAll);
+
   return (
-    <div className="space-y-6 max-w-lg mx-auto">
-      <PageHeader title="More" description="Tools, tracking, and upcoming features" />
+    <div className="space-y-6 max-w-lg mx-auto pb-4">
+      <PageHeader title="More" description="Tools, tracking, and ecosystem features" />
 
       {sections.map((section) => (
         <div key={section.title}>
@@ -90,7 +119,7 @@ export function MoreMenuPage() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-4 px-4 py-3.5 hover:bg-green-50/50 transition-colors touch-manipulation"
+                className="flex items-center gap-4 px-4 py-3.5 hover:bg-green-50/50 transition-colors touch-manipulation min-h-[56px]"
               >
                 <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
                   <item.icon className="w-5 h-5 text-green-600" />

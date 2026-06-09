@@ -1,12 +1,14 @@
 /**
  * Beta / founder access overrides — full Plus + Family access without billing.
  *
- * Client (browser): set NEXT_PUBLIC_BETA_UNLOCK_ALL=true in .env.local
- * Server routes: BETA_UNLOCK_ALL=true also works
- * Local dev: enable Founder Mode in Settings → Developer Tools
+ * Client: localStorage + user profile flag + cookie (for API rate limits)
+ * Server: BETA_UNLOCK_ALL env OR founder-mode cookie on requests
  */
 
+import { loadUserProfile, saveUserProfile } from "@/lib/profile/user-profile";
+
 export const FOUNDER_MODE_STORAGE_KEY = "plantpal-founder-mode";
+export const FOUNDER_MODE_COOKIE = "plantpal-founder-mode";
 export const ACCESS_OVERRIDE_EVENT = "plantpal-access-override-changed";
 
 export type AccessLevel = "restricted" | "full";
@@ -25,40 +27,97 @@ export function isBetaUnlockAll(): boolean {
   );
 }
 
-/** Founder Mode — localStorage override for developers (client only). */
-export function isFounderModeEnabled(): boolean {
+function readProfileFounderFlag(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return loadUserProfile().founderMode === true;
+  } catch {
+    return false;
+  }
+}
+
+function readLocalFounderFlag(): boolean {
   if (typeof window === "undefined") return false;
   return localStorage.getItem(FOUNDER_MODE_STORAGE_KEY) === "true";
 }
 
+/** Sync cookie so server API routes can bypass rate limits when founder mode is on. */
+export function syncFounderModeCookie(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  const maxAge = enabled ? 60 * 60 * 24 * 365 : 0;
+  document.cookie = `${FOUNDER_MODE_COOKIE}=${enabled ? "true" : ""}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+
+/** Founder Mode — localStorage + profile flag (client only). */
+export function isFounderModeEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  return readLocalFounderFlag() || readProfileFounderFlag();
+}
+
+/** Primary check — use before all subscription gates. */
+export function isFounderMode(): boolean {
+  return isFounderModeEnabled();
+}
+
 export function setFounderModeEnabled(enabled: boolean): void {
   if (typeof window === "undefined") return;
+
   if (enabled) {
     localStorage.setItem(FOUNDER_MODE_STORAGE_KEY, "true");
   } else {
     localStorage.removeItem(FOUNDER_MODE_STORAGE_KEY);
   }
+
+  saveUserProfile({ founderMode: enabled });
+  syncFounderModeCookie(enabled);
   window.dispatchEvent(new CustomEvent(ACCESS_OVERRIDE_EVENT));
+}
+
+/** Server: read founder cookie from incoming request. */
+export function isFounderModeFromRequest(request: Request): boolean {
+  const cookie = request.headers.get("cookie") ?? "";
+  return /(?:^|;\s*)plantpal-founder-mode=true(?:;|$)/.test(cookie);
 }
 
 /**
  * True when beta env OR founder mode grants full access.
- * Use this for all subscription / feature gate checks.
+ * Pass `request` on server routes for cookie-based founder bypass.
  */
-export function isBetaUnlocked(): boolean {
-  return isBetaUnlockAll() || isFounderModeEnabled();
+export function isBetaUnlocked(request?: Request): boolean {
+  if (isBetaUnlockAll()) return true;
+  if (request && isFounderModeFromRequest(request)) return true;
+  if (typeof window !== "undefined") return isFounderModeEnabled();
+  return false;
 }
 
-export function getAccessLevel(): AccessLevel {
-  return isBetaUnlocked() ? "full" : "restricted";
+/** Alias for subscription checks — founder overrides Free / Plus / Pro. */
+export function hasUnrestrictedAccess(request?: Request): boolean {
+  return isBetaUnlocked(request);
 }
 
-/** Display label for settings when unrestricted access is active. */
+export function getAccessLevel(request?: Request): AccessLevel {
+  return isBetaUnlocked(request) ? "full" : "restricted";
+}
+
 export const BETA_TESTER_PLAN_LABEL = "Beta Tester";
+export const FOUNDER_PLAN_LABEL = "Founder Mode";
 
 export function getEffectivePlanLabel(
   tierLabel: string,
-  unrestricted: boolean
+  options: { unrestricted?: boolean; founderMode?: boolean } = {}
 ): string {
-  return unrestricted ? BETA_TESTER_PLAN_LABEL : tierLabel;
+  if (options.founderMode) return FOUNDER_PLAN_LABEL;
+  if (options.unrestricted) return BETA_TESTER_PLAN_LABEL;
+  return tierLabel;
+}
+
+/** Call once on app load to align cookie with stored founder state. */
+export function hydrateFounderModeFromStorage(): void {
+  if (typeof window === "undefined") return;
+  const enabled = readLocalFounderFlag() || readProfileFounderFlag();
+  if (enabled) {
+    localStorage.setItem(FOUNDER_MODE_STORAGE_KEY, "true");
+    saveUserProfile({ founderMode: true });
+  }
+  syncFounderModeCookie(enabled);
 }

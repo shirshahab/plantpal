@@ -38,6 +38,19 @@ function mockCarePlan(input: CarePlanRequest): AICarePlanResponse {
     lastWateredAt: null,
     lastFertilizedAt: null,
     createdAt: new Date().toISOString(),
+    photoStatus: "real_photo",
+    placeholderImageType: null,
+    sizeType: "unknown",
+    nurseryContainerSize: null,
+    heightFeet: null,
+    heightInches: null,
+    potDiameterInches: null,
+    trunkDiameterInches: null,
+    estimatedAgeMonths: null,
+    plantedDate: null,
+    purchaseDate: null,
+    purchasePrice: null,
+    purchaseStore: null,
   };
 
   const goals = getGoalsByIds(input.goals);
@@ -97,7 +110,8 @@ Health: ${input.healthStatus}
 Notes: ${input.healthNotes || "none"}
 Season: ${season}
 Goals: ${input.goals.join(", ") || "keep it alive"}
-Primary goal: ${input.primaryGoal || "not specified"}`
+Primary goal: ${input.primaryGoal || "not specified"}
+${input.sizeContext ? `Size & purchase context: ${input.sizeContext}` : ""}`
     );
 
     return { ...raw, source: "ai" };

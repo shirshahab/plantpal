@@ -8,6 +8,7 @@ import {
   getNextMilestone,
 } from "@/lib/plants/goal-care";
 import { getGoalsByIds } from "@/lib/mock/plant-goals";
+import { withPlantDefaults } from "@/lib/supabase/mappers";
 import { chatJSON, isOpenAIConfigured } from "./openai";
 import { GARDENER_SYSTEM_PROMPT, getCurrentSeasonName } from "./prompts";
 
@@ -24,27 +25,18 @@ function mockGoalPlan(input: GoalPlanRequest): AIGoalPlanResponse {
   const goals = getGoalsByIds(input.goals);
   const primary = goals.find((g) => g.name === input.primaryGoal) ?? goals[0];
 
-  const plant: Plant = {
+  const plant: Plant = withPlantDefaults({
     id: input.plantId,
     name: input.nickname,
     species: input.species,
     image: "",
-    locationType: "outdoor",
-    plantingType: "pot",
     zipCode: input.zipCode,
-    sunExposure: "partial_sun",
     healthStatus: input.healthStatus,
     healthNotes: input.healthNotes ?? "",
-    waterFrequencyDays: 7,
-    fertilizeFrequencyWeeks: 8,
-    pruneSchedule: "Early spring",
-    wateringInstructions: "",
-    fertilizingInstructions: "",
-    pruningInstructions: "",
     lastWateredAt: null,
     lastFertilizedAt: null,
     createdAt: input.createdAt,
-  };
+  });
 
   const care = generateGoalBasedCarePlan(plant, goals, input.zipCode, input.healthStatus);
   const milestones = generateMilestonesForPlant(input.plantId, "local", plant, goals);

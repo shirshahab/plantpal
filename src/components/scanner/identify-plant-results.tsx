@@ -24,6 +24,8 @@ import {
   getPrimarySourceLabel,
 } from "@/lib/scanner/identification-source-labels";
 import { markScanAddedToGarden } from "@/lib/scanner/scan-history";
+import { isDemoMode } from "@/lib/profile/user-profile";
+import { AiSafetyDisclaimer } from "@/components/ai/ai-safety-disclaimer";
 import type { PhotoQualityAssessment, PlantIdentificationResponse } from "@/lib/types/ai";
 import { cn } from "@/lib/utils";
 
@@ -48,17 +50,22 @@ export function IdentifyPlantResults({
 }: IdentifyPlantResultsProps) {
   const photoQuality = mergePhotoQuality(clientPhotoQuality ?? null, result.photo_quality);
   const badPhoto = !photoQuality.acceptable;
+  const isDemoResult = result.source === "mock" || result.identification_provider === "mock";
+  const showDemoResult = isDemoResult && isDemoMode();
+  const liveAiUnavailable = isDemoResult && !isDemoMode();
+
   const notConfident =
     result.not_fully_confident ??
     (result.confidence_score < 70 || result.low_confidence || result.providers_disagree);
 
-  const headline =
-    result.friendly_headline ??
-    (badPhoto
-      ? "PlantPal needs a clearer photo before identifying this plant."
-      : result.source === "mock"
-        ? "Demo identification — not based on your photo."
-        : `PlantPal thinks this is likely a ${result.common_name}.`);
+  const headline = liveAiUnavailable
+    ? "Live AI identification isn't configured yet."
+    : (result.friendly_headline ??
+      (badPhoto
+        ? "PlantPal needs a clearer photo before identifying this plant."
+        : showDemoResult
+          ? "Demo identification — not based on your photo."
+          : `PlantPal thinks this is likely a ${result.common_name}.`));
 
   const primaryLabel = getPrimarySourceLabel(result);
   const plantNetLabel = getPlantNetSourceLabel(result.plantnet_configured ?? false);
@@ -82,9 +89,20 @@ export function IdentifyPlantResults({
 
   return (
     <div className="space-y-4 page-enter">
+      <AiSafetyDisclaimer />
+      {liveAiUnavailable && (
+        <Card padding="md" className="border-amber-200 bg-amber-50">
+          <p className="text-sm font-semibold text-amber-950">Live AI not available</p>
+          <p className="text-sm text-amber-900/90 mt-1 leading-relaxed">
+            Add OPENAI_API_KEY (and optionally PLANTNET_API_KEY) in your environment to identify
+            plants from photos. Demo results are only shown in demo mode.
+          </p>
+        </Card>
+      )}
+
       {badPhoto && <BadPhotoGuidance quality={photoQuality} />}
 
-      {!badPhoto && notConfident && (
+      {!badPhoto && !liveAiUnavailable && notConfident && (
         <LowConfidenceGuidance onRetake={onRetake} onSaveUnknown={() => savePrefill(true)} />
       )}
 
@@ -100,12 +118,12 @@ export function IdentifyPlantResults({
         </Card>
       )}
 
-      <Card padding="md" className={cn("space-y-4", badPhoto ? "border-gray-200 opacity-90" : "border-green-100")}>
-        <div className="flex flex-wrap gap-2">
-          <Badge variant={result.source === "mock" ? "outline" : "success"} className="text-[10px]">
-            {primaryLabel}
+      <Card padding="md" className={cn("space-y-4", badPhoto || liveAiUnavailable ? "border-gray-200 opacity-90" : "border-green-100")}>
+        <div className="flex flex-wrap gap-2 items-center">
+          <Badge variant={liveAiUnavailable ? "outline" : showDemoResult ? "outline" : "success"} className="text-[10px]">
+            {liveAiUnavailable ? "Not configured" : primaryLabel}
           </Badge>
-          {plantNetLabel && (
+          {!liveAiUnavailable && plantNetLabel && (
             <Badge variant="outline" className="text-[10px]">
               {plantNetLabel}
             </Badge>
@@ -115,11 +133,19 @@ export function IdentifyPlantResults({
               {consensusLabel}
             </Badge>
           )}
+          {!badPhoto && !liveAiUnavailable && (
+            <Badge
+              variant={result.confidence_score >= 70 ? "success" : "warning"}
+              className="text-[10px] ml-auto tabular-nums"
+            >
+              {result.confidence_score}% confidence
+            </Badge>
+          )}
         </div>
 
         <div className="space-y-2">
           <p className="text-sm text-gray-800 leading-relaxed font-medium">{headline}</p>
-          {!badPhoto && (
+          {!badPhoto && !liveAiUnavailable && (
             <div>
               <p className="text-xs font-medium text-green-700 uppercase tracking-wide">
                 Best match
@@ -132,7 +158,7 @@ export function IdentifyPlantResults({
           )}
         </div>
 
-        {!badPhoto && result.top_matches.length > 0 && (
+        {!badPhoto && !liveAiUnavailable && result.top_matches.length > 0 && (
           <section>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
               Other possibilities
@@ -165,7 +191,7 @@ export function IdentifyPlantResults({
           </section>
         )}
 
-        {!badPhoto && (
+        {!badPhoto && !liveAiUnavailable && (
           <>
             <section className="rounded-xl bg-indigo-50/60 border border-indigo-100 px-4 py-3">
               <p className="text-xs font-semibold text-indigo-800 uppercase tracking-wide flex items-center gap-1.5">
@@ -255,7 +281,7 @@ export function IdentifyPlantResults({
         )}
 
         <div className="flex flex-col gap-2 pt-1">
-          {!badPhoto && (
+          {!badPhoto && !liveAiUnavailable && (
             <Button
               className="w-full h-14 touch-manipulation"
               onClick={() => savePrefill(false)}
@@ -272,7 +298,7 @@ export function IdentifyPlantResults({
             <RotateCcw className="w-4 h-4" />
             {badPhoto ? "Retake clearer photo" : "Take another photo"}
           </Button>
-          {!badPhoto && (
+          {!badPhoto && !liveAiUnavailable && (
             <Button
               variant="outline"
               className="w-full h-12 touch-manipulation"
@@ -282,9 +308,9 @@ export function IdentifyPlantResults({
               Save as Unknown
             </Button>
           )}
-          {!badPhoto && result.database_species_id && (
+          {!badPhoto && !liveAiUnavailable && result.database_species_id && (
             <Link href={`/database/plants/${result.database_species_id}`}>
-              <Button variant="secondary" className="w-full">
+              <Button variant="secondary" className="w-full touch-manipulation">
                 View in plant database
               </Button>
             </Link>
@@ -292,9 +318,9 @@ export function IdentifyPlantResults({
         </div>
 
         <p className="text-[11px] text-gray-400 text-center">
-          {primaryLabel}
-          {plantNetLabel && ` · ${plantNetLabel}`}
-          {result.source === "mock" && " · set OPENAI_API_KEY for live ID"}
+          {liveAiUnavailable
+            ? "Configure OPENAI_API_KEY for live identification"
+            : `${primaryLabel}${plantNetLabel ? ` · ${plantNetLabel}` : ""}`}
         </p>
       </Card>
     </div>

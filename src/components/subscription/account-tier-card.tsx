@@ -12,10 +12,13 @@ import { buildSubscriptionPlans } from "@/lib/subscription/plans";
 import { getEffectivePlanLabel } from "@/lib/billing/beta-unlock";
 
 export function AccountTierCard() {
-  const { tier, plantCount, plantLimit, plantsRemaining, betaUnlockAll, subscription } =
+  const { tier, plantCount, plantLimit, plantsRemaining, betaUnlockAll, founderMode, subscription } =
     useSubscription();
   const plan = buildSubscriptionPlans(subscription.billingCycle).find((p) => p.id === tier);
-  const planLabel = getEffectivePlanLabel(TIER_LABELS[tier], betaUnlockAll);
+  const planLabel = getEffectivePlanLabel(TIER_LABELS[tier], {
+    founderMode,
+    unrestricted: betaUnlockAll && !founderMode,
+  });
 
   return (
     <Card>
@@ -28,7 +31,11 @@ export function AccountTierCard() {
             <div>
               <h2 className="font-semibold text-gray-900">Subscription</h2>
               <p className="text-sm text-gray-500">
-                {betaUnlockAll ? "Beta Access Enabled" : "Manage plan & usage"}
+                {founderMode
+                  ? "Founder Mode Active"
+                  : betaUnlockAll
+                    ? "Beta Access Enabled"
+                    : "Manage plan & usage"}
               </p>
             </div>
           </div>

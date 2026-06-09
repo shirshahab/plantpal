@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Sparkles, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useSubscription } from "@/lib/store/subscription-provider";
 import { cn } from "@/lib/utils";
 
 interface UpgradePromptProps {
@@ -21,7 +24,9 @@ export function UpgradePrompt({
   compact = false,
   hidden = false,
 }: UpgradePromptProps) {
-  if (hidden) return null;
+  const { betaUnlockAll } = useSubscription();
+
+  if (hidden || betaUnlockAll) return null;
 
   if (compact) {
     return (

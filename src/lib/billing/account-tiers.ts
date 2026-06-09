@@ -9,6 +9,11 @@ import {
 export interface AccessOptions {
   betaUnlockAll?: boolean;
   bypassLimits?: boolean;
+  founderMode?: boolean;
+}
+
+export function isAccessUnrestricted(options: AccessOptions = {}): boolean {
+  return !!(options.betaUnlockAll || options.bypassLimits || options.founderMode);
 }
 
 export function isFree(tier: Tier): boolean {
@@ -32,7 +37,7 @@ export function canAccessFeature(
   feature: BillingFeature | string,
   options: AccessOptions = {}
 ): boolean {
-  if (options.betaUnlockAll || options.bypassLimits) return true;
+  if (isAccessUnrestricted(options)) return true;
 
   const normalized = normalizeFeature(feature);
   if (!normalized) return false;
@@ -46,7 +51,7 @@ export function canAccessFeature(
 }
 
 export function getPlantLimit(tier: Tier, options: AccessOptions = {}): number | null {
-  if (options.betaUnlockAll || options.bypassLimits) return null;
+  if (isAccessUnrestricted(options)) return null;
   return isFree(tier) ? FREE_PLANT_LIMIT : null;
 }
 

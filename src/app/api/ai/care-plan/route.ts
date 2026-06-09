@@ -51,6 +51,7 @@ export async function POST(request: Request) {
       goals: stringArray(body, "goals"),
       primaryGoal: optionalString(body, "primaryGoal"),
       season: optionalString(body, "season"),
+      sizeContext: optionalString(body, "sizeContext"),
     });
 
     let saved = false;

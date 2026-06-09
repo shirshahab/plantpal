@@ -5,6 +5,7 @@ import type {
   DoctorRequest,
   GoalPlanRequest,
 } from "@/lib/types/ai";
+import { buildSizeContextForAi } from "@/lib/plants/plant-size";
 import type { ConciergePlanRequest } from "@/lib/concierge/types";
 
 export function buildCarePlanRequest(
@@ -24,6 +25,7 @@ export function buildCarePlanRequest(
     healthNotes: plant.healthNotes,
     goals: goals.map((g) => g.name),
     primaryGoal: primary?.name,
+    sizeContext: buildSizeContextForAi(plant),
   };
 }
 

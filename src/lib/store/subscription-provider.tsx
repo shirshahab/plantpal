@@ -19,8 +19,9 @@ import {
 } from "@/lib/billing/account-tiers";
 import {
   ACCESS_OVERRIDE_EVENT,
+  hydrateFounderModeFromStorage,
   isBetaUnlocked,
-  isFounderModeEnabled,
+  isFounderMode,
 } from "@/lib/billing/beta-unlock";
 import {
   loadMockSubscription,
@@ -53,6 +54,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const { plants } = usePlants();
 
   useEffect(() => {
+    hydrateFounderModeFromStorage();
     setSubscription(loadMockSubscription());
     setBypassLimits(isDemoMode());
   }, []);
@@ -68,7 +70,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const betaUnlockAll = useMemo(() => isBetaUnlocked(), [accessRevision]);
-  const founderMode = useMemo(() => isFounderModeEnabled(), [accessRevision]);
+  const founderMode = useMemo(() => isFounderMode(), [accessRevision]);
 
   const tier = subscription.tier;
 
@@ -76,8 +78,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     () => ({
       betaUnlockAll: betaUnlockAll || bypassLimits,
       bypassLimits: bypassLimits || betaUnlockAll,
+      founderMode,
     }),
-    [betaUnlockAll, bypassLimits]
+    [betaUnlockAll, bypassLimits, founderMode]
   );
 
   const setTier = useCallback(

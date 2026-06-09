@@ -14,6 +14,8 @@ import { ToastProvider } from "@/lib/store/toast-provider";
 import { GenomeProvider } from "@/lib/store/genome-provider";
 import { SubscriptionProvider } from "@/lib/store/subscription-provider";
 import { UpgradeModalProvider } from "@/components/billing/upgrade-modal-provider";
+import { FounderHydrator } from "@/components/billing/founder-hydrator";
+import { MoatProvider } from "@/lib/store/moat-provider";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,6 +23,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <SyncProvider>
         <PlantsProvider>
         <SubscriptionProvider>
+        <FounderHydrator />
         <UpgradeModalProvider>
         <JourneyProvider>
           <AiProvider>
@@ -31,9 +34,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <ToastProvider>
                       <AcademyProvider>
                         <TasksProvider>
+                          <MoatProvider>
                           <GenomeProvider>
                             <AppShell>{children}</AppShell>
                           </GenomeProvider>
+                          </MoatProvider>
                         </TasksProvider>
                       </AcademyProvider>
                     </ToastProvider>

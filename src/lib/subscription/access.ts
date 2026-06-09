@@ -22,7 +22,7 @@ export {
   FREE_PLANT_LIMIT,
   TIER_RANK,
 } from "@/lib/billing/tier-config";
-export { isBetaUnlockAll, isBetaUnlocked, isFounderModeEnabled } from "@/lib/billing/beta-unlock";
+export { isBetaUnlockAll, isBetaUnlocked, isFounderMode, isFounderModeEnabled } from "@/lib/billing/beta-unlock";
 export { getFeatureLockLabel, normalizeFeature } from "@/lib/billing/feature-gates";
 
 import type { AccountTier } from "@/lib/billing/tier-config";

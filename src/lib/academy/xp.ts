@@ -11,6 +11,10 @@ export const XP_REWARDS: Record<XpEventType, number> = {
   task_completed: 5,
   price_check_completed: 10,
   daily_mission_completed: 20,
+  weekly_mission_completed: 75,
+  family_challenge_completed: 150,
+  seasonal_task_completed: 10,
+  garden_map_updated: 15,
 };
 
 /** XP events not yet wired in app code — see ACADEMY_SYNC_PLAN.md */

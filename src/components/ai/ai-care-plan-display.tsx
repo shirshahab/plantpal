@@ -1,5 +1,6 @@
 import type { AICarePlanResponse } from "@/lib/types/ai";
 import { AiSourceBadge } from "./ai-source-badge";
+import { AiSafetyDisclaimer } from "./ai-safety-disclaimer";
 
 export function AiCarePlanDisplay({
   plan,
@@ -66,6 +67,7 @@ export function AiCarePlanDisplay({
           {plan.warning_signs.join(" ")}
         </div>
       )}
+      <AiSafetyDisclaimer compact />
     </div>
   );
 }

@@ -82,13 +82,14 @@ export async function POST(request: Request) {
   const daily = checkRateLimit(
     dailyLimitKey("ai-scan", clientKey),
     RATE_LIMITS.aiScanDaily,
-    24 * 60 * 60 * 1000
+    24 * 60 * 60 * 1000,
+    { request }
   );
   if (!daily.allowed) {
     return aiError("Daily plant scan limit reached. Try again tomorrow.", 429);
   }
 
-  const burst = checkRateLimit(`ai-scan-burst:${clientKey}`, 5, 60_000);
+  const burst = checkRateLimit(`ai-scan-burst:${clientKey}`, 5, 60_000, { request });
   if (!burst.allowed) {
     return aiError("Too many scans — wait a minute and try again.", 429);
   }

@@ -13,6 +13,9 @@ const PROTECTED_PREFIXES = [
   "/database",
   "/settings",
   "/more",
+  "/activity",
+  "/beta-start",
+  "/tester-guide",
   "/doctor",
   "/achievements",
   "/gallery",
@@ -24,6 +27,12 @@ const PROTECTED_PREFIXES = [
   "/upgrade",
   "/ar",
   "/price-checker",
+  "/garden-map",
+  "/design-studio",
+  "/family",
+  "/seasonal",
+  "/missions",
+  "/marketplace",
 ];
 
 export async function updateSession(request: NextRequest) {

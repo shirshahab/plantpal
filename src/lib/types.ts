@@ -1,3 +1,13 @@
+import type {
+  PhotoStatus,
+  PlaceholderImageType,
+  PlantPhotoFields,
+  PlantSizeFields,
+  PlantSizeType,
+} from "@/lib/plants/plant-size";
+
+export type { PhotoStatus, PlaceholderImageType, PlantSizeType };
+
 export type LocationType = "indoor" | "outdoor";
 export type PlantingType = "pot" | "ground";
 export type SunExposure = "full_sun" | "partial_sun" | "shade";
@@ -35,6 +45,19 @@ export interface DbPlant {
   last_repotted_at: string | null;
   last_health_scan_at: string | null;
   last_growth_photo_at: string | null;
+  placeholder_image_type: string | null;
+  photo_status: string | null;
+  size_type: string | null;
+  nursery_container_size: string | null;
+  height_feet: number | null;
+  height_inches: number | null;
+  pot_diameter_inches: number | null;
+  trunk_diameter_inches: number | null;
+  estimated_age_months: number | null;
+  planted_date: string | null;
+  purchase_date: string | null;
+  purchase_price: number | null;
+  purchase_store: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -64,6 +87,19 @@ export interface Plant {
   lastHealthScanAt?: string | null;
   lastGrowthPhotoAt?: string | null;
   createdAt: string;
+  photoStatus: PhotoStatus;
+  placeholderImageType: PlaceholderImageType | null;
+  sizeType: PlantSizeType;
+  nurseryContainerSize: string | null;
+  heightFeet: number | null;
+  heightInches: number | null;
+  potDiameterInches: number | null;
+  trunkDiameterInches: number | null;
+  estimatedAgeMonths: number | null;
+  plantedDate: string | null;
+  purchaseDate: string | null;
+  purchasePrice: number | null;
+  purchaseStore: string | null;
 }
 
 export interface NewPlantInput {
@@ -76,7 +112,50 @@ export interface NewPlantInput {
   sunExposure: SunExposure;
   goalIds: string[];
   primaryGoalId?: string;
+  notes?: string;
+  photoStatus?: PhotoStatus;
+  placeholderImageType?: PlaceholderImageType | null;
+  sizeType?: PlantSizeType;
+  nurseryContainerSize?: string | null;
+  heightFeet?: number | null;
+  heightInches?: number | null;
+  potDiameterInches?: number | null;
+  trunkDiameterInches?: number | null;
+  estimatedAgeMonths?: number | null;
+  plantedDate?: string | null;
+  purchaseDate?: string | null;
+  purchasePrice?: number | null;
+  purchaseStore?: string | null;
 }
+
+export type UpdatePlantInput = Partial<
+  Pick<
+    Plant,
+    | "name"
+    | "species"
+    | "image"
+    | "locationType"
+    | "plantingType"
+    | "zipCode"
+    | "sunExposure"
+    | "healthNotes"
+    | "photoStatus"
+    | "placeholderImageType"
+    | "sizeType"
+    | "nurseryContainerSize"
+    | "heightFeet"
+    | "heightInches"
+    | "potDiameterInches"
+    | "trunkDiameterInches"
+    | "estimatedAgeMonths"
+    | "plantedDate"
+    | "purchaseDate"
+    | "purchasePrice"
+    | "purchaseStore"
+  >
+> &
+  PlantPhotoFields &
+  PlantSizeFields;
 
 export interface ScanResult {
   issue: string;

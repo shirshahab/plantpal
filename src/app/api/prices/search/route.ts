@@ -32,7 +32,8 @@ export async function POST(request: Request) {
   const burst = checkRateLimit(
     `price-burst:${clientKey}`,
     RATE_LIMITS.priceSearchBurst,
-    RATE_LIMITS.priceSearchBurstWindowMs
+    RATE_LIMITS.priceSearchBurstWindowMs,
+    { request }
   );
   if (!burst.allowed) {
     return NextResponse.json(
@@ -44,7 +45,8 @@ export async function POST(request: Request) {
   const daily = checkRateLimit(
     dailyLimitKey("price-search", clientKey),
     RATE_LIMITS.priceSearchDaily,
-    24 * 60 * 60 * 1000
+    24 * 60 * 60 * 1000,
+    { request }
   );
   if (!daily.allowed) {
     return NextResponse.json(

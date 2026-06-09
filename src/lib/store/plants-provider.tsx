@@ -7,7 +7,13 @@ import {
   useEffect,
   useState,
 } from "react";
-import type { NewPlantInput, Plant } from "@/lib/types";
+import type { NewPlantInput, Plant, UpdatePlantInput } from "@/lib/types";
+import {
+  DEFAULT_PHOTO_FIELDS,
+  DEFAULT_SIZE_FIELDS,
+} from "@/lib/plants/plant-size";
+import { getPlaceholderImageUrl } from "@/lib/plants/plant-placeholders";
+import { cleanupLocalPlantData } from "@/lib/plants/remove-plant-cleanup";
 import { MOCK_PLANTS } from "@/lib/mock/plants";
 import { generateGoalBasedCarePlan } from "@/lib/plants";
 import { getGoalsByIds } from "@/lib/mock/plant-goals";
@@ -15,6 +21,8 @@ import { createClient } from "@/lib/supabase/client";
 import {
   mapDbPlantToPlant,
   mapPlantInputToDb,
+  mapPlantUpdateToDb,
+  withPlantDefaults,
 } from "@/lib/supabase/mappers";
 import { inferHardinessZone } from "@/lib/location/location-service";
 import { friendlySaveError } from "@/lib/errors/user-messages";
@@ -33,6 +41,8 @@ interface PlantsContextValue {
   loading: boolean;
   isMockMode: boolean;
   addPlant: (input: NewPlantInput, photoFile?: File | null) => Promise<Plant>;
+  updatePlant: (id: string, patch: UpdatePlantInput, photoFile?: File | null) => Promise<Plant>;
+  removePlant: (id: string) => Promise<void>;
   getPlant: (id: string) => Plant | undefined;
   markWatered: (id: string) => Promise<void>;
   markFertilized: (id: string) => Promise<void>;
@@ -54,13 +64,14 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setPlants(JSON.parse(stored) as Plant[]);
+        const parsed = JSON.parse(stored) as Partial<Plant>[];
+        setPlants(parsed.map((p) => withPlantDefaults(p as Plant)));
       } else {
-        setPlants(MOCK_PLANTS);
+        setPlants(MOCK_PLANTS.map((p) => withPlantDefaults(p)));
         localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_PLANTS));
       }
     } catch {
-      setPlants(MOCK_PLANTS);
+      setPlants(MOCK_PLANTS.map((p) => withPlantDefaults(p)));
     }
   }, []);
 
@@ -127,7 +138,7 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
       }
 
       const goals = getGoalsByIds(input.goalIds);
-      const careStub: Plant = {
+      const careStub: Plant = withPlantDefaults({
         id: "temp",
         name: input.name,
         species: input.species,
@@ -141,13 +152,14 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
         lastWateredAt: null,
         lastFertilizedAt: null,
         createdAt: new Date().toISOString(),
-        waterFrequencyDays: 7,
-        fertilizeFrequencyWeeks: 8,
-        pruneSchedule: "Early spring",
-        wateringInstructions: "",
-        fertilizingInstructions: "",
-        pruningInstructions: "",
-      };
+        sizeType: input.sizeType ?? "unknown",
+        nurseryContainerSize: input.nurseryContainerSize ?? null,
+        heightFeet: input.heightFeet ?? null,
+        heightInches: input.heightInches ?? null,
+        potDiameterInches: input.potDiameterInches ?? null,
+        trunkDiameterInches: input.trunkDiameterInches ?? null,
+        plantedDate: input.plantedDate ?? null,
+      });
       const carePlan = generateGoalBasedCarePlan(
         careStub,
         goals,
@@ -163,14 +175,36 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
         pruningInstructions: carePlan.pruningInstructions,
       };
 
+      const photoStatus = input.photoStatus ?? (photoFile || input.image.startsWith("data:") ? "real_photo" : DEFAULT_PHOTO_FIELDS.photoStatus);
+      const placeholderImageType = input.placeholderImageType ?? null;
+      const displayImage =
+        photoStatus === "placeholder" && placeholderImageType
+          ? getPlaceholderImageUrl(placeholderImageType)
+          : input.image;
+
       if (isMockMode) {
         const plant: Plant = {
           id: crypto.randomUUID(),
           ...input,
+          image: displayImage,
           ...care,
+          ...DEFAULT_SIZE_FIELDS,
+          sizeType: input.sizeType ?? DEFAULT_SIZE_FIELDS.sizeType,
+          nurseryContainerSize: input.nurseryContainerSize ?? null,
+          heightFeet: input.heightFeet ?? null,
+          heightInches: input.heightInches ?? null,
+          potDiameterInches: input.potDiameterInches ?? null,
+          trunkDiameterInches: input.trunkDiameterInches ?? null,
+          estimatedAgeMonths: input.estimatedAgeMonths ?? null,
+          plantedDate: input.plantedDate ?? null,
+          purchaseDate: input.purchaseDate ?? null,
+          purchasePrice: input.purchasePrice ?? null,
+          purchaseStore: input.purchaseStore ?? null,
+          photoStatus,
+          placeholderImageType,
           hardinessZone: inferHardinessZone(input.zipCode),
           healthStatus: "healthy",
-          healthNotes: "Newly added — monitor for the first two weeks.",
+          healthNotes: input.notes ?? "Newly added — monitor for the first two weeks.",
           lastWateredAt: null,
           lastFertilizedAt: null,
           createdAt: new Date().toISOString(),
@@ -201,7 +235,12 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
       }
 
       const row = mapPlantInputToDb(
-        { ...input, image: photoUrl },
+        {
+          ...input,
+          image: photoUrl,
+          photoStatus,
+          placeholderImageType,
+        },
         user.id,
         {
           waterFrequencyDays: care.waterFrequencyDays,
@@ -226,7 +265,7 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
         pruningInstructions: care.pruningInstructions,
       };
 
-      if (photoUrl) {
+      if (photoUrl && photoStatus === "real_photo") {
         await supabase.from("plant_photos").insert({
           plant_id: fullPlant.id,
           user_id: user.id,
@@ -246,6 +285,124 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
   const getPlant = useCallback(
     (id: string) => plants.find((p) => p.id === id),
     [plants]
+  );
+
+  const updatePlant = useCallback(
+    async (
+      id: string,
+      patch: UpdatePlantInput,
+      photoFile?: File | null
+    ): Promise<Plant> => {
+      const existing = plants.find((p) => p.id === id);
+      if (!existing) throw new Error("Plant not found");
+
+      let image = patch.image ?? existing.image;
+      let photoStatus = patch.photoStatus ?? existing.photoStatus;
+      let placeholderImageType =
+        patch.placeholderImageType !== undefined
+          ? patch.placeholderImageType
+          : existing.placeholderImageType;
+
+      if (photoFile) {
+        photoStatus = "real_photo";
+        placeholderImageType = null;
+      }
+
+      if (!isMockMode && user && photoFile) {
+        const supabase = createClient();
+        const ext = photoFile.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("plant-photos")
+          .upload(path, photoFile);
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage
+            .from("plant-photos")
+            .getPublicUrl(path);
+          image = urlData.publicUrl;
+        }
+      } else if (photoFile) {
+        image = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(photoFile);
+        });
+      }
+
+      if (photoStatus === "placeholder" && placeholderImageType) {
+        image = getPlaceholderImageUrl(placeholderImageType);
+      }
+
+      const merged: Plant = {
+        ...existing,
+        ...patch,
+        name: patch.name ?? existing.name,
+        image,
+        photoStatus,
+        placeholderImageType,
+      };
+
+      if (isMockMode) {
+        persistMock(plants.map((p) => (p.id === id ? merged : p)));
+        return merged;
+      }
+
+      if (!user) throw new Error("You must be logged in to edit a plant.");
+
+      const supabase = createClient();
+      const row = mapPlantUpdateToDb({
+        ...patch,
+        image,
+        photoStatus,
+        placeholderImageType,
+      });
+
+      const { data, error } = await supabase
+        .from("plants")
+        .update(row)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw new Error(friendlySaveError(error));
+
+      const updated = mapDbPlantToPlant(data as DbPlant);
+      setPlants((prev) =>
+        prev.map((p) =>
+          p.id === id
+            ? {
+                ...updated,
+                wateringInstructions: p.wateringInstructions,
+                fertilizingInstructions: p.fertilizingInstructions,
+                pruningInstructions: p.pruningInstructions,
+              }
+            : p
+        )
+      );
+      return updated;
+    },
+    [isMockMode, plants, persistMock, user]
+  );
+
+  const removePlant = useCallback(
+    async (id: string) => {
+      if (isMockMode) {
+        persistMock(plants.filter((p) => p.id !== id));
+        cleanupLocalPlantData(id);
+        return;
+      }
+
+      if (!user) throw new Error("You must be logged in to remove a plant.");
+
+      const supabase = createClient();
+      const { error } = await supabase.from("plants").delete().eq("id", id);
+      if (error) throw new Error(friendlySaveError(error));
+
+      cleanupLocalPlantData(id);
+      setPlants((prev) => prev.filter((p) => p.id !== id));
+    },
+    [isMockMode, plants, persistMock, user]
   );
 
   const markWatered = useCallback(
@@ -350,6 +507,8 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
         loading: loading || authLoading,
         isMockMode,
         addPlant,
+        updatePlant,
+        removePlant,
         getPlant,
         markWatered,
         markFertilized,

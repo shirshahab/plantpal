@@ -34,10 +34,24 @@ import {
 import { cn } from "@/lib/utils";
 import { LocalMatchCheck } from "@/components/climate/local-match-check";
 import { GoalPicker } from "@/components/journey/goal-picker";
+import { PlaceholderPickerCard, getPreviewImageUrl } from "@/components/plants/plant-image";
+import {
+  PlantSizeFieldsForm,
+  parseSizeFormValues,
+  EMPTY_SIZE_FORM,
+} from "@/components/plants/plant-size-fields";
 import { useJourney } from "@/lib/store/journey-provider";
 import { getGoalsByIds } from "@/lib/mock/plant-goals";
+import {
+  inferPlaceholderType,
+  PLACEHOLDER_OPTIONS,
+  type PhotoStatus,
+  type PlaceholderImageType,
+} from "@/lib/plants/plant-size";
+import { getPlaceholderImageUrl } from "@/lib/plants/plant-placeholders";
 
-const STEPS = ["Get started", "Plant", "Nickname", "Location", "Goals", "Review"];
+const STEPS = ["Get started", "Plant", "Photo", "Details", "Goals"];
+const DEFAULT_GOAL_ID = "keep-it-alive";
 
 type EntryMode = "search" | "manual" | null;
 
@@ -60,9 +74,15 @@ export function AddPlantWizard() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [speciesId, setSpeciesId] = useState<string | null>(null);
   const [speciesImage, setSpeciesImage] = useState<string | null>(null);
-  const [goalIds, setGoalIds] = useState<string[]>([]);
-  const [primaryGoalId, setPrimaryGoalId] = useState<string | null>(null);
+  const [goalIds, setGoalIds] = useState<string[]>([DEFAULT_GOAL_ID]);
+  const [primaryGoalId, setPrimaryGoalId] = useState<string | null>(DEFAULT_GOAL_ID);
+  const [photoStatus, setPhotoStatus] = useState<PhotoStatus>("needs_photo");
+  const [placeholderType, setPlaceholderType] = useState<PlaceholderImageType | null>(null);
+  const [addPhotoLater, setAddPhotoLater] = useState(false);
+  const [fromScanPhoto, setFromScanPhoto] = useState(false);
+  const [sizeForm, setSizeForm] = useState(EMPTY_SIZE_FORM);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -72,6 +92,8 @@ export function AddPlantWizard() {
     zipCode: "",
     sunExposure: "partial_sun" as SunExposure,
   });
+
+  const atPlantLimit = !canAddPlant() && !betaUnlockAll;
 
   useEffect(() => {
     const profile = loadUserProfile();
@@ -121,7 +143,11 @@ export function AddPlantWizard() {
                 ? scan.suggested_sun
                 : p.sunExposure,
           }));
-          if (scan.imageDataUrl) setPreview(scan.imageDataUrl);
+          if (scan.imageDataUrl) {
+            setPreview(scan.imageDataUrl);
+            setPhotoStatus("real_photo");
+            setFromScanPhoto(true);
+          }
           if (scan.database_species_id) setSpeciesId(scan.database_species_id);
           setEntryMode("manual");
           setStep(2);
@@ -208,9 +234,29 @@ export function AddPlantWizard() {
   function handlePhoto(file: File | undefined) {
     if (!file) return;
     setPhotoFile(file);
+    setAddPhotoLater(false);
+    setPhotoStatus("real_photo");
+    setPlaceholderType(null);
     const reader = new FileReader();
     reader.onload = (ev) => setPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
+  }
+
+  function handleAddPhotoLater() {
+    setAddPhotoLater(true);
+    setPhotoFile(null);
+    setPreview(null);
+    const inferred = inferPlaceholderType(form.species, form.name);
+    setPlaceholderType(inferred);
+    setPhotoStatus("needs_photo");
+  }
+
+  function selectPlaceholder(type: PlaceholderImageType) {
+    setPlaceholderType(type);
+    setPhotoStatus("placeholder");
+    setAddPhotoLater(false);
+    setPhotoFile(null);
+    setPreview(null);
   }
 
   function handleSpeciesSelect(
@@ -250,7 +296,7 @@ export function AddPlantWizard() {
   }
 
   async function handleSave() {
-    if (!canAddPlant()) {
+    if (atPlantLimit) {
       setError(
         `You've reached the free limit of ${plantLimit} plants. Upgrade to add more.`
       );
@@ -260,17 +306,34 @@ export function AddPlantWizard() {
     setLoading(true);
     const isFirstPlant = plants.length === 0;
     try {
-      const image = preview || speciesImage || DEFAULT_PLANT_IMAGE;
+      const inferred = inferPlaceholderType(form.species, form.name);
+      const effectivePlaceholder = placeholderType ?? inferred;
+      const hasRealPhoto = !!(photoFile || (preview && (fromScanPhoto || photoStatus === "real_photo")));
+      const status: PhotoStatus = hasRealPhoto
+        ? "real_photo"
+        : addPhotoLater
+          ? "needs_photo"
+          : "placeholder";
+      const image = hasRealPhoto
+        ? preview || speciesImage || DEFAULT_PLANT_IMAGE
+        : getPlaceholderImageUrl(effectivePlaceholder);
+      const size = parseSizeFormValues(sizeForm);
+      const effectiveGoals = goalIds.length > 0 ? goalIds : [DEFAULT_GOAL_ID];
+      const effectivePrimary = primaryGoalId ?? effectiveGoals[0];
+
       const plant = await addPlant(
         {
           ...form,
           image,
-          goalIds,
-          primaryGoalId: primaryGoalId ?? goalIds[0],
+          goalIds: effectiveGoals,
+          primaryGoalId: effectivePrimary,
+          photoStatus: status,
+          placeholderImageType: hasRealPhoto ? null : effectivePlaceholder,
+          ...size,
         },
         photoFile
       );
-      initPlantJourney(plant, goalIds, primaryGoalId ?? goalIds[0]);
+      initPlantJourney(plant, effectiveGoals, effectivePrimary);
       toast("Plant added to your garden.");
       router.push(
         isFirstPlant ? `/plants/${plant.id}?welcome=1` : `/plants/${plant.id}`
@@ -286,25 +349,28 @@ export function AddPlantWizard() {
   }
 
   useEffect(() => {
-    if (!canAddPlant() && !betaUnlockAll) {
+    if (atPlantLimit) {
       showUpgradeModal({
         headline: UPGRADE_COPY.plant_limit.title,
         copy: UPGRADE_COPY.plant_limit.message,
       });
     }
-  }, [canAddPlant, betaUnlockAll, showUpgradeModal]);
+  }, [atPlantLimit, showUpgradeModal]);
 
-  const displayImage = preview || speciesImage;
+  const displayImage = getPreviewImageUrl(
+    preview,
+    placeholderType,
+    speciesImage
+  );
 
   return (
     <div className="max-w-lg mx-auto pb-28 md:pb-8">
-      {!canAddPlant() && (
+      {atPlantLimit && (
         <div className="mb-6">
           <UpgradePrompt
             title={UPGRADE_COPY.plant_limit.title}
             message={`${UPGRADE_COPY.plant_limit.message} You have ${plantCount} plants.`}
             lockLabel={UPGRADE_COPY.plant_limit.lockLabel}
-            hidden={betaUnlockAll}
           />
         </div>
       )}
@@ -323,14 +389,25 @@ export function AddPlantWizard() {
         </div>
       </div>
 
-      <div className="page-enter min-h-[360px]">
+      <div className="page-enter min-h-[320px]">
         {step === 0 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">How would you like to add your plant?</h2>
-            <p className="text-sm text-gray-500">
-              Search our database or scan a plant — we&apos;ll pre-fill species and care info.
-            </p>
+            <h2 className="text-xl font-bold text-gray-900">Add a plant</h2>
+            <p className="text-sm text-gray-500">Pick the fastest way for you — you can always add a photo later.</p>
             <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => router.push("/scanner")}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-200 text-left hover:border-green-200 transition-all touch-manipulation"
+              >
+                <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                  <Camera className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Scan plant</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Use your camera — we&apos;ll identify it</p>
+                </div>
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -348,21 +425,8 @@ export function AddPlantWizard() {
                   <Search className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">Search plant database</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Recommended — fastest way to get started</p>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push("/scanner")}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-200 text-left hover:border-green-200 transition-all touch-manipulation"
-              >
-                <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                  <Camera className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">Scan plant or nursery tag</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Use your camera to identify or read a tag</p>
+                  <p className="font-semibold text-gray-900">Search plant</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Find it in our database</p>
                 </div>
               </button>
               <button
@@ -385,7 +449,7 @@ export function AddPlantWizard() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900">Add manually</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Enter species name yourself</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Type the name yourself</p>
                 </div>
               </button>
             </div>
@@ -394,8 +458,8 @@ export function AddPlantWizard() {
 
         {step === 1 && entryMode === "search" && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Find your plant</h2>
-            <p className="text-sm text-gray-500">Search by common or scientific name.</p>
+            <h2 className="text-xl font-bold text-gray-900">Search plant</h2>
+            <p className="text-sm text-gray-500">Common or scientific name.</p>
             {speciesId && (
               <Card padding="md" className="bg-green-50 border-green-100">
                 <p className="text-sm font-medium text-green-800">{form.name}</p>
@@ -408,13 +472,12 @@ export function AddPlantWizard() {
 
         {step === 1 && entryMode === "manual" && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Enter plant species</h2>
-            <p className="text-sm text-gray-500">Use the scientific or common name.</p>
+            <h2 className="text-xl font-bold text-gray-900">Plant name</h2>
             <Input
               id="species"
               name="species"
               label="Species"
-              placeholder="Citrus × meyeri or Meyer Lemon"
+              placeholder="Meyer Lemon or Citrus × meyeri"
               value={form.species}
               onChange={handleChange}
               className="text-base py-3"
@@ -422,8 +485,8 @@ export function AddPlantWizard() {
             <Input
               id="name-default"
               name="name"
-              label="Default nickname (optional)"
-              placeholder="My Meyer Lemon"
+              label="Nickname (optional)"
+              placeholder="Kitchen lemon tree"
               value={form.name}
               onChange={handleChange}
               className="text-base py-3"
@@ -433,7 +496,11 @@ export function AddPlantWizard() {
 
         {step === 2 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Confirm & nickname</h2>
+            <h2 className="text-xl font-bold text-gray-900">Photo & nickname</h2>
+            <p className="text-sm text-gray-500">
+              Snap a photo now, pick a placeholder, or add one later.
+            </p>
+
             {displayImage && (
               <div className="relative h-36 rounded-xl overflow-hidden">
                 <Image
@@ -441,60 +508,93 @@ export function AddPlantWizard() {
                   alt="Plant preview"
                   fill
                   className="object-cover"
-                  unoptimized={!!preview}
+                  unoptimized={!!preview || !!placeholderType}
                 />
               </div>
             )}
+
             <Input
               id="name"
               name="name"
-              label="Plant nickname"
-              placeholder="My Meyer Lemon"
+              label="Nickname"
+              placeholder={form.species.split(" ")[0] || "My plant"}
               value={form.name}
               onChange={handleChange}
               className="text-base py-3"
             />
-            <div className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500">
               <span className="font-medium text-gray-700">Species: </span>
               {form.species}
-            </div>
-            {entryMode === "manual" && (
-              <Input
-                id="species-edit"
-                name="species"
-                label="Species"
-                placeholder="Citrus × meyeri"
-                value={form.species}
-                onChange={handleChange}
-                className="text-base py-3"
-              />
-            )}
-            <div className="flex gap-2">
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="touch-manipulation"
-                onClick={() => fileRef.current?.click()}
+                className="h-12 touch-manipulation"
+                onClick={() => cameraRef.current?.click()}
               >
                 <Camera className="w-4 h-4" />
-                Add photo (optional)
+                Take photo
               </Button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => handlePhoto(e.target.files?.[0])}
-              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-12 touch-manipulation"
+                onClick={() => fileRef.current?.click()}
+              >
+                Upload
+              </Button>
+            </div>
+            <input
+              ref={cameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => handlePhoto(e.target.files?.[0])}
+            />
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => handlePhoto(e.target.files?.[0])}
+            />
+
+            <Button
+              variant="secondary"
+              size="sm"
+              className="w-full h-12 touch-manipulation"
+              onClick={handleAddPhotoLater}
+            >
+              Add now, photo later
+            </Button>
+
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                Or use a placeholder
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {PLACEHOLDER_OPTIONS.map((opt) => (
+                  <PlaceholderPickerCard
+                    key={opt.id}
+                    type={opt.id}
+                    selected={placeholderType === opt.id}
+                    onSelect={() => selectPlaceholder(opt.id)}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         )}
 
         {step === 3 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Location & climate</h2>
-            <p className="text-sm text-gray-500">We use your ZIP for local care tips.</p>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Location & size</h2>
+              <p className="text-sm text-gray-500 mt-1">Used for local care tips and watering guidance.</p>
+            </div>
             <Input
               id="zipCode"
               name="zipCode"
@@ -514,7 +614,7 @@ export function AddPlantWizard() {
                     type="button"
                     onClick={() => setForm((p) => ({ ...p, locationType: v }))}
                     className={cn(
-                      "h-16 rounded-2xl border-2 text-sm font-medium transition-all touch-manipulation",
+                      "h-14 rounded-2xl border-2 text-sm font-medium transition-all touch-manipulation",
                       form.locationType === v
                         ? "border-green-600 bg-green-50 text-green-800"
                         : "border-gray-200 text-gray-600"
@@ -545,6 +645,26 @@ export function AddPlantWizard() {
                 ))}
               </div>
             </div>
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Pot or in-ground?</p>
+              <div className="grid grid-cols-2 gap-3">
+                {(["pot", "ground"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setForm((p) => ({ ...p, plantingType: v }))}
+                    className={cn(
+                      "h-12 rounded-xl border-2 text-sm font-medium transition-all touch-manipulation",
+                      form.plantingType === v
+                        ? "border-green-600 bg-green-50 text-green-800"
+                        : "border-gray-200 text-gray-600"
+                    )}
+                  >
+                    {PLANTING_TYPE_LABELS[v]}
+                  </button>
+                ))}
+              </div>
+            </div>
             <LocalMatchCheck
               name={form.name}
               species={form.species}
@@ -553,14 +673,15 @@ export function AddPlantWizard() {
               plantingType={form.plantingType}
               sunExposure={form.sunExposure}
             />
+            <PlantSizeFieldsForm values={sizeForm} onChange={setSizeForm} />
           </div>
         )}
 
         {step === 4 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Choose your goal</h2>
+            <h2 className="text-xl font-bold text-gray-900">Your goal</h2>
             <p className="text-sm text-gray-500">
-              Your care plan adapts to what you&apos;re trying to achieve.
+              We pre-selected &ldquo;Keep it alive&rdquo; — change it if you like.
             </p>
             <GoalPicker
               selectedIds={goalIds}
@@ -571,36 +692,13 @@ export function AddPlantWizard() {
               }}
               compact
             />
-          </div>
-        )}
-
-        {step === 5 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Review & save</h2>
-            <Card padding="md" className="space-y-3 text-sm">
-              {displayImage && (
-                <div className="relative h-32 rounded-xl overflow-hidden mb-3">
-                  <Image
-                    src={displayImage}
-                    alt="Preview"
-                    fill
-                    className="object-cover"
-                    unoptimized={!!preview}
-                  />
-                </div>
-              )}
-              <Row label="Nickname" value={form.name} />
-              <Row label="Species" value={form.species} />
-              <Row label="Location" value={LOCATION_TYPE_LABELS[form.locationType]} />
-              <Row label="Planting" value={PLANTING_TYPE_LABELS[form.plantingType]} />
-              <Row label="ZIP" value={form.zipCode} />
-              <Row label="Sun" value={SUN_EXPOSURE_LABELS[form.sunExposure]} />
-              <Row
-                label="Goals"
-                value={getGoalsByIds(goalIds)
+            <Card padding="md" className="text-sm space-y-1 bg-gray-50">
+              <p className="font-medium text-gray-900">{form.name || form.species}</p>
+              <p className="text-gray-500 text-xs">
+                {getGoalsByIds(goalIds.length ? goalIds : [DEFAULT_GOAL_ID])
                   .map((g) => g.name)
-                  .join(", ")}
-              />
+                  .join(" · ")}
+              </p>
             </Card>
             {error && (
               <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl whitespace-pre-wrap">
@@ -639,23 +737,14 @@ export function AddPlantWizard() {
             size="lg"
             className="h-14 flex-1 touch-manipulation"
             loading={loading}
-            disabled={!canAddPlant()}
+            disabled={atPlantLimit || !canContinue()}
             onClick={handleSave}
           >
             <Check className="w-5 h-5" />
-            Save Plant
+            Save plant
           </Button>
         )}
       </div>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between py-1 border-b border-gray-50 last:border-0">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-gray-900 text-right max-w-[60%]">{value}</span>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getLocalInsights } from "@/lib/location/location-service";
 import type { Plant } from "@/lib/types";
 import type { LocationInsightsRequest } from "@/lib/types/location";
+import { withPlantDefaults } from "@/lib/supabase/mappers";
 
 export async function POST(request: Request) {
   let body: LocationInsightsRequest;
@@ -16,27 +17,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "zip_code is required" }, { status: 400 });
   }
 
-  const plants: Plant[] = (body.plants ?? []).map((p, i) => ({
-    id: p.id ?? `temp-${i}`,
-    name: p.name,
-    species: p.species,
-    image: "",
-    locationType: (p.locationType as Plant["locationType"]) ?? "outdoor",
-    plantingType: (p.plantingType as Plant["plantingType"]) ?? "pot",
-    zipCode: zip,
-    sunExposure: (p.sunExposure as Plant["sunExposure"]) ?? "partial_sun",
-    waterFrequencyDays: 7,
-    fertilizeFrequencyWeeks: 8,
-    pruneSchedule: "Early spring",
-    healthStatus: "healthy",
-    healthNotes: "",
-    wateringInstructions: "",
-    fertilizingInstructions: "",
-    pruningInstructions: "",
-    lastWateredAt: null,
-    lastFertilizedAt: null,
-    createdAt: new Date().toISOString(),
-  }));
+  const plants: Plant[] = (body.plants ?? []).map((p, i) =>
+    withPlantDefaults({
+      id: p.id ?? `temp-${i}`,
+      name: p.name,
+      species: p.species,
+      image: "",
+      locationType: (p.locationType as Plant["locationType"]) ?? "outdoor",
+      plantingType: (p.plantingType as Plant["plantingType"]) ?? "pot",
+      zipCode: zip,
+      sunExposure: (p.sunExposure as Plant["sunExposure"]) ?? "partial_sun",
+      healthStatus: "healthy",
+      healthNotes: "",
+      lastWateredAt: null,
+      lastFertilizedAt: null,
+      createdAt: new Date().toISOString(),
+    })
+  );
 
   const insights = await getLocalInsights(zip, plants);
 

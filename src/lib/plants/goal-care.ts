@@ -5,6 +5,7 @@ import type {
   PlantMilestone,
   PlantMission,
 } from "@/lib/types/care-goals";
+import { parseGallonSize } from "./plant-size";
 import { defaultCareForSpecies } from "./care-defaults";
 
 /** Infer plant profile from species name for milestone/mission templates. */
@@ -67,7 +68,56 @@ export function generateGoalBasedCarePlan(
   const ageDays = Math.floor(
     (Date.now() - new Date(plant.createdAt).getTime()) / (1000 * 60 * 60 * 24)
   );
-  const isNewPlant = ageDays < 60;
+  const isNewPlant =
+    ageDays < 60 ||
+    (plant.plantedDate != null &&
+      Math.floor(
+        (Date.now() - new Date(plant.plantedDate).getTime()) / (1000 * 60 * 60 * 24)
+      ) < 90);
+
+  // Size-aware care adjustments
+  if (plant.plantingType === "pot") {
+    wateringAdjustment.push(
+      "Container plants dry faster than in-ground — check soil moisture more often."
+    );
+    if (plant.potDiameterInches && plant.potDiameterInches <= 8) {
+      waterDays = Math.max(waterDays - 1, 2);
+      goalSpecificTips.push("Small pot — may need water every few days in heat.");
+    }
+  }
+
+  const gallons = parseGallonSize(plant.nurseryContainerSize);
+  if (gallons != null) {
+    if (gallons <= 3) {
+      waterDays = Math.max(waterDays - 1, 2);
+      wateringAdjustment.push(
+        `${plant.nurseryContainerSize} nursery stock — smaller root ball needs more frequent checks.`
+      );
+    } else if (gallons >= 15) {
+      waterDays = Math.min(waterDays + 2, 14);
+      wateringAdjustment.push(
+        `${plant.nurseryContainerSize} tree — deep, less frequent watering once established.`
+      );
+    }
+  }
+
+  if (plant.sizeType === "height" && (plant.heightFeet ?? 0) >= 4) {
+    wateringAdjustment.push("Taller specimen — deep soak to reach the full root zone.");
+  }
+
+  if (profile === "bonsai" && plant.potDiameterInches) {
+    waterDays = Math.max(waterDays - 2, 1);
+    goalSpecificTips.push(
+      `Bonsai in ${plant.potDiameterInches}" pot — monitor daily; shallow soil dries quickly.`
+    );
+  }
+
+  if (isNewPlant && plant.plantedDate) {
+    waterDays = Math.max(waterDays - 1, 2);
+    wateringAdjustment.push(
+      "Newly planted — establishment watering: deep soak 2–3× per week for the first season."
+    );
+  }
   const climateNote =
     zipCode.startsWith("9") || zipCode.startsWith("85")
       ? "warmer/dryer climate"

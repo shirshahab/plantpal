@@ -277,6 +277,23 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
       }
     }
 
+    if (plant.photoStatus === "needs_photo") {
+      raw.push(
+        makeTask({
+          id: `add-photo-${plant.id}`,
+          plantId: plant.id,
+          plantName: plant.name,
+          title: `Add a photo of ${plant.name}`,
+          description: "Capture a real photo when you're near the plant.",
+          taskType: "take_growth_photo",
+          priority: "medium",
+          dueDate: todayStr,
+          source: "manual",
+          whyItMatters: "A photo helps ID issues and track growth over time.",
+        })
+      );
+    }
+
     const ai = aiPlans[plant.id];
     if (ai?.next_7_days?.length) {
       ai.next_7_days.slice(0, 2).forEach((tip, i) => {

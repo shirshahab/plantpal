@@ -1,5 +1,6 @@
 import type { AIGoalPlanResponse } from "@/lib/types/ai";
 import { AiSourceBadge } from "./ai-source-badge";
+import { AiSafetyDisclaimer } from "./ai-safety-disclaimer";
 
 export function AiGoalPlanDisplay({
   plan,
@@ -57,6 +58,7 @@ export function AiGoalPlanDisplay({
           </ul>
         </div>
       )}
+      <AiSafetyDisclaimer compact />
     </div>
   );
 }

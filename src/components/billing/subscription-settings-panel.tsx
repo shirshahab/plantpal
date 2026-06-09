@@ -38,7 +38,10 @@ export function SubscriptionSettingsPanel() {
   } = useSubscription();
 
   const plan = buildSubscriptionPlans(subscription.billingCycle).find((p) => p.id === tier);
-  const planLabel = getEffectivePlanLabel(TIER_LABELS[tier], betaUnlockAll);
+  const planLabel = getEffectivePlanLabel(TIER_LABELS[tier], {
+    founderMode,
+    unrestricted: betaUnlockAll && !founderMode,
+  });
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -51,9 +54,11 @@ export function SubscriptionSettingsPanel() {
             <div>
               <h2 className="font-semibold text-gray-900">Subscription</h2>
               <p className="text-sm text-gray-500">
-                {betaUnlockAll
-                  ? "Beta Access Enabled — all features unlocked"
-                  : "Preview mode — no billing yet"}
+                {founderMode
+                  ? "Founder Mode Active — all features unlocked"
+                  : betaUnlockAll
+                    ? "Beta Access Enabled — all features unlocked"
+                    : "Preview mode — no billing yet"}
               </p>
             </div>
           </div>

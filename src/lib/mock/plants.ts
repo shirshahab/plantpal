@@ -1,7 +1,11 @@
 import type { Plant } from "@/lib/types";
+import { withPlantDefaults } from "@/lib/supabase/mappers";
 
 /** Investor-ready demo garden — Pasadena, CA (91107). */
-export const DEMO_GARDEN_PLANTS: Plant[] = [
+const DEMO_GARDEN_RAW: Omit<
+  Plant,
+  "photoStatus" | "placeholderImageType" | "sizeType" | "nurseryContainerSize" | "heightFeet" | "heightInches" | "potDiameterInches" | "trunkDiameterInches" | "estimatedAgeMonths" | "plantedDate" | "purchaseDate" | "purchasePrice" | "purchaseStore"
+>[] = [
   {
     id: "1",
     name: "Meyer Lemon Tree",
@@ -130,6 +134,17 @@ export const DEMO_GARDEN_PLANTS: Plant[] = [
     createdAt: new Date(Date.now() - 180 * 86400000).toISOString(),
   },
 ];
+
+export const DEMO_GARDEN_PLANTS: Plant[] = DEMO_GARDEN_RAW.map((p, i) =>
+  withPlantDefaults({
+    ...p,
+    photoStatus: "real_photo",
+    sizeType: i === 0 ? "nursery_container" : i === 4 ? "nursery_container" : "unknown",
+    nurseryContainerSize: i === 0 ? "15 gallon" : i === 4 ? "5 gallon" : null,
+    heightFeet: i === 1 ? 5 : null,
+    heightInches: i === 1 ? 6 : null,
+  })
+);
 
 /** Default mock plants — same as demo garden for consistency. */
 export const MOCK_PLANTS = DEMO_GARDEN_PLANTS;

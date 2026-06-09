@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/ui/modal";
 import { SyncStatusBadge } from "@/components/sync/sync-status-badge";
 import { DeveloperToolsSection } from "@/components/settings/developer-tools";
+import { FounderModeBadge } from "@/components/settings/founder-mode-badge";
 import { MOCK_PLANTS } from "@/lib/mock/plants";
 import { useAuth } from "@/lib/store/auth-provider";
 import { createClient } from "@/lib/supabase/client";
@@ -102,6 +103,7 @@ export default function SettingsPage() {
         description="Manage your account and app preferences"
         action={
           <div className="flex items-center gap-2">
+            <FounderModeBadge />
             <BetaBadge />
             <SyncStatusBadge />
           </div>

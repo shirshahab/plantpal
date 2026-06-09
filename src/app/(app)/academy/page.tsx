@@ -13,6 +13,7 @@ import {
 } from "@/components/academy/academy-home";
 import { DailyLessonCard } from "@/components/academy/daily-lesson-card";
 import { StreakProtectionBanner } from "@/components/academy/streak-protection-banner";
+import { SendFeedbackButton } from "@/components/feedback/send-feedback-button";
 import { useAcademy } from "@/lib/store/academy-provider";
 import { ACADEMY_PATHS, getPathProgress } from "@/lib/academy/paths";
 
@@ -29,12 +30,15 @@ export default function AcademyPage() {
         title="PlantPal Academy"
         description="Level up your gardening skills — one fun lesson at a time."
         action={
-          <Link href="/academy/trophies">
-            <Button variant="outline" size="sm">
-              <GraduationCap className="w-4 h-4" />
-              Trophies
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <SendFeedbackButton />
+            <Link href="/academy/trophies">
+              <Button variant="outline" size="sm">
+                <GraduationCap className="w-4 h-4" />
+                Trophies
+              </Button>
+            </Link>
+          </div>
         }
       />
 

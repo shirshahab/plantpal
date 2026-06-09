@@ -23,6 +23,8 @@ export interface UserProfile {
   zipCode: string;
   mainGoal: MainGoal | null;
   completedAt: string | null;
+  /** Founder Mode — unrestricted access for testing (local only). */
+  founderMode?: boolean;
 }
 
 export const DEFAULT_PROFILE: UserProfile = {

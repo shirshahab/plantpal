@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import type { BetaFeedbackCategory } from "@/lib/feedback/types";
+import { getCategoryLabel } from "@/lib/feedback/types";
 
 interface FeedbackBody {
+  category?: BetaFeedbackCategory;
   tried?: string;
   confused?: string;
   improvement?: string;
@@ -14,7 +17,16 @@ interface FeedbackBody {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as FeedbackBody;
-    const message = body.message?.trim();
+    let message = body.message?.trim();
+
+    if (!message) {
+      const parts: string[] = [];
+      if (body.category) parts.push(`Category: ${getCategoryLabel(body.category)}`);
+      if (body.tried?.trim()) parts.push(`What I tried: ${body.tried.trim()}`);
+      if (body.confused?.trim()) parts.push(`What confused me: ${body.confused.trim()}`);
+      if (body.improvement?.trim()) parts.push(`What would help: ${body.improvement.trim()}`);
+      message = parts.join("\n\n");
+    }
 
     if (!message) {
       return NextResponse.json(
@@ -27,7 +39,7 @@ export async function POST(request: Request) {
       user_id: null as string | null,
       email: body.email?.trim() || null,
       route: body.route?.trim() || null,
-      feedback_type: "beta",
+      feedback_type: body.category ? `beta:${body.category}` : "beta",
       message,
     };
 
