@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import type { AIApiResponse } from "@/lib/types/ai";
+import type { AIApiResponse, AIApiResult } from "@/lib/types/ai";
 
 import {
   FRIENDLY_ANALYSIS_FAILED,
@@ -10,8 +10,13 @@ import {
 
 export { FRIENDLY_ANALYSIS_FAILED, FRIENDLY_PAYLOAD_TOO_LARGE };
 
-export function aiSuccess<T>(data: T, saved: boolean) {
-  return NextResponse.json({ ok: true, data, saved } satisfies AIApiResponse<T>);
+export function aiSuccess<T>(data: T, saved: boolean, savedPhotoUrl?: string | null) {
+  return NextResponse.json({
+    ok: true,
+    data,
+    saved,
+    ...(savedPhotoUrl ? { savedPhotoUrl } : {}),
+  } satisfies AIApiResult<T>);
 }
 
 export function aiError(message: string, status = 400) {

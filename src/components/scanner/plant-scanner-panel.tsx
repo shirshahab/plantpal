@@ -12,7 +12,7 @@ import { IdentifyPlantResults } from "@/components/scanner/identify-plant-result
 import { BadPhotoGuidance } from "@/components/scanner/bad-photo-guidance";
 import { requestIdentifyPlant } from "@/lib/ai/client";
 import { assessPhotoQualityClient } from "@/lib/scanner/photo-quality";
-import { saveScanToHistory } from "@/lib/scanner/scan-history";
+import { saveScanToHistory, SCAN_HISTORY_QUOTA_MESSAGE } from "@/lib/scanner/scan-history";
 import { useToast } from "@/lib/store/toast-provider";
 import { friendlyAiError } from "@/lib/errors/user-messages";
 import { isDemoMode } from "@/lib/profile/user-profile";
@@ -90,13 +90,21 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
         throw new Error(msg);
       }
 
-      const entry = saveScanToHistory({
-        photoUrl: preview ?? imageDataUrls[0],
-        photoUrls: imageDataUrls,
-        result: res.data,
-      });
-      setScanHistoryId(entry.id);
       setResult(res.data);
+
+      try {
+        const { entry, warning } = await saveScanToHistory({
+          photoUrl: preview ?? imageDataUrls[0],
+          photoUrls: imageDataUrls,
+          result: res.data,
+          remotePhotoUrl: res.savedPhotoUrl ?? null,
+        });
+        setScanHistoryId(entry.id);
+        if (warning) toast(warning);
+      } catch (saveErr) {
+        console.error("[scanner] scan history save failed", saveErr);
+        toast(SCAN_HISTORY_QUOTA_MESSAGE);
+      }
 
       if (res.data.not_fully_confident) {
         toast("Not fully confident — another photo may help");

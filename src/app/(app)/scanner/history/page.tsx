@@ -17,7 +17,7 @@ import {
   getHealthReports,
   type HealthReportSummary,
 } from "@/lib/db";
-import { getScanHistory, type ScanHistoryEntry } from "@/lib/scanner/scan-history";
+import { getScanHistory, getScanHistoryDisplayUrl, type ScanHistoryEntry } from "@/lib/scanner/scan-history";
 import type { PhotoType } from "@/lib/types/ai";
 import { formatDate } from "@/lib/utils";
 
@@ -90,27 +90,30 @@ export default function ScannerHistoryPage() {
           {identifyHistory.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-gray-900">Plant identifications</h2>
-              {identifyHistory.map((entry) => (
+              {identifyHistory.map((entry) => {
+                const displayUrl = getScanHistoryDisplayUrl(entry);
+                return (
                 <Card key={entry.id} padding="sm" className="flex gap-3">
                   <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                    <Image
-                      src={entry.photoUrl}
-                      alt={entry.topMatch}
-                      fill
-                      className="object-cover"
-                      unoptimized={entry.photoUrl.startsWith("data:")}
-                    />
-                    {entry.photoUrls.length > 1 && (
-                      <span className="absolute bottom-0 right-0 bg-black/60 text-white text-[9px] px-1 rounded-tl">
-                        +{entry.photoUrls.length - 1}
-                      </span>
+                    {displayUrl ? (
+                      <Image
+                        src={displayUrl}
+                        alt={entry.plantName}
+                        fill
+                        className="object-cover"
+                        unoptimized={displayUrl.startsWith("data:")}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-green-50">
+                        <Leaf className="w-6 h-6 text-green-600" />
+                      </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {entry.topMatch}
+                          {entry.plantName}
                         </p>
                         <p className="text-xs text-gray-500 italic truncate">
                           {entry.scientificName}
@@ -124,11 +127,6 @@ export default function ScannerHistoryPage() {
                       )}
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5">{formatDate(entry.createdAt)}</p>
-                    {entry.friendlyHeadline && (
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                        {entry.friendlyHeadline}
-                      </p>
-                    )}
                     <div className="flex flex-wrap gap-2 mt-1.5">
                       <Badge variant="outline" className="text-[10px]">
                         {SOURCE_LABELS[entry.source] ?? entry.source}
@@ -144,7 +142,8 @@ export default function ScannerHistoryPage() {
                     </div>
                   </div>
                 </Card>
-              ))}
+              );
+              })}
             </section>
           )}
 

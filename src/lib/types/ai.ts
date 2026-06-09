@@ -234,6 +234,8 @@ export interface AIApiResult<T> {
   ok: true;
   data: T;
   saved: boolean;
+  /** Public Supabase Storage URL when scan photo was persisted server-side. */
+  savedPhotoUrl?: string | null;
 }
 
 export interface AIApiError {

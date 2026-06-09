@@ -36,7 +36,7 @@ import type {
   PhotoQualityAssessment,
 } from "@/lib/types/ai";
 import { assessPhotoQualityClient } from "@/lib/scanner/photo-quality";
-import { saveScanToHistory } from "@/lib/scanner/scan-history";
+import { saveScanToHistory, SCAN_HISTORY_QUOTA_MESSAGE } from "@/lib/scanner/scan-history";
 import { usePlants } from "@/lib/store/plants-provider";
 import { usePhotos } from "@/lib/store/photos-provider";
 import { useEngagement } from "@/lib/store/engagement-provider";
@@ -158,14 +158,22 @@ export function CameraHub() {
         throw new Error(msg);
       }
 
-      const entry = saveScanToHistory({
-        photoUrl: identifyPreview ?? imageDataUrls[0],
-        photoUrls: imageDataUrls,
-        result: res.data,
-        friendlyHeadline: res.data.friendly_headline,
-      });
-      setScanHistoryId(entry.id);
       setIdentifyResult(res.data);
+
+      try {
+        const { entry, warning } = await saveScanToHistory({
+          photoUrl: identifyPreview ?? imageDataUrls[0],
+          photoUrls: imageDataUrls,
+          result: res.data,
+          friendlyHeadline: res.data.friendly_headline,
+          remotePhotoUrl: res.savedPhotoUrl ?? null,
+        });
+        setScanHistoryId(entry.id);
+        if (warning) toast(warning);
+      } catch (saveErr) {
+        console.error("[scanner] scan history save failed", saveErr);
+        toast(SCAN_HISTORY_QUOTA_MESSAGE);
+      }
 
       const badPhoto =
         res.data.photo_quality?.acceptable === false ||

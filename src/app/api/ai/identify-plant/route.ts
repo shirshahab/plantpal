@@ -244,12 +244,14 @@ export async function POST(request: Request) {
     });
 
     let saved = false;
+    let savedPhotoUrl: string | null = null;
     if (userId && isSupabaseConfigured()) {
       try {
         const supabase = await createClient();
         const blob = dataUrlToBlob(primaryUrl);
         const photoUrl = await uploadPlantPhotoServer(supabase, userId, blob, "identification");
         if (photoUrl) {
+          savedPhotoUrl = photoUrl;
           const { error } = await supabase.from("plant_photos").insert({
             user_id: userId,
             plant_id: null,
@@ -273,7 +275,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return aiSuccess(enriched, saved);
+    return aiSuccess(enriched, saved, savedPhotoUrl);
   } catch (e) {
     if (e instanceof IdentificationFailedError) {
       logIdentifyDebug(ROUTE, e.debug);

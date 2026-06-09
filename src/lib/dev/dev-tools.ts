@@ -29,6 +29,7 @@ export const PLANTPAL_STORAGE_KEYS = [
   "plantpal-install-dismissed",
   "plantpal-qa-checklist",
   "plantpal-founder-mode",
+  "plantpal-scan-history",
   PROFILE_STORAGE_KEY,
   DEMO_MODE_KEY,
 ] as const;
@@ -70,6 +71,8 @@ export function resetTasks(): void {
 export function resetGenome(): void {
   localStorage.removeItem("plantpal-genomes");
 }
+
+export { clearScanHistory } from "@/lib/scanner/scan-history";
 
 export function loadDemoGarden(zip = "91107"): boolean {
   return seedDemoGarden(zip);

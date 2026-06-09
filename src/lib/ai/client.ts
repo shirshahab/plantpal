@@ -13,6 +13,7 @@ export type IdentifyPlantApiResponse = AIApiResponse<PlantIdentificationResponse
   failureReason?: string;
   failureStep?: string;
   debug?: IdentifyDebugLog;
+  savedPhotoUrl?: string | null;
 };
 
 function friendlyNonJsonError(status: number, bodyText: string): string {

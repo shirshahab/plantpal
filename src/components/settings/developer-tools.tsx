@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   clearLocalData,
+  clearScanHistory,
   isDevEnvironment,
   loadDemoGarden,
   resetAiCache,
@@ -126,6 +127,19 @@ export function DeveloperToolsSection() {
         <Button variant="outline" size="sm" onClick={() => { resetGenome(); reload(); }}>
           <Dna className="w-4 h-4" />
           Reset Genome
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (confirm("Clear local plant scan history? Photos in Supabase are not deleted.")) {
+              clearScanHistory();
+              reload();
+            }
+          }}
+        >
+          <Trash2 className="w-4 h-4" />
+          Clear Scan History
         </Button>
         <Link href="/setup">
           <Button variant="outline" size="sm" className="w-full">
