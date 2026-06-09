@@ -28,7 +28,7 @@ import {
   loadMockSubscription,
   setMockTier,
 } from "@/lib/billing/subscription-state";
-import { isDemoMode } from "@/lib/profile/user-profile";
+import { PUBLIC_BETA_UNLOCK_ALL } from "@/lib/billing/limits";
 import { usePlants } from "@/lib/store/plants-provider";
 import {
   buildUsageSummary,
@@ -63,7 +63,8 @@ const SubscriptionContext = createContext<SubscriptionContextValue | null>(null)
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [subscription, setSubscription] = useState<UserSubscription>(() => loadMockSubscription());
-  const [bypassLimits, setBypassLimits] = useState(false);
+  // Public beta: everything unlocked — no paywalls (Phase 37.5)
+  const [bypassLimits, setBypassLimits] = useState(PUBLIC_BETA_UNLOCK_ALL);
   const [accessRevision, setAccessRevision] = useState(0);
   const [scanRevision, setScanRevision] = useState(0);
   const { plants } = usePlants();
@@ -72,7 +73,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     hydrateFounderModeFromStorage();
     const sub = loadMockSubscription();
     setSubscription(sub);
-    setBypassLimits(isDemoMode());
+    setBypassLimits(PUBLIC_BETA_UNLOCK_ALL);
   }, []);
 
   useEffect(() => {

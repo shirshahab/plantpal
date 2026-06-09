@@ -16,8 +16,6 @@ import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BetaBadge } from "@/components/brand/beta-badge";
-import { seedDemoGarden } from "@/lib/demo/seed-demo-garden";
-import { loadUserProfile } from "@/lib/profile/user-profile";
 
 const WHAT_TO_TEST = [
   { icon: Leaf, text: "Add a plant — scan, search, or type it in" },
@@ -36,10 +34,8 @@ const KNOWN_ISSUES = [
 export default function BetaStartPage() {
   const router = useRouter();
 
-  function startDemoGarden() {
-    const zip = loadUserProfile().zipCode || "91107";
-    seedDemoGarden(zip);
-    window.location.href = "/dashboard";
+  function startScan() {
+    router.push("/scanner");
   }
 
   function startOwnPlants() {
@@ -109,13 +105,13 @@ export default function BetaStartPage() {
         <Button
           size="lg"
           className="w-full h-14 touch-manipulation"
-          onClick={startDemoGarden}
+          onClick={startScan}
         >
-          <Sparkles className="w-5 h-5" />
-          Start with Demo Garden
+          <ScanLine className="w-5 h-5" />
+          Scan Your First Plant
         </Button>
         <p className="text-xs text-gray-500 text-center px-4">
-          Pre-loaded plants, tasks, and care plans — great for a quick tour.
+          Point your camera at any plant for an instant AI identification.
         </p>
         <Button
           variant="secondary"
@@ -124,10 +120,10 @@ export default function BetaStartPage() {
           onClick={startOwnPlants}
         >
           <Leaf className="w-5 h-5" />
-          Start with My Own Plants
+          Add Plant Manually
         </Button>
         <p className="text-xs text-gray-500 text-center px-4">
-          Add your real plants from scratch — scan or search to get started.
+          Search or type in your plants to start tasks and care plans.
         </p>
       </section>
 

@@ -39,7 +39,7 @@ export function FamilyDashboard() {
     if (json.ok && json.inviteCode) {
       toast(`Family garden created! Code: ${json.inviteCode}`);
     } else {
-      toast("Family garden ready (demo mode).");
+      toast("Family garden ready (local mode).");
     }
   }
 

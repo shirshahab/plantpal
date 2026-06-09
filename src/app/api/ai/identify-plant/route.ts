@@ -19,7 +19,6 @@ import { parseJsonBody } from "@/lib/ai/parse-request-body";
 import { isOpenAIConfigured, OPENAI_VISION_MODEL } from "@/lib/ai/openai";
 import type { AIApiResponse } from "@/lib/types/ai";
 import { isPlantIdEnabled } from "@/lib/integrations/plantid";
-import { isScannerDemoModeEnabled } from "@/lib/scanner/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { dataUrlToBlob } from "@/lib/storage/plant-photos";
@@ -193,11 +192,8 @@ export async function POST(request: Request) {
     payload: formatBytes(payloadBytes),
   });
 
-  const forceDemo =
-    body.demoMode === true || isScannerDemoModeEnabled();
-
   try {
-    const result = await identifyPlantFromPhoto(urls, roles, { forceDemo });
+    const result = await identifyPlantFromPhoto(urls, roles);
 
     logIdentifyDebug(ROUTE, {
       openaiKeyConfigured: isOpenAIConfigured(),

@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { usePlants } from "@/lib/store/plants-provider";
 import {
   hasFirstPlant,
-  isDemoMode,
   isOnboardingComplete,
 } from "@/lib/profile/user-profile";
 
@@ -15,7 +14,6 @@ const BYPASS_PREFIXES = [
   "/signup",
   "/beta-start",
   "/tester-guide",
-  "/demo-script",
   "/qa",
   "/setup",
   "/debug",
@@ -44,8 +42,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
 
     if (loading) return;
 
-    const needsFirstPlant =
-      !hasFirstPlant() && plants.length === 0 && !isDemoMode();
+    const needsFirstPlant = !hasFirstPlant() && plants.length === 0;
 
     if (needsFirstPlant && pathname !== "/plants/new") {
       router.replace("/plants/new?first=1");

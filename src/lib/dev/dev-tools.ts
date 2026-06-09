@@ -1,10 +1,5 @@
-import { MOCK_PLANTS } from "@/lib/mock/plants";
-import {
-  PROFILE_STORAGE_KEY,
-  DEMO_MODE_KEY,
-} from "@/lib/profile/user-profile";
+import { PROFILE_STORAGE_KEY } from "@/lib/profile/user-profile";
 import { DEFAULT_PROFILE } from "@/lib/types/profile";
-import { seedDemoGarden } from "@/lib/demo/seed-demo-garden";
 
 /** All localStorage keys used by PlantPal providers. */
 export const PLANTPAL_STORAGE_KEYS = [
@@ -31,7 +26,6 @@ export const PLANTPAL_STORAGE_KEYS = [
   "plantpal-founder-mode",
   "plantpal-scan-history",
   PROFILE_STORAGE_KEY,
-  DEMO_MODE_KEY,
 ] as const;
 
 export function isDevEnvironment(): boolean {
@@ -50,12 +44,10 @@ export function clearLocalData(): void {
   for (const key of PLANTPAL_STORAGE_KEYS) {
     localStorage.removeItem(key);
   }
-  localStorage.setItem("plantpal-plants", JSON.stringify(MOCK_PLANTS));
 }
 
 export function resetOnboarding(): void {
   localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(DEFAULT_PROFILE));
-  localStorage.removeItem(DEMO_MODE_KEY);
 }
 
 export function resetAiCache(): void {
@@ -73,7 +65,3 @@ export function resetGenome(): void {
 }
 
 export { clearScanHistory } from "@/lib/scanner/scan-history";
-
-export function loadDemoGarden(zip = "91107"): boolean {
-  return seedDemoGarden(zip);
-}

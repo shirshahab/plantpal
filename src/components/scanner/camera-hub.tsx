@@ -42,7 +42,6 @@ import { usePhotos } from "@/lib/store/photos-provider";
 import { useEngagement } from "@/lib/store/engagement-provider";
 import { useToast } from "@/lib/store/toast-provider";
 import { friendlyAiError } from "@/lib/errors/user-messages";
-import { isDemoMode } from "@/lib/profile/user-profile";
 import { trackEvent } from "@/lib/analytics/track";
 import { recordScanUsage } from "@/lib/billing/usage-tracking";
 import { useSubscription } from "@/lib/store/subscription-provider";
@@ -161,7 +160,6 @@ export function CameraHub() {
       const res = await requestIdentifyPlant({
         imageDataUrls,
         photoRoles,
-        demoMode: isDemoMode(),
       });
       if (!res.ok) {
         const msg = res.failureReason ?? res.error ?? "Identification failed";
@@ -203,8 +201,6 @@ export function CameraHub() {
         toast("Photo quality is low — try a clearer shot");
       } else if (res.data.not_fully_confident || res.data.providers_disagree) {
         toast("Not fully confident — another photo may help");
-      } else if (res.data.source === "mock") {
-        toast("Demo");
       } else {
         toast("Plant identified");
       }

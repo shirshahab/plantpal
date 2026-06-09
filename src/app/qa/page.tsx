@@ -20,7 +20,7 @@ const QA_ITEMS = [
   { id: "mobile-nav", label: "Mobile navigation", desc: "Bottom nav, add button, and More menu work" },
   { id: "pwa", label: "PWA install", desc: "Install prompt appears; app opens standalone" },
   { id: "setup", label: "Setup checker", desc: "Supabase URL, tables, storage, API keys" },
-  { id: "demo-mode", label: "Demo mode", desc: "Explore Demo Garden loads full demo data" },
+  { id: "empty-state", label: "Empty state", desc: "New account shows 'Let's add your first plant.'" },
 ];
 
 const STORAGE_KEY = "plantpal-qa-checklist";
@@ -122,9 +122,6 @@ export default function QAPage() {
             <Button variant="outline" className="w-full">
               Open App
             </Button>
-          </Link>
-          <Link href="/demo-script" className="flex-1">
-            <Button className="w-full">Demo Script</Button>
           </Link>
         </div>
       </main>

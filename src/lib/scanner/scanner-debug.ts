@@ -10,7 +10,6 @@ import {
 import { probeOpenAI } from "@/lib/integrations/probe";
 import { isPlantIdEnabled } from "@/lib/integrations/plantid";
 import { identifyPlantFromImageDetailed } from "@/lib/integrations/plantnet";
-import { isScannerDemoModeEnabled } from "@/lib/scanner/demo-mode";
 import {
   normalizeDataUrlsForVision,
   SUPPORTED_SCANNER_MIMES,
@@ -48,7 +47,6 @@ export interface ScannerEnvDebug {
   plantnetKeyDetected: boolean;
   plantnetKeyAvailable: boolean;
   plantIdKeyDetected: boolean;
-  scannerDemoMode: boolean;
   nodeEnv: string;
   onVercel: boolean;
   vercelEnv: string | null;
@@ -184,7 +182,6 @@ export async function probeScannerEnvironment(): Promise<ScannerEnvDebug> {
     plantnetKeyDetected,
     plantnetKeyAvailable: plantnetKeyDetected,
     plantIdKeyDetected: isPlantIdEnabled(),
-    scannerDemoMode: isScannerDemoModeEnabled(),
     nodeEnv: process.env.NODE_ENV ?? "unknown",
     onVercel: Boolean(process.env.VERCEL),
     vercelEnv: process.env.VERCEL_ENV ?? null,

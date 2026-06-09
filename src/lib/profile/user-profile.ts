@@ -2,14 +2,32 @@ import type { UserProfile } from "@/lib/types/profile";
 import { DEFAULT_PROFILE } from "@/lib/types/profile";
 
 export const PROFILE_STORAGE_KEY = "plantpal-user-profile";
-export const DEMO_MODE_KEY = "plantpal-demo-mode";
+
+/** Legacy demo-mode keys — purged on load (Phase 37.5: public beta, no demo mode). */
+const LEGACY_DEMO_KEYS = ["plantpal-demo-mode"];
+
+function purgeLegacyDemoState(): void {
+  try {
+    for (const key of LEGACY_DEMO_KEYS) {
+      if (localStorage.getItem(key) !== null) localStorage.removeItem(key);
+    }
+  } catch {
+    /* ignore */
+  }
+}
 
 export function loadUserProfile(): UserProfile {
   if (typeof window === "undefined") return DEFAULT_PROFILE;
   try {
+    purgeLegacyDemoState();
     const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
     if (!raw) return DEFAULT_PROFILE;
-    return { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw) as UserProfile & { demoMode?: boolean };
+    if (parsed.demoMode !== undefined) {
+      delete parsed.demoMode;
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(parsed));
+    }
+    return { ...DEFAULT_PROFILE, ...parsed };
   } catch {
     return DEFAULT_PROFILE;
   }
@@ -18,15 +36,7 @@ export function loadUserProfile(): UserProfile {
 export function saveUserProfile(profile: Partial<UserProfile>): UserProfile {
   const next = { ...loadUserProfile(), ...profile };
   localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(next));
-  if (profile.demoMode !== undefined) {
-    localStorage.setItem(DEMO_MODE_KEY, profile.demoMode ? "1" : "0");
-  }
   return next;
-}
-
-export function isDemoMode(): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(DEMO_MODE_KEY) === "1" || loadUserProfile().demoMode;
 }
 
 export function isOnboardingComplete(): boolean {
@@ -34,8 +44,7 @@ export function isOnboardingComplete(): boolean {
 }
 
 export function hasFirstPlant(): boolean {
-  const profile = loadUserProfile();
-  return profile.firstPlantAdded === true || profile.demoMode;
+  return loadUserProfile().firstPlantAdded === true;
 }
 
 export function markFirstPlantAdded(): UserProfile {

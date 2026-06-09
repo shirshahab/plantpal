@@ -109,7 +109,7 @@ export function ConciergeHub() {
     toast(
       data.source === "ai"
         ? "Recovery plan ready."
-        : "Recovery plan ready (demo mode)."
+        : "Recovery plan ready (preview mode)."
     );
   }
 

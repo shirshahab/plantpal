@@ -6,6 +6,7 @@ import {
 } from "./tier-config";
 import {
   FREE_PLANT_LIMIT,
+  PUBLIC_BETA_UNLOCK_ALL,
   canAccessAcademyPath,
   isProTier,
 } from "./limits";
@@ -17,6 +18,7 @@ export interface AccessOptions {
 }
 
 export function isAccessUnrestricted(options: AccessOptions = {}): boolean {
+  if (PUBLIC_BETA_UNLOCK_ALL) return true;
   return !!(options.betaUnlockAll || options.bypassLimits || options.founderMode);
 }
 

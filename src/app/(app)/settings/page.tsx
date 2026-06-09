@@ -15,7 +15,6 @@ import { ConfirmModal } from "@/components/ui/modal";
 import { SyncStatusBadge } from "@/components/sync/sync-status-badge";
 import { DeveloperToolsSection } from "@/components/settings/developer-tools";
 import { FounderModeBadge } from "@/components/settings/founder-mode-badge";
-import { MOCK_PLANTS } from "@/lib/mock/plants";
 import { useAuth } from "@/lib/store/auth-provider";
 import { createClient } from "@/lib/supabase/client";
 import { loadUserProfile } from "@/lib/profile/user-profile";
@@ -24,7 +23,6 @@ import {
   EXPERIENCE_OPTIONS,
   MAIN_GOAL_OPTIONS,
 } from "@/lib/types/profile";
-import { seedDemoGarden } from "@/lib/demo/seed-demo-garden";
 
 export default function SettingsPage() {
   const { user, isMockMode } = useAuth();
@@ -92,7 +90,7 @@ export default function SettingsPage() {
   }
 
   function handleResetData() {
-    localStorage.setItem("plantpal-plants", JSON.stringify(MOCK_PLANTS));
+    localStorage.removeItem("plantpal-plants");
     setResetOpen(false);
     window.location.reload();
   }
@@ -165,11 +163,6 @@ export default function SettingsPage() {
               <p className="text-gray-600">
                 <span className="font-medium text-gray-900">ZIP:</span>{" "}
                 {profile.zipCode || "Not set"}
-                {profile.demoMode && (
-                  <span className="ml-2 text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
-                    Demo mode
-                  </span>
-                )}
               </p>
               {profile.experienceLevel && (
                 <p className="text-gray-600">
@@ -202,16 +195,6 @@ export default function SettingsPage() {
                 {profile.onboardingComplete ? "Update preferences" : "Start onboarding"}
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                seedDemoGarden(profile.zipCode || "91107");
-                window.location.reload();
-              }}
-            >
-              Explore Demo Garden
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -271,15 +254,15 @@ export default function SettingsPage() {
       {isMockMode && (
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-gray-900">Demo Data</h2>
+            <h2 className="font-semibold text-gray-900">Local Data</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Reset local demo plants and learning progress
+              Reset locally stored plants and learning progress
             </p>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button variant="outline" onClick={() => setResetOpen(true)}>
               <RotateCcw className="w-4 h-4" />
-              Reset Mock Plants
+              Reset Local Plants
             </Button>
             <Button variant="outline" onClick={() => setResetEduOpen(true)}>
               <RotateCcw className="w-4 h-4" />
@@ -295,8 +278,8 @@ export default function SettingsPage() {
         open={resetOpen}
         onClose={() => setResetOpen(false)}
         onConfirm={handleResetData}
-        title="Reset mock data?"
-        description="This will restore the 5 default plants and remove any plants you added."
+        title="Reset local plants?"
+        description="This will remove all locally stored plants and start your garden fresh."
         confirmLabel="Reset"
       />
 

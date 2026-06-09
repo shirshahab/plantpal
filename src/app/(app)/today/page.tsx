@@ -56,12 +56,12 @@ export default function TodayPage() {
       {plants.length === 0 ? (
         <EmptyState
           icon="🪴"
-          title="Add your first plant"
+          title="Let's add your first plant."
           description="Your daily tasks, watering reminders, and care schedule start here."
-          actionLabel="Add Plant"
-          actionHref="/plants/new"
-          secondaryLabel="Explore Demo"
-          secondaryHref="/onboarding"
+          actionLabel="Scan Plant"
+          actionHref="/scanner"
+          secondaryLabel="Add Plant Manually"
+          secondaryHref="/plants/new"
         />
       ) : (
         <>

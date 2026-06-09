@@ -24,7 +24,6 @@ import {
   getPrimarySourceLabel,
 } from "@/lib/scanner/identification-source-labels";
 import { markScanAddedToGarden } from "@/lib/scanner/scan-history";
-import { isDemoMode } from "@/lib/profile/user-profile";
 import { AiSafetyDisclaimer } from "@/components/ai/ai-safety-disclaimer";
 import type { PhotoQualityAssessment, PlantIdentificationResponse } from "@/lib/types/ai";
 import { cn } from "@/lib/utils";
@@ -50,22 +49,19 @@ export function IdentifyPlantResults({
 }: IdentifyPlantResultsProps) {
   const photoQuality = mergePhotoQuality(clientPhotoQuality ?? null, result.photo_quality);
   const badPhoto = !photoQuality.acceptable;
-  const isDemoResult = result.source === "mock" || result.identification_provider === "mock";
-  const showDemoResult = isDemoResult && isDemoMode();
-  const liveAiUnavailable = isDemoResult && !isDemoMode();
+  const liveAiUnavailable =
+    result.source === "mock" || result.identification_provider === "mock";
 
   const notConfident =
     result.not_fully_confident ??
     (result.confidence_score < 70 || result.low_confidence || result.providers_disagree);
 
   const headline = liveAiUnavailable
-    ? "Live AI identification isn't configured yet."
+    ? "We couldn't identify this plant. Try another photo."
     : (result.friendly_headline ??
       (badPhoto
         ? "PlantPal needs a clearer photo before identifying this plant."
-        : showDemoResult
-          ? "Demo identification — not based on your photo."
-          : `PlantPal thinks this is likely a ${result.common_name}.`));
+        : `PlantPal thinks this is likely a ${result.common_name}.`));
 
   const primaryLabel = getPrimarySourceLabel(result);
   const plantNetLabel = getPlantNetSourceLabel(result.plantnet_configured ?? false);
@@ -92,10 +88,11 @@ export function IdentifyPlantResults({
       <AiSafetyDisclaimer />
       {liveAiUnavailable && (
         <Card padding="md" className="border-amber-200 bg-amber-50">
-          <p className="text-sm font-semibold text-amber-950">Live AI not available</p>
+          <p className="text-sm font-semibold text-amber-950">
+            We couldn&apos;t identify this plant
+          </p>
           <p className="text-sm text-amber-900/90 mt-1 leading-relaxed">
-            Add OPENAI_API_KEY (and optionally PLANTNET_API_KEY) in your environment to identify
-            plants from photos. Demo results are only shown in demo mode.
+            Try another photo with the whole plant and a leaf close-up in good light.
           </p>
         </Card>
       )}
@@ -120,8 +117,8 @@ export function IdentifyPlantResults({
 
       <Card padding="md" className={cn("space-y-4", badPhoto || liveAiUnavailable ? "border-gray-200 opacity-90" : "border-green-100")}>
         <div className="flex flex-wrap gap-2 items-center">
-          <Badge variant={liveAiUnavailable ? "outline" : showDemoResult ? "outline" : "success"} className="text-[10px]">
-            {liveAiUnavailable ? "Not configured" : primaryLabel}
+          <Badge variant={liveAiUnavailable ? "outline" : "success"} className="text-[10px]">
+            {liveAiUnavailable ? "Unidentified" : primaryLabel}
           </Badge>
           {!liveAiUnavailable && plantNetLabel && (
             <Badge variant="outline" className="text-[10px]">

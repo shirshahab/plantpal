@@ -6,7 +6,6 @@ import { ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { InstallPrompt } from "@/components/mobile/install-prompt";
-import { DemoBanner } from "@/components/demo/demo-banner";
 import { SyncStatusBadge } from "@/components/sync/sync-status-badge";
 import { DashboardHealthScore } from "@/components/dashboard/health-score-section";
 import { DashboardTopTasks } from "@/components/dashboard/top-tasks-section";
@@ -80,7 +79,6 @@ export function DashboardHome() {
       />
 
       <InstallPrompt />
-      <DemoBanner />
 
       <div className="flex flex-col gap-5">
         <DashboardHealthScore health={gardenHealth} plants={plants} />

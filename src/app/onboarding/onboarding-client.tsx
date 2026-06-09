@@ -10,7 +10,6 @@ import { Card } from "@/components/ui/card";
 import { BetaBadge } from "@/components/brand/beta-badge";
 import { cn } from "@/lib/utils";
 import { saveUserProfile } from "@/lib/profile/user-profile";
-import { seedDemoGarden } from "@/lib/demo/seed-demo-garden";
 import { trackEvent } from "@/lib/analytics/track";
 import {
   capturePendingReferral,
@@ -72,7 +71,7 @@ export default function OnboardingPageClient() {
     }
   }
 
-  function persistProfile(extra: { demoMode?: boolean; firstPlantAdded?: boolean } = {}) {
+  function persistProfile(extra: { firstPlantAdded?: boolean } = {}) {
     saveUserProfile({
       onboardingComplete: true,
       growTypes,
@@ -100,16 +99,14 @@ export default function OnboardingPageClient() {
     }
   }
 
-  function handleExploreDemo() {
-    persistProfile({ demoMode: true, firstPlantAdded: true });
-    seedDemoGarden(zipCode.trim() || "91107");
-    router.push("/dashboard");
-    window.location.reload();
-  }
-
   function handleAddPlant() {
     persistProfile();
     router.push("/plants/new?first=1");
+  }
+
+  function handleScanPlant() {
+    persistProfile();
+    router.push("/scanner");
   }
 
   return (
@@ -289,19 +286,19 @@ export default function OnboardingPageClient() {
               </p>
             </div>
 
-            <Button className="w-full" size="lg" onClick={handleAddPlant}>
-              Add First Plant
+            <Button className="w-full" size="lg" onClick={handleScanPlant}>
+              Scan Plant
               <ChevronRight className="w-4 h-4" />
             </Button>
 
-            <Button variant="outline" className="w-full" size="lg" onClick={handleExploreDemo}>
-              Explore Demo Garden
+            <Button variant="outline" className="w-full" size="lg" onClick={handleAddPlant}>
+              Add Plant Manually
             </Button>
 
             <Card padding="md" className="border-gray-100 bg-gray-50/50">
               <p className="text-sm text-gray-600 leading-relaxed">
-                The demo garden includes Meyer Lemon, Japanese Maple, Bougainvillea, and more —
-                with tasks, care plans, and scans pre-loaded.
+                Point your camera at any plant to identify it instantly, or add it manually —
+                tasks and care plans start the moment your first plant is in.
               </p>
             </Card>
           </div>

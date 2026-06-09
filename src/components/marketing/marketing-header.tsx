@@ -6,7 +6,6 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
 import { BetaBadge } from "@/components/brand/beta-badge";
-import { DemoButton } from "@/components/marketing/demo-button";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -45,9 +44,8 @@ export function MarketingHeader() {
               Login
             </Button>
           </Link>
-          <DemoButton variant="outline" size="sm" label="Try Demo" />
-          <Link href="/waitlist">
-            <Button size="sm">Start Growing</Button>
+          <Link href="/onboarding">
+            <Button size="sm">Get Started Free</Button>
           </Link>
         </div>
 
@@ -84,10 +82,9 @@ export function MarketingHeader() {
                 Login
               </Button>
             </Link>
-            <DemoButton variant="outline" size="md" label="Try Demo" className="w-full" />
-            <Link href="/waitlist" onClick={() => setOpen(false)}>
+            <Link href="/onboarding" onClick={() => setOpen(false)}>
               <Button size="md" className="w-full">
-                Start Growing
+                Get Started Free
               </Button>
             </Link>
           </div>

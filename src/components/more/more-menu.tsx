@@ -98,7 +98,6 @@ function buildSections(hideUpgrade: boolean) {
         { href: "/invite", label: "Invite Friends", icon: Gift, desc: "Share PlantPal — both get Plus trial" },
         { href: "/settings", label: "Settings", icon: Settings, desc: "Profile & preferences" },
         { href: "/setup", label: "Setup checker", icon: Database, desc: "Supabase & API health" },
-        { href: "/demo-script", label: "Demo Script", icon: Sparkles, desc: "Live pitch guide" },
         { href: "/qa", label: "QA Checklist", icon: Trophy, desc: "Manual test checklist" },
       ],
     },

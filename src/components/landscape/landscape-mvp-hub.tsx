@@ -182,7 +182,7 @@ export function LandscapeMvpHub() {
     toast(
       res.data.source === "ai"
         ? "Your landscape concept is ready."
-        : "Your landscape concept is ready (demo mode)."
+        : "Your landscape concept is ready (preview mode)."
     );
   }
 

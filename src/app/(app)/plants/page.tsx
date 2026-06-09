@@ -40,12 +40,12 @@ export default function PlantsPage() {
       {plants.length === 0 ? (
         <EmptyState
           icon="🌿"
-          title="Add your first plant"
+          title="Let's add your first plant."
           description="Build your collection — each plant gets its own care schedule and journey."
-          actionLabel="Add Plant"
-          actionHref="/plants/new"
-          secondaryLabel="Explore Demo"
-          secondaryHref="/onboarding"
+          actionLabel="Scan Plant"
+          actionHref="/scanner"
+          secondaryLabel="Add Plant Manually"
+          secondaryHref="/plants/new"
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

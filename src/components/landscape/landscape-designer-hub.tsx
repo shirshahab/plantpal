@@ -117,7 +117,7 @@ export function LandscapeDesignerHub() {
     toast(
       res.data.source === "ai"
         ? "Your garden design is ready."
-        : "Your garden design is ready (demo mode)."
+        : "Your garden design is ready (preview mode)."
     );
   }
 

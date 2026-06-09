@@ -108,8 +108,6 @@ export interface IdentifyPlantRequest {
   /** Up to 3 photos: whole plant, leaf, flower/fruit */
   imageDataUrls?: string[];
   photoRoles?: Array<"whole" | "leaf" | "flower">;
-  /** User explicitly chose demo mode (profile / onboarding) */
-  demoMode?: boolean;
 }
 
 export interface ScanTagRequest {

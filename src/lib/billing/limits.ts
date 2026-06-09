@@ -1,5 +1,11 @@
 import { AccountTier, type AccountTier as Tier } from "./tier-config";
 
+/**
+ * Public beta (Phase 37.5): all features unlocked, no paywalls.
+ * Flip to false when PlantPal Pro launches.
+ */
+export const PUBLIC_BETA_UNLOCK_ALL = true;
+
 export const FREE_PLANT_LIMIT = 25;
 
 /** Free tier: plant ID scans per calendar month */
@@ -24,15 +30,18 @@ export function isProTier(tier: Tier): boolean {
 }
 
 export function getScanLimitForTier(tier: Tier): number | null {
+  if (PUBLIC_BETA_UNLOCK_ALL) return null;
   return isProTier(tier) ? null : FREE_SCAN_LIMIT_MONTHLY;
 }
 
 export function canAccessAcademyPath(tier: Tier, pathId: string): boolean {
+  if (PUBLIC_BETA_UNLOCK_ALL) return true;
   if (isProTier(tier)) return true;
   return (FREE_ACADEMY_PATH_IDS as readonly string[]).includes(pathId);
 }
 
 export function isProOnlyRoute(pathname: string): boolean {
+  if (PUBLIC_BETA_UNLOCK_ALL) return false;
   return PRO_ONLY_ROUTE_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );

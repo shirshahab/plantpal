@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DemoButton } from "@/components/marketing/demo-button";
 import { Input } from "@/components/ui/input";
 import {
   GROW_TYPE_OPTIONS,
@@ -78,9 +78,11 @@ export function WaitlistForm({ variant = "full", source = "website", className }
           You&apos;re on the PlantPal waitlist.
         </h3>
         <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-          We&apos;ll email you when early access opens. In the meantime, explore the demo garden.
+          We&apos;ll email you when early access opens. Or start your garden right now.
         </p>
-        <DemoButton size="md" label="Explore Demo" className="mt-6" />
+        <Link href="/onboarding" className="inline-block mt-6">
+          <Button size="md">Start My Garden</Button>
+        </Link>
       </div>
     );
   }

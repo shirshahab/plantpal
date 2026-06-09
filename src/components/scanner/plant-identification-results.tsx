@@ -30,7 +30,7 @@ interface PlantIdentificationResultsProps {
 const PROVIDER_LABELS: Record<string, string> = {
   plantid: "Plant.id",
   openai: "OpenAI Vision",
-  mock: "Demo mode",
+  mock: "Unidentified",
 };
 
 export function PlantIdentificationResults({

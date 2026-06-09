@@ -156,7 +156,7 @@ export function DesignResults({
         <p className="text-xs font-medium text-gray-400 uppercase mb-1">Design summary</p>
         <p className="text-sm text-gray-700 leading-relaxed">{design.design_summary}</p>
         <p className="text-xs text-gray-400 mt-2">
-          {design.source === "ai" ? "AI analysis" : "Demo analysis"} · Zone {design.climate.usda_zone} ·{" "}
+          {design.source === "ai" ? "AI analysis" : "Preview analysis"} · Zone {design.climate.usda_zone} ·{" "}
           {design.climate.city}
         </p>
       </Card>

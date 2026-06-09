@@ -9,7 +9,7 @@ const LABELS: Record<SyncStatus, string> = {
   offline: "Offline mode",
   pending: "Syncing…",
   failed: "Sync failed",
-  local: "Local demo mode",
+  local: "Local mode",
 };
 
 const ICONS: Record<SyncStatus, React.ElementType> = {

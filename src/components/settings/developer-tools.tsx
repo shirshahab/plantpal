@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { RotateCcw, Trash2, Sparkles, Database, Wrench, Dna } from "lucide-react";
+import { RotateCcw, Trash2, Database, Wrench, Dna } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   clearLocalData,
   clearScanHistory,
   isDevEnvironment,
-  loadDemoGarden,
   resetAiCache,
   resetOnboarding,
   resetTasks,
@@ -39,17 +38,6 @@ export function DeveloperToolsSection() {
 
         {isDev && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                loadDemoGarden("91107");
-                reload();
-              }}
-            >
-              <Sparkles className="w-4 h-4" />
-              Load Demo Garden
-            </Button>
             <Button
               variant="outline"
               size="sm"

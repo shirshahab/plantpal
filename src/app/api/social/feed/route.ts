@@ -9,7 +9,7 @@ import type {
   FeedVisibility,
   SocialProfile,
 } from "@/lib/social/types";
-import { DEMO_FEED_EVENTS, EVENT_EMOJI } from "@/lib/social/constants";
+import { EVENT_EMOJI } from "@/lib/social/constants";
 
 function profileFrom(row: {
   id: string;
@@ -50,37 +50,12 @@ function matchesFilter(event: ActivityFeedEvent, filter: FeedFilter, userId: str
   }
 }
 
-function demoEvents(): ActivityFeedEvent[] {
-  const now = Date.now();
-  return DEMO_FEED_EVENTS.map((d, i) => ({
-    id: `demo-${i}`,
-    userId: `demo-user-${i}`,
-    eventType: d.eventType,
-    visibility: "friends" as FeedVisibility,
-    groupId: d.actorName === "Family Garden" ? "demo-family" : null,
-    title: d.title,
-    body: "",
-    emoji: d.emoji,
-    payload: {},
-    createdAt: new Date(now - i * 3600000).toISOString(),
-    actor: {
-      id: `demo-user-${i}`,
-      fullName: d.actorName,
-      email: null,
-      avatarUrl: null,
-    },
-    reactionCounts: { nice_work: i % 3 },
-    commentCount: i % 2,
-  }));
-}
-
 export async function GET(request: Request) {
   const filter = (new URL(request.url).searchParams.get("filter") ?? "all") as FeedFilter;
   const limit = Math.min(Number(new URL(request.url).searchParams.get("limit") ?? 20), 50);
 
   if (!isSupabaseConfigured()) {
-    const events = demoEvents().filter((e) => matchesFilter(e, filter, null));
-    return NextResponse.json({ ok: true, events: events.slice(0, limit), storage: "local" as const });
+    return NextResponse.json({ ok: true, events: [], storage: "local" as const });
   }
 
   const supabase = await createClient();
@@ -89,8 +64,7 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const events = demoEvents().filter((e) => matchesFilter(e, filter, null));
-    return NextResponse.json({ ok: true, events: events.slice(0, limit), storage: "demo" as const });
+    return NextResponse.json({ ok: true, events: [], storage: "local" as const });
   }
 
   const { data: rows, error } = await supabase
@@ -101,7 +75,7 @@ export async function GET(request: Request) {
 
   if (error) {
     console.error("[social/feed GET]", error.message);
-    return NextResponse.json({ ok: true, events: demoEvents().slice(0, limit), storage: "fallback" as const });
+    return NextResponse.json({ ok: true, events: [], storage: "fallback" as const });
   }
 
   const userIds = [...new Set((rows ?? []).map((r) => r.user_id))];
@@ -155,14 +129,6 @@ export async function GET(request: Request) {
   }));
 
   const filtered = events.filter((e) => matchesFilter(e, filter, user.id)).slice(0, limit);
-
-  if (filtered.length === 0) {
-    return NextResponse.json({
-      ok: true,
-      events: demoEvents().filter((e) => matchesFilter(e, filter, user.id)).slice(0, limit),
-      storage: "demo" as const,
-    });
-  }
 
   return NextResponse.json({ ok: true, events: filtered, storage: "supabase" as const });
 }

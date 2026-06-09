@@ -87,57 +87,6 @@ export const SOCIAL_BADGES: Record<
   },
 };
 
-export const DEMO_FEED_EVENTS = [
-  {
-    actorName: "Shahab",
-    eventType: "plant_added" as FeedEventType,
-    title: "added Meyer Lemon",
-    emoji: "🌱",
-  },
-  {
-    actorName: "Sabina",
-    eventType: "lesson_completed" as FeedEventType,
-    title: "completed Soil Basics",
-    emoji: "📚",
-  },
-  {
-    actorName: "Alex",
-    eventType: "badge_earned" as FeedEventType,
-    title: "earned Bug Hunter Badge",
-    emoji: "🏅",
-  },
-  {
-    actorName: "Sarah",
-    eventType: "growth_photo" as FeedEventType,
-    title: "uploaded a growth photo",
-    emoji: "📸",
-  },
-  {
-    actorName: "John",
-    eventType: "streak_milestone" as FeedEventType,
-    title: "completed a 7 day streak",
-    emoji: "🔥",
-  },
-  {
-    actorName: "Lisa",
-    eventType: "harvest_logged" as FeedEventType,
-    title: "harvested tomatoes",
-    emoji: "🍅",
-  },
-  {
-    actorName: "Mike",
-    eventType: "diagnosis_completed" as FeedEventType,
-    title: "diagnosed aphids",
-    emoji: "🩺",
-  },
-  {
-    actorName: "Family Garden",
-    eventType: "group_milestone" as FeedEventType,
-    title: "reached 100 plants",
-    emoji: "👨‍👩‍👧",
-  },
-];
-
 export const CHALLENGE_TEMPLATES = [
   {
     challengeType: "water_streak" as const,

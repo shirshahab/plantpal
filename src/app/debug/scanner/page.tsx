@@ -157,11 +157,6 @@ export default function ScannerDebugPage() {
                   OpenAI auth: {displayEnv.openaiAuthError}
                 </p>
               )}
-              {displayEnv.scannerDemoMode && (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
-                  SCANNER_DEMO_MODE is enabled — scanner returns demo data, not live ID.
-                </p>
-              )}
             </>
           )}
         </Section>

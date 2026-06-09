@@ -23,7 +23,6 @@ import {
   Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DemoButton } from "@/components/marketing/demo-button";
 import { PhoneMockup } from "@/components/marketing/phone-mockup";
 import { WaitlistForm } from "@/components/marketing/waitlist-form";
 import { BRAND } from "@/lib/brand/tokens";
@@ -86,20 +85,24 @@ export function MarketingHomePage() {
             </p>
             <p className="text-sm text-brand-text-secondary mb-6">{BRAND.tagline}</p>
             <h1 className="font-heading text-4xl sm:text-5xl lg:text-[3.25rem] font-bold text-brand-text tracking-tight leading-[1.08]">
-              Because plants don&apos;t come with instructions.
+              Your AI Gardening Coach
             </h1>
             <p className="text-lg sm:text-xl text-brand-text-secondary mt-6 leading-relaxed max-w-xl mx-auto lg:mx-0">
-              Track every plant, diagnose problems with photos, get local care advice, and know
-              exactly what to do next.
+              Grow with confidence. Track every plant, diagnose problems with photos, get local
+              care advice, and know exactly what to do next.
             </p>
             <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 mt-10">
-              <Link href="/waitlist">
+              <Link href="/onboarding">
                 <Button size="lg" className="min-w-[200px] h-14">
-                  Start Growing
+                  Get Started Free
                   <ChevronRight className="w-5 h-5" />
                 </Button>
               </Link>
-              <DemoButton label="Explore Demo" size="lg" className="min-w-[200px] h-14" />
+              <Link href="/onboarding">
+                <Button variant="outline" size="lg" className="min-w-[200px] h-14">
+                  Start My Garden
+                </Button>
+              </Link>
             </div>
           </div>
           <div className="flex justify-center lg:justify-end">
@@ -252,23 +255,25 @@ export function MarketingHomePage() {
         </div>
       </section>
 
-      {/* Demo CTA */}
+      {/* Get started CTA */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="bg-brand-primary rounded-3xl p-8 sm:p-12 text-white text-center">
           <h2 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight">
-            See PlantPal in action.
+            Your garden starts today.
           </h2>
           <p className="text-brand-sage mt-4 max-w-xl mx-auto leading-relaxed">
-            Explore a demo garden with citrus, avocado, bougainvillea, Japanese maple, and indoor
-            plants.
+            Scan your first plant, get a personalized care plan, and grow with confidence.
           </p>
           <div className="mt-8">
-            <DemoButton
-              label="Explore Demo"
-              variant="secondary"
-              size="lg"
-              className="min-w-[200px] bg-white text-brand-primary hover:bg-brand-bg"
-            />
+            <Link href="/onboarding">
+              <Button
+                variant="secondary"
+                size="lg"
+                className="min-w-[200px] bg-white text-brand-primary hover:bg-brand-bg"
+              >
+                Start My Garden
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

@@ -14,7 +14,6 @@ import {
 } from "./enrich-identification";
 import { buildFriendlyHeadline } from "@/lib/scanner/identification-copy";
 import { estimateDataUrlBytes } from "@/lib/scanner/upload-limits";
-import { isScannerDemoModeEnabled } from "@/lib/scanner/demo-mode";
 import {
   IdentificationFailedError,
   type IdentifyDebugLog,
@@ -23,16 +22,6 @@ import { LIVE_IDENTIFICATION_FAILED } from "./messages";
 import { redactSecrets } from "./redact-secrets";
 
 export type IdentifyPhotoRole = "whole" | "leaf" | "flower";
-
-export interface IdentifyPlantOptions {
-  /** Explicit demo from client profile or SCANNER_DEMO_MODE */
-  forceDemo?: boolean;
-}
-
-function shouldUseDemoIdentification(forceDemo?: boolean): boolean {
-  if (forceDemo || isScannerDemoModeEnabled()) return true;
-  return !isOpenAIConfigured() && !isPlantIdEnabled();
-}
 
 const SCHEMA = `{
   "photo_quality": {
@@ -97,37 +86,6 @@ function normalizePhotoQuality(raw?: {
     issues,
     message: acceptable ? undefined : raw?.message ?? "PlantPal needs a clearer photo.",
   };
-}
-
-/** Placeholder only — used when no live API keys exist or SCANNER_DEMO_MODE is on. */
-function buildDemoIdentification(debug: IdentifyDebugLog): PlantIdentificationResponse {
-  debug.responseSource = "mock";
-  debug.identificationProvider = "mock";
-  debug.fallbackReason = debug.fallbackReason ?? "demo_mode_or_no_api_keys";
-
-  const enriched = enrichIdentification({
-    common_name: "Demo identification",
-    scientific_name: "Connect OPENAI_API_KEY for live plant ID",
-    confidence: "low",
-    confidence_score: 0,
-    identification_rationale:
-      "This is placeholder demo data — not based on your photo. Add OPENAI_API_KEY to .env.local and restart the dev server for live identification.",
-    top_matches: [],
-    common_lookalikes: [],
-    care_summary: "Demo mode — no real care data for this scan.",
-    light_needs: "—",
-    watering_needs: "—",
-    toxicity: "—",
-    care_difficulty: "Moderate",
-    toxicity_warning: null,
-    suggested_location: "either",
-    suggested_sun: "partial_sun",
-    source: "mock",
-    identification_provider: "mock",
-    photo_quality: { acceptable: true, issues: [] },
-  });
-
-  return applyFriendlyCopy(enriched);
 }
 
 function applyFriendlyCopy(result: PlantIdentificationResponse): PlantIdentificationResponse {
@@ -338,31 +296,17 @@ function sunLabelFromExposure(sun: ReturnType<typeof mapSunToExposure>): string 
 
 export async function identifyPlantFromPhoto(
   imageDataUrl: string | string[],
-  roles?: IdentifyPhotoRole[],
-  options?: IdentifyPlantOptions
+  roles?: IdentifyPhotoRole[]
 ): Promise<PlantIdentificationResponse> {
   const urls = Array.isArray(imageDataUrl) ? imageDataUrl : [imageDataUrl];
   const primary = urls[0];
   const debug = buildDebugBase(urls);
-  const useDemo = shouldUseDemoIdentification(options?.forceDemo);
 
   if (!primary) {
-    if (useDemo) {
-      debug.fallbackReason = "no_image_demo";
-      return buildDemoIdentification(debug);
-    }
     throw new IdentificationFailedError(LIVE_IDENTIFICATION_FAILED, {
       ...debug,
       fallbackReason: "no_image",
     });
-  }
-
-  if (useDemo) {
-    debug.fallbackReason =
-      options?.forceDemo || isScannerDemoModeEnabled()
-        ? "explicit_demo_mode"
-        : "no_api_keys";
-    return buildDemoIdentification(debug);
   }
 
   if (isOpenAIConfigured()) {

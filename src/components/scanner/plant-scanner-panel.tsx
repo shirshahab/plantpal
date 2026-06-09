@@ -15,7 +15,6 @@ import { assessPhotoQualityClient } from "@/lib/scanner/photo-quality";
 import { saveScanToHistory, SCAN_HISTORY_QUOTA_MESSAGE } from "@/lib/scanner/scan-history";
 import { useToast } from "@/lib/store/toast-provider";
 import { friendlyAiError } from "@/lib/errors/user-messages";
-import { isDemoMode } from "@/lib/profile/user-profile";
 import { isScannerDebugUI } from "@/lib/dev/dev-tools";
 import { ScannerDebugErrorPanel } from "@/components/scanner/scanner-debug-error";
 import type { IdentifyDebugLog } from "@/lib/ai/identify-errors";
@@ -80,7 +79,6 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
       const res = await requestIdentifyPlant({
         imageDataUrls,
         photoRoles,
-        demoMode: isDemoMode(),
       });
       if (!res.ok) {
         const msg = res.failureReason ?? res.error ?? "Identification failed";
@@ -108,8 +106,6 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
 
       if (res.data.not_fully_confident) {
         toast("Not fully confident — another photo may help");
-      } else if (res.data.source === "mock") {
-        toast("Demo");
       } else {
         toast("Plant identified");
       }

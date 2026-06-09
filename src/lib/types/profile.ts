@@ -17,9 +17,8 @@ export type MainGoal =
 
 export interface UserProfile {
   onboardingComplete: boolean;
-  /** Set when user adds a plant or loads demo garden. */
+  /** Set when user adds their first plant. */
   firstPlantAdded?: boolean;
-  demoMode: boolean;
   growTypes: GrowType[];
   experienceLevel: ExperienceLevel | null;
   zipCode: string;
@@ -35,7 +34,6 @@ export interface UserProfile {
 
 export const DEFAULT_PROFILE: UserProfile = {
   onboardingComplete: false,
-  demoMode: false,
   growTypes: [],
   experienceLevel: null,
   zipCode: "",

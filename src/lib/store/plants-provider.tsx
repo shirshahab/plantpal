@@ -14,7 +14,6 @@ import {
 } from "@/lib/plants/plant-size";
 import { getPlaceholderImageUrl } from "@/lib/plants/plant-placeholders";
 import { cleanupLocalPlantData } from "@/lib/plants/remove-plant-cleanup";
-import { MOCK_PLANTS } from "@/lib/mock/plants";
 import { generateGoalBasedCarePlan } from "@/lib/plants";
 import { getGoalsByIds } from "@/lib/mock/plant-goals";
 import { createClient } from "@/lib/supabase/client";
@@ -29,7 +28,6 @@ import { friendlySaveError } from "@/lib/errors/user-messages";
 import { canAddPlantCount } from "@/lib/billing/account-tiers";
 import { isBetaUnlocked } from "@/lib/billing/beta-unlock";
 import { loadMockSubscription } from "@/lib/billing/subscription-state";
-import { isDemoMode } from "@/lib/profile/user-profile";
 import { emitAwardXp } from "@/lib/academy/xp-events";
 import { publishActivityEvent } from "@/lib/social/events";
 import { useAuth } from "@/lib/store/auth-provider";
@@ -68,11 +66,10 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
         const parsed = JSON.parse(stored) as Partial<Plant>[];
         setPlants(parsed.map((p) => withPlantDefaults(p as Plant)));
       } else {
-        setPlants(MOCK_PLANTS.map((p) => withPlantDefaults(p)));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_PLANTS));
+        setPlants([]);
       }
     } catch {
-      setPlants(MOCK_PLANTS.map((p) => withPlantDefaults(p)));
+      setPlants([]);
     }
   }, []);
 
@@ -127,7 +124,7 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
       input: NewPlantInput,
       photoFile?: File | null
     ): Promise<Plant> => {
-      const bypassLimits = isDemoMode() || isBetaUnlocked();
+      const bypassLimits = isBetaUnlocked();
       const sub = loadMockSubscription();
       if (
         !canAddPlantCount(sub.tier, plants.length, {

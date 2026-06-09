@@ -59,7 +59,7 @@ export default function BetaPage() {
           <ul className="space-y-2">
             {[
               "Early access to the full app before public launch",
-              "Demo garden to explore without adding plants",
+              "Every feature unlocked during the beta",
               "Direct line for feedback — we read every note",
               "Influence what we ship next",
             ].map((item) => (
@@ -91,9 +91,9 @@ export default function BetaPage() {
               Join the beta
             </Button>
           </Link>
-          <Link href="/dashboard">
+          <Link href="/onboarding">
             <Button variant="outline" size="lg" className="w-full sm:w-auto">
-              Try demo garden
+              Start My Garden
             </Button>
           </Link>
         </div>

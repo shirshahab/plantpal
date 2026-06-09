@@ -3,12 +3,12 @@ import type { PlantIdentificationResponse } from "@/lib/types/ai";
 export const SOURCE_BADGE = {
   liveAi: "Live AI",
   plantNet: "Pl@ntNet",
-  demo: "Demo",
+  unidentified: "Unidentified",
 } as const;
 
 export function getPrimarySourceLabel(result: PlantIdentificationResponse): string {
   if (result.source === "mock" || result.identification_provider === "mock") {
-    return SOURCE_BADGE.demo;
+    return SOURCE_BADGE.unidentified;
   }
   return SOURCE_BADGE.liveAi;
 }
