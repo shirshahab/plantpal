@@ -16,8 +16,7 @@ import { LocalCareCard } from "@/components/climate/local-care-card";
 import { TaskCard } from "@/components/tasks/task-card";
 import { useTasks } from "@/lib/store/tasks-provider";
 import { useJourney } from "@/lib/store/journey-provider";
-import { useEducation } from "@/lib/store/education-provider";
-import { LESSONS } from "@/lib/education/lessons";
+import { ContinueLearningWidget } from "@/components/academy/continue-learning-widget";
 import { usePullToRefresh } from "@/lib/hooks/use-pull-to-refresh";
 import { useToast } from "@/lib/store/toast-provider";
 import { seedDemoGarden } from "@/lib/demo/seed-demo-garden";
@@ -27,7 +26,6 @@ export default function DashboardPage() {
   const { plants, loading, refreshPlants } = usePlants();
   const { topTasks, completeTask, skipTask, snoozeTask, ready: tasksReady } = useTasks();
   const { getTodaysMissions } = useJourney();
-  const { progress } = useEducation();
   const { toast } = useToast();
   const { refreshing, onTouchStart, onTouchEnd } = usePullToRefresh(async () => {
     await refreshPlants();
@@ -88,7 +86,6 @@ export default function DashboardPage() {
     (p) => p.healthStatus === "needs_attention" || p.healthStatus === "critical"
   );
   const activeMission = getTodaysMissions(plants)[0];
-  const nextLesson = LESSONS.find((l) => !progress.completedLessons.includes(l.id));
 
   return (
     <div
@@ -188,20 +185,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {nextLesson && (
-        <Card padding="md" className="hidden md:block">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-            Continue learning
-          </p>
-          <p className="font-medium text-gray-900 mt-1">{nextLesson.title}</p>
-          <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{nextLesson.description}</p>
-          <Link href={`/learn/${nextLesson.id}`} className="mt-3 inline-block">
-            <Button variant="secondary" size="sm">
-              Resume lesson
-            </Button>
-          </Link>
-        </Card>
-      )}
+      <ContinueLearningWidget />
 
       <div className="hidden md:block">
         <CareLevelCard compact />

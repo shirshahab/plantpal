@@ -1,4 +1,7 @@
 import type { Lesson, LessonQuiz } from "@/lib/education/types";
+import type { AcademyQuiz, QuizType } from "./quiz-types";
+
+export type { QuizType, AcademyQuiz };
 
 export type AcademyRank =
   | "Seedling"
@@ -16,7 +19,10 @@ export type XpEventType =
   | "plant_healthy_30d"
   | "growth_photo"
   | "diagnosis_completed"
-  | "daily_login";
+  | "daily_login"
+  | "task_completed"
+  | "price_check_completed"
+  | "daily_mission_completed";
 
 export type BadgeCategory =
   | "milestone"
@@ -24,8 +30,6 @@ export type BadgeCategory =
   | "care"
   | "collection"
   | "family";
-
-export type QuizType = "multiple_choice" | "true_false" | "scenario";
 
 export interface AcademyPath {
   id: string;
@@ -43,7 +47,11 @@ export interface AcademyLesson extends Lesson {
   introduction: string;
   funFacts: string[];
   summary: string;
+  whyItMatters?: string;
+  realWorldExample?: string;
+  plantyMoment?: string;
   quizType?: QuizType;
+  academyQuiz?: AcademyQuiz;
 }
 
 export interface AcademyBadge {
@@ -70,12 +78,26 @@ export interface AcademyProgress {
   currentStreak: number;
   longestStreak: number;
   lastActiveDate: string | null;
+  streakFreezes: number;
+  streakFreezeUsedDate: string | null;
+  lastStreakMilestone: number;
   unlockedBadges: string[];
+  badgeUnlockedAt: Record<string, string>;
   earnedCertificates: string[];
   completedLessons: string[];
   passedQuizzes: string[];
   familyMode: boolean;
   xpLog: { type: XpEventType; amount: number; at: string }[];
+}
+
+export interface LessonCompleteResult {
+  lessonId: string;
+  xpEarned: number;
+  streak: number;
+  streakMilestone?: 3 | 7 | 30;
+  newBadges: string[];
+  nextLessonId: string | null;
+  pathId: string | null;
 }
 
 export interface RankInfo {

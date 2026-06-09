@@ -58,12 +58,18 @@ async function post<T>(path: string, body: unknown): Promise<AIApiResponse<T>> {
   }
 
   if (!res.ok && json.ok === false) {
-    return json;
+    return {
+      ...json,
+      error: (json as { failureReason?: string }).failureReason ?? json.error,
+    };
   }
   if (!res.ok) {
     return {
       ok: false,
-      error: json.ok === false ? json.error : friendlyNonJsonError(res.status, text),
+      error:
+        json.ok === false
+          ? (json as { failureReason?: string }).failureReason ?? json.error
+          : friendlyNonJsonError(res.status, text),
     };
   }
   return json;

@@ -27,6 +27,7 @@ import { useSync } from "@/lib/store/sync-provider";
 import { useWeather } from "@/lib/hooks/use-weather";
 import { getLocationProfile } from "@/lib/location/location-service";
 import { useToast } from "@/lib/store/toast-provider";
+import { emitAwardXp } from "@/lib/academy/xp-events";
 import {
   canUseSupabase,
   completeTask as dbCompleteTask,
@@ -262,6 +263,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       const missionId = task.metadata?.missionId as string | undefined;
       if (missionId) completeMission(missionId);
 
+      emitAwardXp("task_completed");
       toast(`Done: ${task.title}`);
     },
     [

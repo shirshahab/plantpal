@@ -11,6 +11,8 @@ import {
   RecentBadgesRow,
   FamilyLeaderboard,
 } from "@/components/academy/academy-home";
+import { DailyLessonCard } from "@/components/academy/daily-lesson-card";
+import { StreakProtectionBanner } from "@/components/academy/streak-protection-banner";
 import { useAcademy } from "@/lib/store/academy-provider";
 import { ACADEMY_PATHS, getPathProgress } from "@/lib/academy/paths";
 
@@ -37,6 +39,10 @@ export default function AcademyPage() {
       />
 
       <AcademyHomeHero />
+
+      <StreakProtectionBanner />
+
+      <DailyLessonCard />
 
       <RecentBadgesRow />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -10,11 +10,13 @@ import {
   Target,
   AlertTriangle,
   CheckCircle2,
+  Heart,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
-import { LessonQuizBlock } from "@/components/education/lesson-quiz";
+import { AcademyQuizBlock } from "@/components/academy/academy-quiz";
+import { LessonCompleteModal } from "@/components/academy/lesson-complete-modal";
 import { Planty } from "@/components/academy/planty";
 import { getAcademyLessonById } from "@/lib/academy/lessons";
 import { getPathForLesson } from "@/lib/academy/paths";
@@ -28,6 +30,10 @@ export default function AcademyLessonPage({
   const { lessonId } = use(params);
   const lesson = getAcademyLessonById(lessonId);
   const { completeLesson, isLessonComplete, syncBadgesAndCertificates } = useAcademy();
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [completionResult, setCompletionResult] = useState<
+    ReturnType<typeof completeLesson>
+  >(null);
   const path = lesson ? getPathForLesson(lesson.id) : null;
   const complete = lesson ? isLessonComplete(lesson.id) : false;
 
@@ -43,13 +49,32 @@ export default function AcademyLessonPage({
     );
   }
 
+  const quiz = lesson.academyQuiz ?? {
+    type: "multiple_choice" as const,
+    question: lesson.quiz.question,
+    options: lesson.quiz.options,
+    correctIndex: lesson.quiz.correctIndex,
+    explanation: lesson.quiz.explanation,
+  };
+
   function handlePass() {
-    completeLesson(lessonId);
+    const result = completeLesson(lessonId);
     syncBadgesAndCertificates();
+    if (result) {
+      setCompletionResult(result);
+      setShowCelebration(true);
+    }
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-8">
+      {showCelebration && completionResult && (
+        <LessonCompleteModal
+          result={completionResult}
+          onClose={() => setShowCelebration(false)}
+        />
+      )}
+
       <Link
         href={path ? `/academy/${path.id}` : "/academy"}
         className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
@@ -58,7 +83,7 @@ export default function AcademyLessonPage({
         {path?.title ?? "Academy"}
       </Link>
 
-      <Planty mood="tip" message={lesson.introduction} />
+      <Planty mood="tip" message={lesson.plantyMoment ?? lesson.introduction} />
 
       <div className="flex items-start gap-5">
         <div className="w-16 h-16 rounded-2xl bg-green-50 flex items-center justify-center text-3xl shrink-0">
@@ -83,6 +108,16 @@ export default function AcademyLessonPage({
         </div>
       </div>
 
+      {lesson.whyItMatters && (
+        <Card padding="md" className="border-brand-primary/20 bg-green-50/40">
+          <div className="flex items-center gap-2 mb-2">
+            <Heart className="w-5 h-5 text-brand-primary" />
+            <h2 className="font-semibold text-gray-900">Why it matters</h2>
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed">{lesson.whyItMatters}</p>
+        </Card>
+      )}
+
       <Card padding="md">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-primary mb-2">
           Introduction
@@ -100,14 +135,26 @@ export default function AcademyLessonPage({
         </div>
       </Card>
 
+      {lesson.realWorldExample && (
+        <Card padding="md" className="border-blue-100 bg-blue-50/30">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 mb-2">
+            Real-world example
+          </p>
+          <p className="text-sm text-gray-700 leading-relaxed">{lesson.realWorldExample}</p>
+        </Card>
+      )}
+
       <Card padding="md" className="border-purple-100 bg-purple-50/30">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-5 h-5 text-purple-600" />
-          <h2 className="font-semibold text-gray-900">Fun facts</h2>
+          <h2 className="font-semibold text-gray-900">Planty says</h2>
         </div>
         <ul className="space-y-2">
           {lesson.funFacts.map((fact) => (
-            <li key={fact} className="text-sm text-gray-700 pl-4 relative before:content-['✨'] before:absolute before:left-0">
+            <li
+              key={fact}
+              className="text-sm text-gray-700 pl-4 relative before:content-['🌿'] before:absolute before:left-0"
+            >
               {fact}
             </li>
           ))}
@@ -132,11 +179,14 @@ export default function AcademyLessonPage({
       <Card padding="md" className="border-amber-100 bg-amber-50/30">
         <div className="flex items-center gap-2 mb-3">
           <AlertTriangle className="w-5 h-5 text-amber-600" />
-          <h2 className="font-semibold text-gray-900">Common mistakes</h2>
+          <h2 className="font-semibold text-gray-900">Common beginner mistakes</h2>
         </div>
         <ul className="space-y-2">
           {lesson.commonMistakes.map((item) => (
-            <li key={item} className="text-sm text-gray-700 pl-4 relative before:content-['•'] before:absolute before:left-0">
+            <li
+              key={item}
+              className="text-sm text-gray-700 pl-4 relative before:content-['•'] before:absolute before:left-0"
+            >
               {item}
             </li>
           ))}
@@ -146,12 +196,12 @@ export default function AcademyLessonPage({
       <Card padding="md" className="border-blue-100 bg-blue-50/30">
         <div className="flex items-center gap-2 mb-2">
           <Target className="w-5 h-5 text-blue-600" />
-          <h2 className="font-semibold text-gray-900">Action step</h2>
+          <h2 className="font-semibold text-gray-900">Do this today</h2>
         </div>
         <p className="text-sm text-gray-700">{lesson.actionStep}</p>
       </Card>
 
-      <LessonQuizBlock quiz={lesson.quiz} onPass={handlePass} alreadyComplete={complete} />
+      <AcademyQuizBlock quiz={quiz} onPass={handlePass} alreadyComplete={complete} />
 
       <Card padding="md" className="border-brand-sage/30">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Summary</p>

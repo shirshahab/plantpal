@@ -1,6 +1,7 @@
 import { LESSONS, getLessonById as getLegacyLesson } from "@/lib/education/lessons";
 import type { Lesson } from "@/lib/education/types";
 import { GENERATED_ACADEMY_LESSONS, getGeneratedLesson } from "./generated-lessons";
+import { enrichLessonPersonality } from "./lesson-enrichment";
 import { getPathForLesson } from "./paths";
 import type { AcademyLesson } from "./types";
 
@@ -31,12 +32,17 @@ export const ALL_ACADEMY_LESSONS: AcademyLesson[] = [
   ),
 ];
 
-export function getAcademyLessonById(id: string): AcademyLesson | undefined {
+function resolveLesson(id: string): AcademyLesson | undefined {
   const generated = getGeneratedLesson(id);
   if (generated) return generated;
   const legacy = getLegacyLesson(id);
   if (legacy) return enrichLegacyLesson(legacy);
   return ALL_ACADEMY_LESSONS.find((l) => l.id === id || l.slug === id);
+}
+
+export function getAcademyLessonById(id: string): AcademyLesson | undefined {
+  const lesson = resolveLesson(id);
+  return lesson ? enrichLessonPersonality(lesson) : undefined;
 }
 
 export function getAcademyLessonCount(): number {

@@ -37,6 +37,6 @@ export const BRAND = {
     text: "#1F2937",
     textSecondary: "#6B7280",
   },
-  /** Official logo file — Living P squircle (PNG). Use for all UI, favicon, PWA. */
+  /** Official logo file — solid white Living P on full-bleed #2D6A4F square (PNG). */
   officialIcon: OFFICIAL_APP_ICON,
 } as const;

@@ -162,7 +162,13 @@ export function CameraHub() {
         toast("Plant identified");
       }
     } catch (e) {
-      toast(friendlyAiError(e instanceof Error ? e.message : undefined, "identification"));
+      toast(
+        friendlyAiError(
+          e instanceof Error ? e.message : undefined,
+          "identification"
+        )
+      );
+      console.error("[scanner] identify failed:", e);
     } finally {
       setLoading(false);
     }

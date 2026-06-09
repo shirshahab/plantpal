@@ -184,6 +184,8 @@ async function identifyWithOpenAI(
 
     const enriched = enrichIdentification({
       ...rest,
+      common_name: rest.common_name ?? undefined,
+      scientific_name: rest.scientific_name ?? undefined,
       photo_quality,
       source: "ai",
       identification_provider: "openai",
@@ -196,10 +198,15 @@ async function identifyWithOpenAI(
     return applyFriendlyCopy(enriched);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    debug.openaiError = message.slice(0, 300);
+    debug.openaiError = message.slice(0, 500);
     debug.fallbackReason = "openai_failed";
     console.error("[plant-identify] OpenAI identification failed:", message);
-    throw new IdentificationFailedError(LIVE_IDENTIFICATION_FAILED, debug);
+    throw new IdentificationFailedError(
+      message.includes("OPENAI") || message.includes("OpenAI")
+        ? message
+        : `${LIVE_IDENTIFICATION_FAILED} (${message})`,
+      debug
+    );
   }
 }
 

@@ -7,10 +7,15 @@ import { LoadingState } from "@/components/loading-state";
 import { TrophyBadgeCard } from "@/components/academy/trophy-badge-card";
 import { Planty } from "@/components/academy/planty";
 import { useAcademy, ACADEMY_CERTIFICATES } from "@/lib/store/academy-provider";
+import { usePlants } from "@/lib/store/plants-provider";
+import { useEngagement } from "@/lib/store/engagement-provider";
+import { getBadgeProgress } from "@/lib/academy/badge-progress";
 import { Card } from "@/components/ui/card";
 
 export default function TrophyRoomPage() {
   const { loading, progress, badges } = useAcademy();
+  const { plants } = usePlants();
+  const { stats } = useEngagement();
 
   if (loading) {
     return <LoadingState fullPage message="Loading trophies…" />;
@@ -37,7 +42,7 @@ export default function TrophyRoomPage() {
         mood={unlockedCount > 0 ? "celebrate" : "tip"}
         message={
           unlockedCount > 0
-            ? `You've earned ${unlockedCount} badges — keep going!`
+            ? `You've earned ${unlockedCount} badges — each one marks real skill.`
             : "Complete lessons and care for plants to earn your first badge."
         }
       />
@@ -49,12 +54,20 @@ export default function TrophyRoomPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {badges.map((badge) => {
             const unlocked = progress.unlockedBadges.includes(badge.id);
+            const { current, target, percent } = getBadgeProgress(
+              badge,
+              progress,
+              plants.length,
+              stats.scans
+            );
             return (
               <TrophyBadgeCard
                 key={badge.id}
                 badge={badge}
                 unlocked={unlocked}
-                progress={unlocked ? 100 : 35}
+                progress={percent}
+                progressLabel={unlocked ? undefined : `${current}/${target}`}
+                unlockedAt={progress.badgeUnlockedAt?.[badge.id]}
               />
             );
           })}

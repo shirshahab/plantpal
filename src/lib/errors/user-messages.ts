@@ -46,11 +46,8 @@ export function friendlyAiError(error: string | undefined, feature = "AI"): stri
 
   const lower = error.toLowerCase();
 
-  if (
-    error === LIVE_IDENTIFICATION_FAILED ||
-    lower.includes("live identification failed")
-  ) {
-    return LIVE_IDENTIFICATION_FAILED;
+  if (lower.includes("live identification failed")) {
+    return error;
   }
 
   if (

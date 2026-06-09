@@ -51,10 +51,21 @@ export async function uploadPlantPhotoClient(
   return data.publicUrl;
 }
 
-/** Convert data URL to Blob for upload. */
+/** Convert data URL to Blob for upload. Works in browser and Node. */
 export function dataUrlToBlob(dataUrl: string): Blob {
-  const [header, base64] = dataUrl.split(",");
+  const comma = dataUrl.indexOf(",");
+  if (comma === -1) {
+    throw new Error("Invalid data URL — missing base64 payload");
+  }
+  const header = dataUrl.slice(0, comma);
+  const base64 = dataUrl.slice(comma + 1);
   const mime = header.match(/:(.*?);/)?.[1] ?? "image/jpeg";
+
+  if (typeof Buffer !== "undefined") {
+    const bytes = Buffer.from(base64, "base64");
+    return new Blob([bytes], { type: mime });
+  }
+
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);

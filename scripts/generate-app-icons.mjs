@@ -1,6 +1,6 @@
 /**
- * Regenerate PlantPal PWA icons — full #2D6A4F square, white Living P mark only.
- * Preserves the existing logo stroke; removes outer white/transparent padding.
+ * Regenerate PlantPal PWA icons — full #2D6A4F square, solid white Living P mark.
+ * Optimized for Android home screen visibility at 48px (Duolingo-style bold silhouette).
  *
  * Usage: node scripts/generate-app-icons.mjs
  */
@@ -11,80 +11,40 @@ import sharp from "sharp";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const SOURCE = path.join(ROOT, "public", "app-icon.png");
-const SOURCE_BACKUP = path.join(ROOT, "scripts", ".icon-source-backup.png");
 
-const BRAND_GREEN = { r: 45, g: 106, b: 79 }; // #2D6A4F
-const WHITE = { r: 255, g: 255, b: 255 };
+const BRAND_GREEN = "#2D6A4F";
+const WHITE = "#FFFFFF";
+const CANVAS = 512;
 
-/** Original icon green background — excludes white/gray padding pixels. */
-function isSourceGreen(r, g, b, a) {
-  if (a < 24) return false;
-  if (r > 120 && g > 120 && b > 120) return false;
-  return g > 90 && g > r + 35 && g > b + 15;
-}
-
-/** Near-white stroke pixel. */
-function isNearWhite(r, g, b, a) {
-  if (a < 24) return false;
-  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-  return luminance >= 175 && chroma <= 55;
-}
-
-function buildOutputPixels(raw, width, height) {
-  const size = width * height;
-  const greenMask = new Uint8Array(size);
-  const whiteMask = new Uint8Array(size);
-
-  for (let i = 0; i < size; i++) {
-    const r = raw[i * 4];
-    const g = raw[i * 4 + 1];
-    const b = raw[i * 4 + 2];
-    const a = raw[i * 4 + 3];
-    greenMask[i] = isSourceGreen(r, g, b, a) ? 1 : 0;
-    whiteMask[i] = isNearWhite(r, g, b, a) ? 1 : 0;
-  }
-
-  // Logo white sits on the green squircle — keep white only near green and near center.
-  const logoMask = new Uint8Array(size);
-  const cx = width / 2;
-  const cy = height / 2;
-  const maxLogoDist = Math.min(width, height) * 0.39;
-
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = y * width + x;
-      if (!whiteMask[i]) continue;
-
-      const dist = Math.hypot(x - cx, y - cy);
-      if (dist > maxLogoDist) continue;
-
-      let nearGreen = false;
-      for (let dy = -3; dy <= 3 && !nearGreen; dy++) {
-        for (let dx = -3; dx <= 3; dx++) {
-          const nx = x + dx;
-          const ny = y + dy;
-          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
-          if (greenMask[ny * width + nx]) {
-            nearGreen = true;
-            break;
-          }
-        }
-      }
-      logoMask[i] = nearGreen ? 1 : 0;
-    }
-  }
-
-  const out = Buffer.alloc(size * 4);
-  for (let i = 0; i < size; i++) {
-    const color = logoMask[i] ? WHITE : BRAND_GREEN;
-    out[i * 4] = color.r;
-    out[i * 4 + 1] = color.g;
-    out[i * 4 + 2] = color.b;
-    out[i * 4 + 3] = 255;
-  }
-  return out;
+/**
+ * Solid filled Living P — stem + leaf bowl forming letter P (evenodd counter).
+ * No outlines, no transparency, centered at ~74% of canvas for small-size legibility.
+ */
+function buildLivingPMarkSvg(size = CANVAS) {
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${CANVAS} ${CANVAS}" role="img" aria-label="PlantPal">
+  <rect width="${CANVAS}" height="${CANVAS}" fill="${BRAND_GREEN}"/>
+  <g transform="translate(256 262) scale(1.22) translate(-256 -262)">
+    <!-- Stem -->
+    <rect x="146" y="98" width="54" height="318" rx="27" fill="${WHITE}"/>
+    <!-- Pointed leaf bowl + P counter -->
+    <path fill="${WHITE}" fill-rule="evenodd" d="
+      M 200 98
+      C 262 76 346 78 394 136
+      C 422 178 408 262 346 312
+      C 296 348 236 342 200 302
+      L 200 98
+      Z
+      M 228 128
+      C 282 112 324 140 328 188
+      C 332 234 292 272 244 272
+      C 216 272 200 248 200 218
+      C 200 178 208 142 228 128
+      Z
+    "/>
+  </g>
+</svg>`;
+  return svg;
 }
 
 const OUTPUTS = [
@@ -100,66 +60,56 @@ const OUTPUTS = [
   { file: "src/app/apple-icon.png", size: 180 },
 ];
 
+async function renderMaster(svg) {
+  return sharp(Buffer.from(svg)).resize(CANVAS, CANVAS).png({ compressionLevel: 9 }).toBuffer();
+}
+
 async function writeIcon(master512, { file, size }) {
   const outPath = path.join(ROOT, file);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  const buf = await sharp(master512).resize(size, size).png({ compressionLevel: 9 }).toBuffer();
+  const kernel = size <= 32 ? sharp.kernel.cubic : sharp.kernel.lanczos3;
+  const buf = await sharp(master512)
+    .resize(size, size, { kernel })
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
   fs.writeFileSync(outPath, buf);
 }
 
-function writeSvg(master512Base64) {
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="PlantPal">
-  <image width="512" height="512" href="data:image/png;base64,${master512Base64}"/>
-</svg>
-`;
+function writeSvg(svg) {
   fs.writeFileSync(path.join(ROOT, "public", "icon.svg"), svg, "utf8");
 }
 
+async function verifySmallSize(master512) {
+  const buf48 = await sharp(master512).resize(48, 48).png().toBuffer();
+  const { data } = await sharp(buf48).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let white = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240) white++;
+  }
+  const pct = Math.round((white / (48 * 48)) * 100);
+  console.log(`  48px check: ${pct}% white mark coverage (target 18–25%)`);
+}
+
 async function main() {
-  if (!fs.existsSync(SOURCE)) {
-    throw new Error(`Missing source icon: ${SOURCE}`);
-  }
+  const svg = buildLivingPMarkSvg();
+  const master512 = await renderMaster(svg);
 
-  if (!fs.existsSync(SOURCE_BACKUP)) {
-    fs.copyFileSync(SOURCE, SOURCE_BACKUP);
-    console.log(`Backed up source → ${path.relative(ROOT, SOURCE_BACKUP)}`);
-  }
-
-  const readPath = fs.existsSync(SOURCE_BACKUP) ? SOURCE_BACKUP : SOURCE;
-  const img = sharp(readPath);
-  const { width, height } = await img.metadata();
-  if (!width || !height) throw new Error("Could not read source icon dimensions");
-
-  const raw = await img.ensureAlpha().raw().toBuffer();
-  const out = buildOutputPixels(raw, width, height);
-
-  const master512 = await sharp(out, { raw: { width, height, channels: 4 } })
-    .resize(512, 512, { fit: "fill" })
-    .png({ compressionLevel: 9 })
-    .toBuffer();
-
-  const master512Base64 = master512.toString("base64");
-
-  const ordered = [
-    ...OUTPUTS.filter((output) => output.file !== "public/app-icon.png"),
-    ...OUTPUTS.filter((output) => output.file === "public/app-icon.png"),
-  ];
-
-  for (const output of ordered) {
+  for (const output of OUTPUTS) {
     await writeIcon(master512, output);
     console.log(`✓ ${output.file} (${output.size}×${output.size})`);
   }
 
-  writeSvg(master512Base64);
-  console.log("✓ public/icon.svg");
+  writeSvg(svg);
+  console.log("✓ public/icon.svg (vector source)");
 
-  // Keep legacy favicon.png aligned with 32px asset
   fs.writeFileSync(
     path.join(ROOT, "public", "favicon.png"),
     await sharp(master512).resize(32, 32).png().toBuffer()
   );
   console.log("✓ public/favicon.png (32×32)");
+
+  await verifySmallSize(master512);
+  console.log("\nDone — solid white Living P on full #2D6A4F square.");
 }
 
 main().catch((error) => {

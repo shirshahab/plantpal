@@ -1,5 +1,6 @@
 import { identifyPlantFromPhoto } from "@/lib/ai/plant-identify";
 import type { IdentifyPhotoRole } from "@/lib/ai/plant-identify";
+import { NextResponse } from "next/server";
 import { finalizeIdentification } from "@/lib/ai/identification-consensus";
 import {
   identifyPlantFromImage as identifyWithPlantNet,
@@ -17,6 +18,7 @@ import {
 import { parseJsonBody } from "@/lib/ai/parse-request-body";
 import { isOpenAIConfigured } from "@/lib/ai/openai";
 import { LIVE_IDENTIFICATION_FAILED } from "@/lib/ai/messages";
+import type { AIApiResponse } from "@/lib/types/ai";
 import { isPlantIdEnabled } from "@/lib/integrations/plantid";
 import { isScannerDemoModeEnabled } from "@/lib/scanner/demo-mode";
 import { createClient } from "@/lib/supabase/server";
@@ -172,24 +174,31 @@ export async function POST(request: Request) {
 
     let saved = false;
     if (userId && isSupabaseConfigured()) {
-      const supabase = await createClient();
-      const blob = dataUrlToBlob(primaryUrl);
-      const photoUrl = await uploadPlantPhotoServer(supabase, userId, blob, "identification");
-      if (photoUrl) {
-        const { error } = await supabase.from("plant_photos").insert({
-          user_id: userId,
-          plant_id: null,
-          photo_url: photoUrl,
-          photo_type: "identification",
-          notes: `Identified as ${enriched.common_name}`,
-          metadata: {
-            ...enriched,
-            photo_count: urls.length,
-            added_to_garden: false,
-          },
-          is_primary: false,
-        });
-        saved = !error;
+      try {
+        const supabase = await createClient();
+        const blob = dataUrlToBlob(primaryUrl);
+        const photoUrl = await uploadPlantPhotoServer(supabase, userId, blob, "identification");
+        if (photoUrl) {
+          const { error } = await supabase.from("plant_photos").insert({
+            user_id: userId,
+            plant_id: null,
+            photo_url: photoUrl,
+            photo_type: "identification",
+            notes: `Identified as ${enriched.common_name}`,
+            metadata: {
+              ...enriched,
+              photo_count: urls.length,
+              added_to_garden: false,
+            },
+            is_primary: false,
+          });
+          saved = !error;
+          if (error) {
+            console.error(`[${ROUTE}] scan history save failed:`, error.message);
+          }
+        }
+      } catch (saveErr) {
+        console.error(`[${ROUTE}] photo save failed after successful ID:`, saveErr);
       }
     }
 
@@ -201,11 +210,29 @@ export async function POST(request: Request) {
         fallback: true,
         error: e.debug.fallbackReason ?? "identification_failed",
       });
-      return aiError(e.message, 502);
+      const failureReason =
+        e.debug.openaiError ?? e.debug.fallbackReason ?? e.message;
+      return NextResponse.json(
+        {
+          ok: false,
+          error: e.message,
+          failureReason,
+          debug: e.debug,
+        } satisfies AIApiResponse<never> & { failureReason: string; debug: typeof e.debug },
+        { status: 502 }
+      );
     }
 
     recordDataSource("openai", "mock", { fallback: true, error: "Identification failed" });
+    const message = e instanceof Error ? e.message : String(e);
     console.error(`[${ROUTE}] unexpected error`, e);
-    return aiError(LIVE_IDENTIFICATION_FAILED, 502);
+    return NextResponse.json(
+      {
+        ok: false,
+        error: LIVE_IDENTIFICATION_FAILED,
+        failureReason: message,
+      },
+      { status: 502 }
+    );
   }
 }

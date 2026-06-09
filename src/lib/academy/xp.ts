@@ -8,7 +8,13 @@ export const XP_REWARDS: Record<XpEventType, number> = {
   growth_photo: 10,
   diagnosis_completed: 15,
   daily_login: 5,
+  task_completed: 5,
+  price_check_completed: 10,
+  daily_mission_completed: 20,
 };
+
+/** XP events not yet wired in app code — see ACADEMY_SYNC_PLAN.md */
+export const XP_PENDING_EVENTS: XpEventType[] = ["plant_healthy_30d"];
 
 export function xpForEvent(type: XpEventType): number {
   return XP_REWARDS[type];

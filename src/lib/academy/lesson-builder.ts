@@ -53,29 +53,53 @@ export function quickLesson(
   body: string,
   quizQ: string,
   quizCorrect: string,
-  quizWrong: string[] = ["Ignore it", "Remove the plant", "Add bleach"]
+  quizWrong: string[] = ["Ignore it", "Remove the plant", "Add bleach"],
+  extras?: {
+    plantyMoment?: string;
+    whyItMatters?: string;
+    realWorldExample?: string;
+    actionStep?: string;
+  }
 ): AcademyLesson {
+  const plantyMoment =
+    extras?.plantyMoment ??
+    "Plants are dramatic. Yellow leaves are their way of waving a tiny flag.";
+  const whyItMatters =
+    extras?.whyItMatters ??
+    `Getting ${title.toLowerCase()} right saves you from the guess-and-hope cycle.`;
+  const realWorldExample =
+    extras?.realWorldExample ??
+    `Picture a patio plant wilting at 2pm but perky by morning — that's a clue about ${title.toLowerCase()}, not a death sentence.`;
+
   return buildAcademyLesson({
     id,
     pathId,
     title,
     icon,
     description: body.slice(0, 120) + (body.length > 120 ? "…" : ""),
-    introduction: `Let's learn about ${title.toLowerCase()} — a skill every great gardener builds.`,
-    content: body,
+    introduction: `${plantyMoment} Today we're tackling ${title.toLowerCase()} — ${whyItMatters.toLowerCase()}`,
+    content: `${body}\n\nWhy it matters: ${whyItMatters}\n\nReal-world example: ${realWorldExample}`,
     funFacts: [
-      `Master gardeners revisit ${title.toLowerCase()} every season.`,
-      "Small improvements compound into a thriving garden over time.",
+      plantyMoment,
+      `Pro move: observe one plant for a week after changing ${title.toLowerCase()} habits.`,
     ],
-    keyTakeaways: [body.split(".")[0] + ".", "Apply one change today and observe your plant for a week."],
-    commonMistakes: ["Rushing without observing the plant first", "Copying advice without checking your climate"],
-    actionStep: `Pick one plant and apply what you learned about ${title.toLowerCase()} today.`,
-    summary: `You now understand the basics of ${title.toLowerCase()}. Keep practicing!`,
+    keyTakeaways: [
+      body.split(".")[0]?.trim() + "." || whyItMatters,
+      "Change one thing, watch for a week, then adjust.",
+    ],
+    commonMistakes: [
+      "Acting before checking soil, light, and pot size",
+      "Copying a tip that doesn't match your climate or season",
+    ],
+    actionStep:
+      extras?.actionStep ??
+      `Pick one plant and test one ${title.toLowerCase()} adjustment today — then note what changes in 48 hours.`,
+    summary: `You can now spot ${title.toLowerCase()} issues early and fix them with confidence.`,
     quiz: {
       question: quizQ,
       options: [quizWrong[0], quizCorrect, quizWrong[1] ?? quizWrong[0], quizWrong[2] ?? "Water daily no matter what"],
       correctIndex: 1,
-      explanation: `${quizCorrect} is the best approach for healthy plants.`,
+      explanation: `${quizCorrect} — that's the move that keeps plants happy long-term.`,
     },
   });
 }

@@ -18,6 +18,7 @@ import type {
   UserPlantGoal,
 } from "@/lib/types/care-goals";
 import { getGoalById, getGoalsByIds } from "@/lib/mock/plant-goals";
+import { emitAwardXp } from "@/lib/academy/xp-events";
 import {
   computeJourneyProgress,
   generateGoalBasedCarePlan,
@@ -305,6 +306,7 @@ export function JourneyProvider({ children }: { children: React.ReactNode }) {
             : m
         )
       );
+      emitAwardXp("daily_mission_completed");
     },
     [missions, persistMissions]
   );

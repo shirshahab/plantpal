@@ -35,6 +35,7 @@ import type {
   BuyRecommendation,
 } from "@/lib/types/price-checker";
 import { useToast } from "@/lib/store/toast-provider";
+import { emitAwardXp } from "@/lib/academy/xp-events";
 import { friendlyAiError } from "@/lib/errors/user-messages";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/marketplace/product-card";
@@ -133,6 +134,7 @@ export function PriceCheckerPanel() {
       setAiResult(res.data);
       savePriceCheck(res.data);
       setResult(null);
+      emitAwardXp("price_check_completed");
       toast(
         res.data.source === "ai"
           ? "AI price check ready."

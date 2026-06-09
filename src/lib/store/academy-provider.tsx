@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { AcademyProgress, XpEventType } from "@/lib/academy/types";
+import type { AcademyProgress, LessonCompleteResult, XpEventType } from "@/lib/academy/types";
 import { xpForEvent, xpProgressInLevel } from "@/lib/academy/xp";
 import { getRankForXp, getRankInfo } from "@/lib/academy/ranks";
 import { ACADEMY_BADGES } from "@/lib/academy/badges";
@@ -17,6 +17,8 @@ import {
   ACADEMY_PATHS,
   getPathProgress,
   getContinueLessonId,
+  getPathForLesson,
+  getNextLessonInPath,
 } from "@/lib/academy/paths";
 import { usePlants } from "./plants-provider";
 import { useEngagement } from "./engagement-provider";
@@ -25,12 +27,18 @@ import { useToast } from "./toast-provider";
 
 const STORAGE_KEY = "plantpal-academy";
 
+const STREAK_MILESTONES = [3, 7, 30] as const;
+
 const defaultProgress: AcademyProgress = {
   totalXp: 0,
   currentStreak: 0,
   longestStreak: 0,
   lastActiveDate: null,
+  streakFreezes: 1,
+  streakFreezeUsedDate: null,
+  lastStreakMilestone: 0,
   unlockedBadges: [],
+  badgeUnlockedAt: {},
   earnedCertificates: [],
   completedLessons: [],
   passedQuizzes: [],
@@ -43,14 +51,18 @@ interface AcademyContextValue {
   loading: boolean;
   rankInfo: ReturnType<typeof getRankInfo>;
   levelProgress: ReturnType<typeof xpProgressInLevel>;
+  lastCompletion: LessonCompleteResult | null;
+  clearLastCompletion: () => void;
   awardXp: (type: XpEventType, meta?: { silent?: boolean }) => number;
-  completeLesson: (lessonId: string) => void;
+  completeLesson: (lessonId: string) => LessonCompleteResult | null;
   isLessonComplete: (lessonId: string) => boolean;
   continueLessonId: string | null;
   toggleFamilyMode: () => void;
   badges: typeof ACADEMY_BADGES;
-  syncBadgesAndCertificates: () => void;
+  syncBadgesAndCertificates: () => string[];
   recordDailyLogin: () => void;
+  isStreakAtRisk: () => boolean;
+  useStreakFreeze: () => void;
 }
 
 const AcademyContext = createContext<AcademyContextValue | null>(null);
@@ -65,9 +77,17 @@ function yesterdayKey(): string {
   return d.toISOString().slice(0, 10);
 }
 
+function streakMilestone(streak: number, last: number): 3 | 7 | 30 | undefined {
+  for (const m of STREAK_MILESTONES) {
+    if (streak >= m && last < m) return m;
+  }
+  return undefined;
+}
+
 export function AcademyProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<AcademyProgress>(defaultProgress);
   const [loading, setLoading] = useState(true);
+  const [lastCompletion, setLastCompletion] = useState<LessonCompleteResult | null>(null);
   const { plants } = usePlants();
   const { stats } = useEngagement();
   const { toast } = useToast();
@@ -75,8 +95,9 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setProgress({ ...defaultProgress, ...JSON.parse(stored) });
-      // Migrate legacy education progress
+      if (stored) {
+        setProgress({ ...defaultProgress, ...JSON.parse(stored) });
+      }
       const edu = localStorage.getItem("plantpal-education");
       if (edu) {
         const parsed = JSON.parse(edu) as {
@@ -102,7 +123,6 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
   const persist = useCallback((next: AcademyProgress) => {
     setProgress(next);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    // Keep legacy education key in sync
     localStorage.setItem(
       "plantpal-education",
       JSON.stringify({
@@ -111,6 +131,57 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
       })
     );
   }, []);
+
+  const computeBadges = useCallback(
+    (prev: AcademyProgress): { unlocked: string[]; badgeUnlockedAt: Record<string, string> } => {
+      const unlocked = new Set(prev.unlockedBadges);
+      const badgeUnlockedAt = { ...prev.badgeUnlockedAt };
+      const now = new Date().toISOString();
+      const rank = getRankForXp(prev.totalXp);
+      const lessonCount = prev.completedLessons.length;
+
+      const add = (id: string) => {
+        if (!unlocked.has(id)) badgeUnlockedAt[id] = now;
+        unlocked.add(id);
+      };
+
+      if (plants.length >= 1) add("first-plant");
+      if (stats.scans >= 1) add("first-diagnosis");
+      if (lessonCount >= 1) add("first-lesson");
+      if (lessonCount >= 25) add("lessons-25");
+      if (prev.currentStreak >= 7) add("streak-7");
+      if (prev.currentStreak >= 30) add("streak-30");
+      if (prev.currentStreak >= 100) add("streak-100");
+      if (rank === "Botanical Expert" || rank === "Plant Wizard") add("botanical-expert");
+      if (rank === "Plant Wizard") add("plant-wizard");
+
+      const hasFruitTree = plants.some((p) =>
+        /citrus|lemon|avocado|apple|peach|fig|olive|pomegranate|fruit|tree/i.test(
+          `${p.name} ${p.species}`
+        )
+      );
+      if (hasFruitTree) add("fruit-tree-owner");
+
+      const certs = new Set(prev.earnedCertificates);
+      for (const path of ACADEMY_PATHS) {
+        const { percent } = getPathProgress(path.id, prev.completedLessons);
+        if (percent === 100 && path.certificateId) certs.add(path.certificateId);
+        if (percent === 100) {
+          if (path.id === "soil-mastery") add("compost-hero");
+          if (path.id === "garden-bugs") add("bug-hunter");
+          if (path.id === "water-mastery") add("water-master");
+          if (path.id === "plant-health") add("plant-doctor");
+          if (path.id === "bonsai") add("bonsai-beginner");
+        }
+      }
+
+      if (certs.size >= 5) add("master-gardener");
+      if (certs.size === ACADEMY_PATHS.length) certs.add("cert-master-gardener");
+
+      return { unlocked: [...unlocked], badgeUnlockedAt };
+    },
+    [plants, stats.scans]
+  );
 
   const awardXp = useCallback(
     (type: XpEventType, meta?: { silent?: boolean }) => {
@@ -135,76 +206,68 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
     [toast]
   );
 
-  const syncBadgesAndCertificates = useCallback(() => {
+  const syncBadgesAndCertificates = useCallback((): string[] => {
+    let newBadges: string[] = [];
     setProgress((prev) => {
-      const unlocked = new Set(prev.unlockedBadges);
+      const before = new Set(prev.unlockedBadges);
+      const { unlocked, badgeUnlockedAt } = computeBadges(prev);
+      newBadges = unlocked.filter((id) => !before.has(id));
+
       const certs = new Set(prev.earnedCertificates);
-      const rank = getRankForXp(prev.totalXp);
-      const lessonCount = prev.completedLessons.length;
-
-      if (plants.length >= 1) unlocked.add("first-plant");
-      if (stats.scans >= 1) unlocked.add("first-diagnosis");
-      if (lessonCount >= 1) unlocked.add("first-lesson");
-      if (lessonCount >= 25) unlocked.add("lessons-25");
-      if (prev.currentStreak >= 7) unlocked.add("streak-7");
-      if (prev.currentStreak >= 30) unlocked.add("streak-30");
-      if (prev.currentStreak >= 100) unlocked.add("streak-100");
-      if (rank === "Botanical Expert" || rank === "Plant Wizard") unlocked.add("botanical-expert");
-      if (rank === "Plant Wizard") unlocked.add("plant-wizard");
-
-      const hasFruitTree = plants.some(
-        (p) =>
-          /citrus|lemon|avocado|apple|peach|fig|olive|pomegranate|fruit|tree/i.test(
-            `${p.name} ${p.species}`
-          )
-      );
-      if (hasFruitTree) unlocked.add("fruit-tree-owner");
-
       for (const path of ACADEMY_PATHS) {
         const { percent } = getPathProgress(path.id, prev.completedLessons);
-        if (percent === 100 && path.certificateId) {
-          certs.add(path.certificateId);
-        }
-        if (percent === 100) {
-          if (path.id === "soil-mastery") unlocked.add("compost-hero");
-          if (path.id === "garden-bugs") unlocked.add("bug-hunter");
-          if (path.id === "water-mastery") unlocked.add("water-master");
-          if (path.id === "plant-health") unlocked.add("plant-doctor");
-          if (path.id === "bonsai") unlocked.add("bonsai-beginner");
-        }
+        if (percent === 100 && path.certificateId) certs.add(path.certificateId);
       }
-
-      if (certs.size >= 5) unlocked.add("master-gardener");
       if (certs.size === ACADEMY_PATHS.length) certs.add("cert-master-gardener");
 
       const next = {
         ...prev,
-        unlockedBadges: [...unlocked],
+        unlockedBadges: unlocked,
+        badgeUnlockedAt,
         earnedCertificates: [...certs],
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
-  }, [plants, stats.scans]);
+    return newBadges;
+  }, [computeBadges]);
 
-  const updateStreak = useCallback(() => {
-    const today = todayKey();
-    setProgress((prev) => {
-      if (prev.lastActiveDate === today) return prev;
+  const computeStreakUpdate = useCallback(
+    (prev: AcademyProgress): { streak: number; milestone?: 3 | 7 | 30; next: AcademyProgress } => {
+      const today = todayKey();
+      if (prev.lastActiveDate === today) {
+        return { streak: prev.currentStreak, next: prev };
+      }
       let streak = 1;
       if (prev.lastActiveDate === yesterdayKey()) {
         streak = prev.currentStreak + 1;
       }
+      const milestone = streakMilestone(streak, prev.lastStreakMilestone);
       const next = {
         ...prev,
         currentStreak: streak,
         longestStreak: Math.max(prev.longestStreak, streak),
         lastActiveDate: today,
+        lastStreakMilestone: milestone
+          ? Math.max(prev.lastStreakMilestone, milestone)
+          : prev.lastStreakMilestone,
       };
+      return { streak, milestone, next };
+    },
+    []
+  );
+
+  const updateStreak = useCallback(() => {
+    let result = { streak: 1, milestone: undefined as 3 | 7 | 30 | undefined };
+    setProgress((prev) => {
+      const { streak, milestone, next } = computeStreakUpdate(prev);
+      result = { streak, milestone };
+      if (next === prev) return prev;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
-  }, []);
+    return result;
+  }, [computeStreakUpdate]);
 
   const recordDailyLogin = useCallback(() => {
     updateStreak();
@@ -218,7 +281,10 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
       const next = {
         ...prev,
         totalXp: prev.totalXp + amount,
-        xpLog: [{ type: "daily_login" as XpEventType, amount, at: new Date().toISOString() }, ...prev.xpLog.slice(0, 49)],
+        xpLog: [
+          { type: "daily_login" as XpEventType, amount, at: new Date().toISOString() },
+          ...prev.xpLog.slice(0, 49),
+        ],
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
@@ -226,31 +292,38 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
   }, [updateStreak]);
 
   const completeLesson = useCallback(
-    (lessonId: string) => {
-      updateStreak();
+    (lessonId: string): LessonCompleteResult | null => {
+      let completion: LessonCompleteResult | null = null;
+
       setProgress((prev) => {
         if (prev.completedLessons.includes(lessonId)) return prev;
+
+        const { streak, milestone, next: streaked } = computeStreakUpdate(prev);
         const lessonXp = xpForEvent("lesson_completed");
         const quizXp = xpForEvent("quiz_passed");
-        const next = {
-          ...prev,
-          completedLessons: [...prev.completedLessons, lessonId],
-          passedQuizzes: [...new Set([...prev.passedQuizzes, lessonId])],
-          totalXp: prev.totalXp + lessonXp + quizXp,
+        const xpEarned = lessonXp + quizXp;
+
+        const path = getPathForLesson(lessonId);
+        const pathId = path?.id ?? null;
+        const completedLessons = [...streaked.completedLessons, lessonId];
+
+        const nextBase = {
+          ...streaked,
+          completedLessons,
+          passedQuizzes: [...new Set([...streaked.passedQuizzes, lessonId])],
+          totalXp: streaked.totalXp + xpEarned,
           xpLog: [
-            {
-              type: "quiz_passed" as XpEventType,
-              amount: quizXp,
-              at: new Date().toISOString(),
-            },
-            {
-              type: "lesson_completed" as XpEventType,
-              amount: lessonXp,
-              at: new Date().toISOString(),
-            },
-            ...prev.xpLog.slice(0, 48),
+            { type: "quiz_passed" as XpEventType, amount: quizXp, at: new Date().toISOString() },
+            { type: "lesson_completed" as XpEventType, amount: lessonXp, at: new Date().toISOString() },
+            ...streaked.xpLog.slice(0, 48),
           ],
         };
+
+        const { unlocked, badgeUnlockedAt } = computeBadges(nextBase);
+        const before = new Set(prev.unlockedBadges);
+        const newBadges = unlocked.filter((id) => !before.has(id));
+        const next = { ...nextBase, unlockedBadges: unlocked, badgeUnlockedAt };
+
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
         localStorage.setItem(
           "plantpal-education",
@@ -259,12 +332,56 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
             passedQuizzes: next.passedQuizzes,
           })
         );
+
+        const nextInPath = pathId ? getNextLessonInPath(pathId, completedLessons) : null;
+        const nextLessonId = nextInPath ?? getContinueLessonId(completedLessons);
+
+        completion = {
+          lessonId,
+          xpEarned,
+          streak,
+          streakMilestone: milestone,
+          newBadges,
+          nextLessonId,
+          pathId,
+        };
+
         return next;
       });
-      toast("+75 XP — lesson complete!");
+
+      if (completion) setLastCompletion(completion);
+      return completion;
     },
-    [toast, updateStreak]
+    [computeStreakUpdate, computeBadges]
   );
+
+  const clearLastCompletion = useCallback(() => setLastCompletion(null), []);
+
+  const isStreakAtRisk = useCallback(() => {
+    const today = todayKey();
+    return (
+      progress.currentStreak > 0 &&
+      progress.lastActiveDate !== today &&
+      progress.lastActiveDate === yesterdayKey()
+    );
+  }, [progress.currentStreak, progress.lastActiveDate]);
+
+  const useStreakFreeze = useCallback(() => {
+    setProgress((prev) => {
+      if (prev.streakFreezes <= 0) return prev;
+      const today = todayKey();
+      if (prev.streakFreezeUsedDate === today) return prev;
+      const next = {
+        ...prev,
+        streakFreezes: prev.streakFreezes - 1,
+        streakFreezeUsedDate: today,
+        lastActiveDate: yesterdayKey(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+    toast("Streak freeze used — your streak is protected for today.");
+  }, [toast]);
 
   useEffect(() => {
     return subscribeAwardXp((type) => {
@@ -312,6 +429,8 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
         loading,
         rankInfo,
         levelProgress,
+        lastCompletion,
+        clearLastCompletion,
         awardXp,
         completeLesson,
         isLessonComplete,
@@ -320,6 +439,8 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
         badges: ACADEMY_BADGES,
         syncBadgesAndCertificates,
         recordDailyLogin,
+        isStreakAtRisk,
+        useStreakFreeze,
       }}
     >
       {children}
@@ -333,7 +454,6 @@ export function useAcademy() {
   return ctx;
 }
 
-/** Award XP from other providers (plants, scans, etc.) */
 export function useAcademyXp() {
   const ctx = useContext(AcademyContext);
   return ctx?.awardXp ?? (() => 0);
