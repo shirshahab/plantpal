@@ -18,10 +18,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CameraCapture, fileToDataUrl } from "@/components/scanner/camera-capture";
 import {
-  MultiPhotoCapture,
   photosToRequest,
   type CapturedPhoto,
 } from "@/components/scanner/multi-photo-capture";
+import { LiveCameraScanner } from "@/components/scanner/live-camera-scanner";
 import { IdentifyPlantResults } from "@/components/scanner/identify-plant-results";
 import { BadPhotoGuidance } from "@/components/scanner/bad-photo-guidance";
 import {
@@ -42,6 +42,7 @@ import { usePhotos } from "@/lib/store/photos-provider";
 import { useEngagement } from "@/lib/store/engagement-provider";
 import { useToast } from "@/lib/store/toast-provider";
 import { friendlyAiError } from "@/lib/errors/user-messages";
+import { isDemoMode } from "@/lib/profile/user-profile";
 import { cn } from "@/lib/utils";
 
 type TabId = "identify" | "diagnose" | "tag" | "progress";
@@ -131,7 +132,11 @@ export function CameraHub() {
     setIdentifyResult(null);
     try {
       const { imageDataUrls, photoRoles } = photosToRequest(identifyPhotos);
-      const res = await requestIdentifyPlant({ imageDataUrls, photoRoles });
+      const res = await requestIdentifyPlant({
+        imageDataUrls,
+        photoRoles,
+        demoMode: isDemoMode(),
+      });
       if (!res.ok) throw new Error(res.error);
 
       const entry = saveScanToHistory({
@@ -151,8 +156,10 @@ export function CameraHub() {
         toast("Photo quality is low — try a clearer shot");
       } else if (res.data.not_fully_confident || res.data.providers_disagree) {
         toast("Not fully confident — another photo may help");
+      } else if (res.data.source === "mock") {
+        toast("Demo");
       } else {
-        toast(res.data.source === "ai" ? "Plant identified" : "Demo identification ready");
+        toast("Plant identified");
       }
     } catch (e) {
       toast(friendlyAiError(e instanceof Error ? e.message : undefined, "identification"));
@@ -270,12 +277,13 @@ export function CameraHub() {
     <div className="space-y-4 max-w-lg mx-auto pb-6">
       {isIdentify ? (
         <>
-          <MultiPhotoCapture
+          <LiveCameraScanner
             photos={identifyPhotos}
             onChange={handleIdentifyPhotosChange}
             loading={loading}
             loadingLabel={loadingLabels.identify}
             onLimitError={(message) => toast(message)}
+            cameraActive={!identifyResult}
           />
           {showClientBadPhoto && <BadPhotoGuidance quality={clientPhotoQuality} />}
         </>

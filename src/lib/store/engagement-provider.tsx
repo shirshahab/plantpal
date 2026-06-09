@@ -17,6 +17,7 @@ import {
 } from "@/lib/mock/achievements";
 import type { Achievement } from "@/lib/types/phase6";
 import type { Plant } from "@/lib/types";
+import { emitAwardXp } from "@/lib/academy/xp-events";
 import { calculateGardenScore } from "@/lib/scoring";
 import { usePlants } from "./plants-provider";
 
@@ -186,6 +187,7 @@ export function EngagementProvider({ children }: { children: React.ReactNode }) 
       };
       setGrowthEntries((prev) => [newEntry, ...prev]);
       unlockAchievement("first-growth-photo");
+      emitAwardXp("growth_photo");
     },
     [unlockAchievement]
   );
@@ -224,6 +226,7 @@ export function EngagementProvider({ children }: { children: React.ReactNode }) 
     setStats((s) => ({ ...s, scans: s.scans + 1 }));
     unlockAchievement("first-scan");
     unlockAchievement("pest-hunter");
+    emitAwardXp("diagnosis_completed");
   }, [unlockAchievement]);
 
   const recordWatering = useCallback(() => {

@@ -24,7 +24,7 @@ const navItems = [
   { href: "/plants", label: "All Plants", icon: Leaf },
   { href: "/plants/new", label: "Add Plant", icon: Plus },
   { href: "/scanner", label: "Scanner", icon: ScanLine },
-  { href: "/learn", label: "Learn", icon: GraduationCap },
+  { href: "/academy", label: "Academy", icon: GraduationCap },
   { href: "/more", label: "More", icon: LayoutGrid },
   { href: "/doctor", label: "Plant Doctor", icon: ScanLine },
   { href: "/database", label: "Database", icon: Leaf },
@@ -50,8 +50,8 @@ export function Sidebar() {
         (pathname.startsWith("/plants/") && pathname !== "/plants/new")
       );
     }
-    if (href === "/learn") {
-      return pathname === "/learn" || pathname.startsWith("/learn/");
+    if (href === "/academy") {
+      return pathname === "/academy" || pathname.startsWith("/academy/");
     }
     if (href === "/more") {
       return (

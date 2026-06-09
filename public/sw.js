@@ -1,6 +1,17 @@
-const CACHE = "plantpal-v2";
+const CACHE = "plantpal-v3";
 const OFFLINE_URL = "/offline";
-const PRECACHE = [OFFLINE_URL, "/dashboard", "/today", "/app-icon.png", "/manifest.webmanifest"];
+const PRECACHE = [
+  OFFLINE_URL,
+  "/dashboard",
+  "/today",
+  "/app-icon.png",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/android-chrome-192x192.png",
+  "/android-chrome-512x512.png",
+  "/apple-touch-icon.png",
+  "/manifest.webmanifest",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

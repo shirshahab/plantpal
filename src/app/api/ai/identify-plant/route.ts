@@ -11,9 +11,14 @@ import {
   getAuthUserId,
 } from "@/lib/ai/route-utils";
 import {
-  handleAnalysisRouteError,
-  parseJsonBody,
-} from "@/lib/ai/parse-request-body";
+  IdentificationFailedError,
+  logIdentifyDebug,
+} from "@/lib/ai/identify-errors";
+import { parseJsonBody } from "@/lib/ai/parse-request-body";
+import { isOpenAIConfigured } from "@/lib/ai/openai";
+import { LIVE_IDENTIFICATION_FAILED } from "@/lib/ai/messages";
+import { isPlantIdEnabled } from "@/lib/integrations/plantid";
+import { isScannerDemoModeEnabled } from "@/lib/scanner/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { dataUrlToBlob } from "@/lib/storage/plant-photos";
@@ -25,7 +30,7 @@ import {
   RATE_LIMITS,
 } from "@/lib/api/rate-limit";
 import { recordDataSource } from "@/lib/data-sources/runtime";
-import { formatBytes } from "@/lib/scanner/upload-limits";
+import { formatBytes, totalDataUrlBytes } from "@/lib/scanner/upload-limits";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -55,6 +60,12 @@ function parseImages(body: Record<string, unknown>): {
   }
 
   return { urls: [] };
+}
+
+function plantNetOrganFromRoles(roles?: IdentifyPhotoRole[]): "leaf" | "flower" | "fruit" | "bark" | "habit" {
+  if (roles?.includes("flower")) return "flower";
+  if (roles?.includes("leaf")) return "leaf";
+  return "habit";
 }
 
 export async function POST(request: Request) {
@@ -87,12 +98,35 @@ export async function POST(request: Request) {
 
   const primaryUrl = urls[0];
 
-  console.info(
-    `[${ROUTE}] analyzing ${urls.length} photo(s), payload ${formatBytes(payloadBytes)}`
-  );
+  console.info(`[${ROUTE}] keys`, {
+    openai: isOpenAIConfigured(),
+    plantnet: isPlantNetEnabled(),
+    plantId: isPlantIdEnabled(),
+    imageCount: urls.length,
+    totalImageBytes: totalDataUrlBytes(urls),
+    payload: formatBytes(payloadBytes),
+  });
+
+  const forceDemo =
+    body.demoMode === true || isScannerDemoModeEnabled();
 
   try {
-    const result = await identifyPlantFromPhoto(urls, roles);
+    const result = await identifyPlantFromPhoto(urls, roles, { forceDemo });
+
+    logIdentifyDebug(ROUTE, {
+      openaiKeyConfigured: isOpenAIConfigured(),
+      plantnetKeyConfigured: isPlantNetEnabled(),
+      plantIdKeyConfigured: isPlantIdEnabled(),
+      imageCount: urls.length,
+      imageBytes: urls.map((u) => Math.round(u.length * 0.75)),
+      responseSource: result.source,
+      identificationProvider: result.identification_provider,
+      fallbackReason: result.source === "mock" ? "demo_or_no_keys" : null,
+      openaiRawPreview: null,
+      openaiError: null,
+      plantnetRawPreview: null,
+    });
+
     if (result.source === "ai") {
       recordDataSource("openai", "real_api");
     } else {
@@ -101,10 +135,17 @@ export async function POST(request: Request) {
 
     const plantnetEnabled = isPlantNetEnabled();
     const plantnetSecondOpinion = plantnetEnabled
-      ? await identifyWithPlantNet({ imageDataUrl: primaryUrl })
+      ? await identifyWithPlantNet({
+          imageDataUrl: primaryUrl,
+          organ: plantNetOrganFromRoles(roles),
+        })
       : [];
 
     if (plantnetSecondOpinion.length > 0) {
+      console.info(
+        `[${ROUTE}] Pl@ntNet raw:`,
+        JSON.stringify(plantnetSecondOpinion.slice(0, 3)).slice(0, 500)
+      );
       recordDataSource("plantnet", "real_api");
     } else if (plantnetEnabled) {
       recordDataSource("plantnet", "real_api", { error: "No matches returned" });
@@ -120,6 +161,14 @@ export async function POST(request: Request) {
       plantnetSecondOpinion,
       plantnetEnabled
     );
+
+    console.info(`[${ROUTE}] final`, {
+      source: enriched.source,
+      provider: enriched.identification_provider,
+      common_name: enriched.common_name,
+      scientific_name: enriched.scientific_name,
+      providers_disagree: enriched.providers_disagree,
+    });
 
     let saved = false;
     if (userId && isSupabaseConfigured()) {
@@ -146,7 +195,17 @@ export async function POST(request: Request) {
 
     return aiSuccess(enriched, saved);
   } catch (e) {
+    if (e instanceof IdentificationFailedError) {
+      logIdentifyDebug(ROUTE, e.debug);
+      recordDataSource("openai", "mock", {
+        fallback: true,
+        error: e.debug.fallbackReason ?? "identification_failed",
+      });
+      return aiError(e.message, 502);
+    }
+
     recordDataSource("openai", "mock", { fallback: true, error: "Identification failed" });
-    return handleAnalysisRouteError(ROUTE, e, payloadBytes);
+    console.error(`[${ROUTE}] unexpected error`, e);
+    return aiError(LIVE_IDENTIFICATION_FAILED, 502);
   }
 }

@@ -1,12 +1,11 @@
 "use client";
 
-import { useRef } from "react";
 import Image from "next/image";
-import { Camera, ImageIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Camera } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { compressImageFile } from "@/lib/scanner/compress-image";
 import { SCAN_UPLOAD_LIMIT_LABEL } from "@/lib/scanner/upload-limits";
+import { PhotoCaptureActions } from "@/components/scanner/photo-capture-actions";
 
 interface CameraCaptureProps {
   preview: string | null;
@@ -25,14 +24,6 @@ export function CameraCapture({
   onClear,
   emptyHint = "Take or upload a photo",
 }: CameraCaptureProps) {
-  const galleryRef = useRef<HTMLInputElement>(null);
-  const cameraRef = useRef<HTMLInputElement>(null);
-
-  function handleFile(file: File | undefined) {
-    if (!file) return;
-    onFile(file);
-  }
-
   return (
     <>
       <Card padding="none" className="overflow-hidden">
@@ -67,41 +58,7 @@ export function CameraCapture({
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Button
-          size="lg"
-          className="h-16 text-base touch-manipulation shadow-lg shadow-green-600/20"
-          onClick={() => cameraRef.current?.click()}
-        >
-          <Camera className="w-6 h-6" />
-          Take Photo
-        </Button>
-        <Button
-          variant="secondary"
-          size="lg"
-          className="h-14 touch-manipulation"
-          onClick={() => galleryRef.current?.click()}
-        >
-          <ImageIcon className="w-5 h-5" />
-          Upload
-        </Button>
-      </div>
-
-      <input
-        ref={cameraRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={(e) => handleFile(e.target.files?.[0])}
-      />
-      <input
-        ref={galleryRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => handleFile(e.target.files?.[0])}
-      />
+      <PhotoCaptureActions onFile={onFile} disabled={loading} />
 
       <p className="text-xs text-center text-gray-500">{SCAN_UPLOAD_LIMIT_LABEL}</p>
     </>

@@ -3,3 +3,6 @@ export const FRIENDLY_PAYLOAD_TOO_LARGE =
 
 export const FRIENDLY_ANALYSIS_FAILED =
   "We couldn't analyze those photos. Please try again.";
+
+export const LIVE_IDENTIFICATION_FAILED =
+  "Live identification failed. Try again.";

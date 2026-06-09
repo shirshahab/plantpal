@@ -1,16 +1,33 @@
 import type { PhotoQualityAssessment, PlantIdentificationResponse } from "@/lib/types/ai";
 import { identifyWithPlantId, isPlantIdEnabled } from "@/lib/integrations/plantid";
+import { isPlantNetKeyConfigured } from "@/lib/integrations/env-config";
 import { visionJSON, isOpenAIConfigured } from "./openai";
 import { GARDENER_SYSTEM_PROMPT } from "./prompts";
 import {
   enrichIdentification,
-  matchDatabaseSpecies,
   mapSunToExposure,
   scoreToLevel,
 } from "./enrich-identification";
 import { buildFriendlyHeadline } from "@/lib/scanner/identification-copy";
+import { estimateDataUrlBytes } from "@/lib/scanner/upload-limits";
+import { isScannerDemoModeEnabled } from "@/lib/scanner/demo-mode";
+import {
+  IdentificationFailedError,
+  type IdentifyDebugLog,
+} from "./identify-errors";
+import { LIVE_IDENTIFICATION_FAILED } from "./messages";
 
 export type IdentifyPhotoRole = "whole" | "leaf" | "flower";
+
+export interface IdentifyPlantOptions {
+  /** Explicit demo from client profile or SCANNER_DEMO_MODE */
+  forceDemo?: boolean;
+}
+
+function shouldUseDemoIdentification(forceDemo?: boolean): boolean {
+  if (forceDemo || isScannerDemoModeEnabled()) return true;
+  return !isOpenAIConfigured() && !isPlantIdEnabled();
+}
 
 const SCHEMA = `{
   "photo_quality": {
@@ -37,6 +54,22 @@ const SCHEMA = `{
   "suggested_sun": "full_sun" | "partial_sun" | "shade"
 }`;
 
+function buildDebugBase(urls: string[]): IdentifyDebugLog {
+  return {
+    openaiKeyConfigured: isOpenAIConfigured(),
+    plantnetKeyConfigured: isPlantNetKeyConfigured(),
+    plantIdKeyConfigured: isPlantIdEnabled(),
+    imageCount: urls.length,
+    imageBytes: urls.map(estimateDataUrlBytes),
+    responseSource: null,
+    identificationProvider: null,
+    fallbackReason: null,
+    openaiRawPreview: null,
+    openaiError: null,
+    plantnetRawPreview: null,
+  };
+}
+
 function normalizePhotoQuality(raw?: {
   acceptable?: boolean;
   issues?: string[];
@@ -51,29 +84,29 @@ function normalizePhotoQuality(raw?: {
   };
 }
 
-function mockIdentify(): PlantIdentificationResponse {
+/** Placeholder only — used when no live API keys exist or SCANNER_DEMO_MODE is on. */
+function buildDemoIdentification(debug: IdentifyDebugLog): PlantIdentificationResponse {
+  debug.responseSource = "mock";
+  debug.identificationProvider = "mock";
+  debug.fallbackReason = debug.fallbackReason ?? "demo_mode_or_no_api_keys";
+
   const enriched = enrichIdentification({
-    common_name: "Meyer Lemon",
-    scientific_name: "Citrus × meyeri",
-    confidence: "medium",
-    confidence_score: 72,
+    common_name: "Demo identification",
+    scientific_name: "Connect OPENAI_API_KEY for live plant ID",
+    confidence: "low",
+    confidence_score: 0,
     identification_rationale:
-      "Glossy oval leaves, compact branching, and deep green foliage match Meyer lemon — a common patio citrus with sweeter fruit than Eureka.",
-    top_matches: [
-      { common_name: "Meyer Lemon", scientific_name: "Citrus × meyeri", confidence_score: 72 },
-      { common_name: "Eureka Lemon", scientific_name: "Citrus limon", confidence_score: 16 },
-      { common_name: "Lime Tree", scientific_name: "Citrus aurantiifolia", confidence_score: 8 },
-    ],
-    common_lookalikes: ["Eureka lemon", "Key lime", "Kumquat"],
-    care_summary:
-      "A compact citrus tree that prefers full sun and deep, infrequent watering. Feed during active growth and protect from hard frost.",
-    light_needs: "Full sun (6+ hours direct light)",
-    watering_needs: "Deep water weekly; allow top inch to dry between waterings",
-    toxicity: "Citrus leaves can be mildly irritating to pets if ingested",
+      "This is placeholder demo data — not based on your photo. Add OPENAI_API_KEY to .env.local and restart the dev server for live identification.",
+    top_matches: [],
+    common_lookalikes: [],
+    care_summary: "Demo mode — no real care data for this scan.",
+    light_needs: "—",
+    watering_needs: "—",
+    toxicity: "—",
     care_difficulty: "Moderate",
-    toxicity_warning: "Citrus leaves and stems can be mildly irritating if ingested by pets.",
-    suggested_location: "outdoor",
-    suggested_sun: "full_sun",
+    toxicity_warning: null,
+    suggested_location: "either",
+    suggested_sun: "partial_sun",
     source: "mock",
     identification_provider: "mock",
     photo_quality: { acceptable: true, issues: [] },
@@ -86,7 +119,10 @@ function applyFriendlyCopy(result: PlantIdentificationResponse): PlantIdentifica
   return {
     ...result,
     friendly_headline: buildFriendlyHeadline(result),
-    not_fully_confident: result.confidence_score < 70 || result.low_confidence,
+    not_fully_confident:
+      result.source === "mock" ||
+      result.confidence_score < 70 ||
+      result.low_confidence,
   };
 }
 
@@ -104,9 +140,15 @@ function buildMultiPhotoPrompt(roles?: IdentifyPhotoRole[]): string {
 
 async function identifyWithOpenAI(
   imageDataUrls: string[],
-  roles?: IdentifyPhotoRole[]
-): Promise<PlantIdentificationResponse | null> {
-  if (!isOpenAIConfigured() || imageDataUrls.length === 0) return null;
+  roles: IdentifyPhotoRole[] | undefined,
+  debug: IdentifyDebugLog
+): Promise<PlantIdentificationResponse> {
+  if (!isOpenAIConfigured()) {
+    throw new IdentificationFailedError(LIVE_IDENTIFICATION_FAILED, {
+      ...debug,
+      fallbackReason: "openai_not_configured",
+    });
+  }
 
   try {
     const raw = await visionJSON<
@@ -130,8 +172,12 @@ async function identifyWithOpenAI(
     >(
       `${GARDENER_SYSTEM_PROMPT}\n\nIdentify the plant in these photo(s). Return structured care fields. Assess whether photos are clear enough (not blurry, dark, extreme close-up, or missing leaves/stem). Use hedged language in care_summary. Return JSON:\n${SCHEMA}`,
       buildMultiPhotoPrompt(roles),
-      imageDataUrls
+      imageDataUrls,
+      { detail: "auto" }
     );
+
+    debug.openaiRawPreview = JSON.stringify(raw).slice(0, 500);
+    console.info("[plant-identify] OpenAI raw before enrichment:", debug.openaiRawPreview);
 
     const photo_quality = normalizePhotoQuality(raw.photo_quality);
     const { photo_quality: _pq, ...rest } = raw;
@@ -143,15 +189,23 @@ async function identifyWithOpenAI(
       identification_provider: "openai",
     });
 
+    debug.responseSource = "ai";
+    debug.identificationProvider = "openai";
+    debug.fallbackReason = null;
+
     return applyFriendlyCopy(enriched);
   } catch (e) {
-    console.error("[plant-identify] OpenAI identification failed:", e instanceof Error ? e.message : e);
-    return null;
+    const message = e instanceof Error ? e.message : String(e);
+    debug.openaiError = message.slice(0, 300);
+    debug.fallbackReason = "openai_failed";
+    console.error("[plant-identify] OpenAI identification failed:", message);
+    throw new IdentificationFailedError(LIVE_IDENTIFICATION_FAILED, debug);
   }
 }
 
 async function identifyWithPlantIdPipeline(
-  imageDataUrl: string
+  imageDataUrl: string,
+  debug: IdentifyDebugLog
 ): Promise<PlantIdentificationResponse | null> {
   const plantId = await identifyWithPlantId(imageDataUrl);
   if (!plantId) return null;
@@ -178,6 +232,10 @@ async function identifyWithPlantIdPipeline(
     photo_quality: { acceptable: true, issues: [] },
   });
 
+  debug.responseSource = "ai";
+  debug.identificationProvider = "plantid";
+  debug.fallbackReason = null;
+
   return applyFriendlyCopy(enriched);
 }
 
@@ -189,21 +247,46 @@ function sunLabelFromExposure(sun: ReturnType<typeof mapSunToExposure>): string 
 
 export async function identifyPlantFromPhoto(
   imageDataUrl: string | string[],
-  roles?: IdentifyPhotoRole[]
+  roles?: IdentifyPhotoRole[],
+  options?: IdentifyPlantOptions
 ): Promise<PlantIdentificationResponse> {
   const urls = Array.isArray(imageDataUrl) ? imageDataUrl : [imageDataUrl];
   const primary = urls[0];
-  if (!primary) return mockIdentify();
+  const debug = buildDebugBase(urls);
+  const useDemo = shouldUseDemoIdentification(options?.forceDemo);
 
-  if (isPlantIdEnabled() && urls.length === 1) {
-    const fromPlantId = await identifyWithPlantIdPipeline(primary);
-    if (fromPlantId) return fromPlantId;
+  if (!primary) {
+    if (useDemo) {
+      debug.fallbackReason = "no_image_demo";
+      return buildDemoIdentification(debug);
+    }
+    throw new IdentificationFailedError(LIVE_IDENTIFICATION_FAILED, {
+      ...debug,
+      fallbackReason: "no_image",
+    });
   }
 
-  const fromOpenAI = await identifyWithOpenAI(urls, roles);
-  if (fromOpenAI) return fromOpenAI;
+  if (useDemo) {
+    debug.fallbackReason =
+      options?.forceDemo || isScannerDemoModeEnabled()
+        ? "explicit_demo_mode"
+        : "no_api_keys";
+    return buildDemoIdentification(debug);
+  }
 
-  return mockIdentify();
+  if (isOpenAIConfigured()) {
+    return identifyWithOpenAI(urls, roles, debug);
+  }
+
+  if (isPlantIdEnabled() && urls.length === 1) {
+    const fromPlantId = await identifyWithPlantIdPipeline(primary, debug);
+    if (fromPlantId) return fromPlantId;
+    debug.fallbackReason = "plantid_empty";
+    throw new IdentificationFailedError(LIVE_IDENTIFICATION_FAILED, debug);
+  }
+
+  debug.fallbackReason = "no_live_provider";
+  throw new IdentificationFailedError(LIVE_IDENTIFICATION_FAILED, debug);
 }
 
 /** @deprecated Use identifyPlantFromPhoto */

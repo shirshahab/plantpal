@@ -30,7 +30,7 @@ const sections = [
     items: [
       { href: "/today", label: "Today", icon: Sparkles, desc: "Your daily command center" },
       { href: "/calendar", label: "Calendar", icon: CalendarDays, desc: "Monthly care schedule" },
-      { href: "/learn", label: "Learn", icon: GraduationCap, desc: "Plant care lessons" },
+      { href: "/academy", label: "Academy", icon: GraduationCap, desc: "Learn & earn XP" },
     ],
   },
   {

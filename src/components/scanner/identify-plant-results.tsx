@@ -18,6 +18,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BadPhotoGuidance, LowConfidenceGuidance } from "@/components/scanner/bad-photo-guidance";
 import { mergePhotoQuality } from "@/lib/scanner/photo-quality";
+import {
+  getConsensusLabel,
+  getPlantNetSourceLabel,
+  getPrimarySourceLabel,
+} from "@/lib/scanner/identification-source-labels";
 import { markScanAddedToGarden } from "@/lib/scanner/scan-history";
 import type { PhotoQualityAssessment, PlantIdentificationResponse } from "@/lib/types/ai";
 import { cn } from "@/lib/utils";
@@ -32,12 +37,6 @@ interface IdentifyPlantResultsProps {
   scanHistoryId?: string | null;
   onRetake: () => void;
 }
-
-const PROVIDER_LABELS: Record<string, string> = {
-  plantid: "Plant.id",
-  openai: "AI generated",
-  mock: "Mock fallback",
-};
 
 export function IdentifyPlantResults({
   result,
@@ -57,7 +56,13 @@ export function IdentifyPlantResults({
     result.friendly_headline ??
     (badPhoto
       ? "PlantPal needs a clearer photo before identifying this plant."
-      : `PlantPal thinks this is likely a ${result.common_name}.`);
+      : result.source === "mock"
+        ? "Demo identification — not based on your photo."
+        : `PlantPal thinks this is likely a ${result.common_name}.`);
+
+  const primaryLabel = getPrimarySourceLabel(result);
+  const plantNetLabel = getPlantNetSourceLabel(result.plantnet_configured ?? false);
+  const consensusLabel = getConsensusLabel(result.providers_disagree);
 
   function savePrefill(unknown = false) {
     if (scanHistoryId && !unknown) {
@@ -96,6 +101,22 @@ export function IdentifyPlantResults({
       )}
 
       <Card padding="md" className={cn("space-y-4", badPhoto ? "border-gray-200 opacity-90" : "border-green-100")}>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant={result.source === "mock" ? "outline" : "success"} className="text-[10px]">
+            {primaryLabel}
+          </Badge>
+          {plantNetLabel && (
+            <Badge variant="outline" className="text-[10px]">
+              {plantNetLabel}
+            </Badge>
+          )}
+          {consensusLabel && (
+            <Badge variant="warning" className="text-[10px]">
+              {consensusLabel}
+            </Badge>
+          )}
+        </div>
+
         <div className="space-y-2">
           <p className="text-sm text-gray-800 leading-relaxed font-medium">{headline}</p>
           {!badPhoto && (
@@ -271,9 +292,9 @@ export function IdentifyPlantResults({
         </div>
 
         <p className="text-[11px] text-gray-400 text-center">
-          {PROVIDER_LABELS[result.identification_provider] ?? "AI"}
-          {result.plantnet_available && " · Pl@ntNet"}
-          {result.source === "mock" && " · add OPENAI_API_KEY for live ID"}
+          {primaryLabel}
+          {plantNetLabel && ` · ${plantNetLabel}`}
+          {result.source === "mock" && " · set OPENAI_API_KEY for live ID"}
         </p>
       </Card>
     </div>

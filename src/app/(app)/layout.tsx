@@ -2,6 +2,7 @@ import { AppShell } from "@/components/app-shell";
 import { AuthProvider } from "@/lib/store/auth-provider";
 import { SyncProvider } from "@/lib/store/sync-provider";
 import { PlantsProvider } from "@/lib/store/plants-provider";
+import { AcademyProvider } from "@/lib/store/academy-provider";
 import { EducationProvider } from "@/lib/store/education-provider";
 import { EngagementProvider } from "@/lib/store/engagement-provider";
 import { JourneyProvider } from "@/lib/store/journey-provider";
@@ -28,11 +29,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <RemindersProvider>
                   <PhotosProvider>
                     <ToastProvider>
-                      <TasksProvider>
-                        <GenomeProvider>
-                          <AppShell>{children}</AppShell>
-                        </GenomeProvider>
-                      </TasksProvider>
+                      <AcademyProvider>
+                        <TasksProvider>
+                          <GenomeProvider>
+                            <AppShell>{children}</AppShell>
+                          </GenomeProvider>
+                        </TasksProvider>
+                      </AcademyProvider>
                     </ToastProvider>
                   </PhotosProvider>
                 </RemindersProvider>

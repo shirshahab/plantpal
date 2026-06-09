@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { BRAND, OFFICIAL_APP_ICON } from "@/lib/brand/tokens";
+import { APP_ICON_PATHS, BRAND } from "@/lib/brand/tokens";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -11,7 +11,7 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     display_override: ["standalone", "minimal-ui"],
-    background_color: "#FAFBF8",
+    background_color: "#2D6A4F",
     theme_color: "#2D6A4F",
     orientation: "portrait-primary",
     categories: ["lifestyle", "utilities", "education"],
@@ -20,13 +20,25 @@ export default function manifest(): MetadataRoute.Manifest {
     prefer_related_applications: false,
     icons: [
       {
-        src: OFFICIAL_APP_ICON,
+        src: APP_ICON_PATHS.png192,
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: APP_ICON_PATHS.png512,
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: OFFICIAL_APP_ICON,
+        src: APP_ICON_PATHS.android192,
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: APP_ICON_PATHS.android512,
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
@@ -37,13 +49,13 @@ export default function manifest(): MetadataRoute.Manifest {
         name: "Today",
         short_name: "Today",
         url: "/today",
-        icons: [{ src: OFFICIAL_APP_ICON, sizes: "512x512", type: "image/png" }],
+        icons: [{ src: APP_ICON_PATHS.png192, sizes: "192x192", type: "image/png" }],
       },
       {
         name: "Scan Plant",
         short_name: "Scan",
         url: "/scanner",
-        icons: [{ src: OFFICIAL_APP_ICON, sizes: "512x512", type: "image/png" }],
+        icons: [{ src: APP_ICON_PATHS.png192, sizes: "192x192", type: "image/png" }],
       },
     ],
   };

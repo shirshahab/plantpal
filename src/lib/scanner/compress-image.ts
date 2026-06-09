@@ -38,7 +38,15 @@ function scaleToMaxEdge(width: number, height: number, maxEdge: number) {
 /** Resize to max edge and encode as JPEG before scanner upload. */
 export async function compressImageFile(file: File): Promise<string> {
   const img = await loadImageFromFile(file);
-  const { width, height } = scaleToMaxEdge(img.width, img.height, SCAN_MAX_EDGE_PX);
+  return canvasToJpegDataUrl(drawToCanvas(img, img.width, img.height));
+}
+
+function drawToCanvas(
+  source: CanvasImageSource,
+  sourceWidth: number,
+  sourceHeight: number
+): HTMLCanvasElement {
+  const { width, height } = scaleToMaxEdge(sourceWidth, sourceHeight, SCAN_MAX_EDGE_PX);
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -49,6 +57,18 @@ export async function compressImageFile(file: File): Promise<string> {
     throw new Error("Could not prepare image");
   }
 
-  ctx.drawImage(img, 0, 0, width, height);
+  ctx.drawImage(source, 0, 0, width, height);
+  return canvas;
+}
+
+function canvasToJpegDataUrl(canvas: HTMLCanvasElement): string {
   return canvas.toDataURL("image/jpeg", SCAN_JPEG_QUALITY);
+}
+
+/** Capture a live camera frame, resize, and encode as JPEG. */
+export async function compressVideoFrame(video: HTMLVideoElement): Promise<string> {
+  if (video.videoWidth === 0 || video.videoHeight === 0) {
+    throw new Error("Camera is still starting. Wait a moment and try again.");
+  }
+  return canvasToJpegDataUrl(drawToCanvas(video, video.videoWidth, video.videoHeight));
 }

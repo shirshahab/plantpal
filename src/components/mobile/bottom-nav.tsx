@@ -34,7 +34,7 @@ export function BottomNav() {
       const moreRoutes = [
         "/more", "/doctor", "/database", "/achievements", "/gallery",
         "/harvest", "/shop-assistant", "/property", "/collection",
-        "/community", "/ar", "/settings", "/price-checker", "/learn",
+        "/community", "/ar", "/settings", "/price-checker", "/learn", "/academy",
         "/scanner/history", "/setup", "/demo-script", "/qa",
       ];
       return moreRoutes.some((r) => pathname === r || pathname.startsWith(`${r}/`));

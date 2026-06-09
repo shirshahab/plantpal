@@ -1,4 +1,5 @@
 import type { PostgrestError } from "@supabase/supabase-js";
+import { LIVE_IDENTIFICATION_FAILED } from "@/lib/ai/messages";
 import { isMissingTableError } from "@/lib/supabase/errors";
 
 type ErrorLike = Pick<PostgrestError, "message" | "code" | "details" | "hint">;
@@ -46,6 +47,13 @@ export function friendlyAiError(error: string | undefined, feature = "AI"): stri
   const lower = error.toLowerCase();
 
   if (
+    error === LIVE_IDENTIFICATION_FAILED ||
+    lower.includes("live identification failed")
+  ) {
+    return LIVE_IDENTIFICATION_FAILED;
+  }
+
+  if (
     lower.includes("too large") ||
     lower.includes("entity too large") ||
     lower.includes("unexpected token") ||
@@ -73,7 +81,7 @@ export function friendlyAiError(error: string | undefined, feature = "AI"): stri
     return "Photos are too large. Try again with smaller images.";
   }
 
-  if (lower.includes("identification failed") || lower.includes("photo analysis failed")) {
+  if (lower.includes("photo analysis failed")) {
     return "We couldn't analyze those photos. Please try again.";
   }
 

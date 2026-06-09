@@ -49,7 +49,8 @@ export function detectProviderDisagreement(
 
 export function buildTopMatches(
   result: PlantIdentificationResponse,
-  plantnet: PlantNetSuggestion[]
+  plantnet: PlantNetSuggestion[],
+  providersDisagree = false
 ): IdentificationMatch[] {
   const seen = new Set<string>();
   const matches: IdentificationMatch[] = [];
@@ -75,8 +76,11 @@ export function buildTopMatches(
     push(s.commonNames[0] ?? s.scientificName, s.scientificName, s.probability);
   }
 
-  for (const s of plantnet) {
-    push(s.commonNames[0] ?? s.species, s.species, s.score);
+  // Do not merge Pl@ntNet into alternates when sources clearly disagree.
+  if (!providersDisagree) {
+    for (const s of plantnet) {
+      push(s.commonNames[0] ?? s.species, s.species, s.score);
+    }
   }
 
   return matches.slice(0, 3);
@@ -88,7 +92,7 @@ export function finalizeIdentification(
   plantnetEnabled: boolean
 ): PlantIdentificationResponse {
   const providers_disagree = detectProviderDisagreement(result, plantnet);
-  const top_matches = buildTopMatches(result, plantnet);
+  const top_matches = buildTopMatches(result, plantnet, providers_disagree);
   const low_confidence =
     result.low_confidence ||
     result.confidence_score < 70 ||

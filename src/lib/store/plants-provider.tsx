@@ -22,6 +22,7 @@ import { canAddPlantCount } from "@/lib/billing/account-tiers";
 import { isBetaUnlocked } from "@/lib/billing/beta-unlock";
 import { loadMockSubscription } from "@/lib/billing/subscription-state";
 import { isDemoMode } from "@/lib/profile/user-profile";
+import { emitAwardXp } from "@/lib/academy/xp-events";
 import { useAuth } from "@/lib/store/auth-provider";
 import type { DbPlant } from "@/lib/types";
 
@@ -175,6 +176,7 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
           createdAt: new Date().toISOString(),
         };
         persistMock([plant, ...plants]);
+        emitAwardXp("plant_added");
         return plant;
       }
 
@@ -235,6 +237,7 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
       }
 
       setPlants((prev) => [fullPlant, ...prev]);
+      emitAwardXp("plant_added");
       return fullPlant;
     },
     [isMockMode, plants, persistMock, user]

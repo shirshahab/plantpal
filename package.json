@@ -9,7 +9,8 @@
     "start": "next start",
     "db:migrate": "supabase db query --linked -f supabase/migrations/002_phase2_schema.sql",
     "db:apply": "tsx scripts/apply-supabase-migrations.ts",
-    "db:seed": "tsx scripts/generate-knowledge-seed.ts"
+    "db:seed": "tsx scripts/generate-knowledge-seed.ts",
+    "icons:generate": "node scripts/generate-app-icons.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
@@ -30,6 +31,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "pg": "^8.21.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -34,10 +34,12 @@ export async function chatJSON<T>(
 export async function visionJSON<T>(
   systemPrompt: string,
   userText: string,
-  imageDataUrl: string | string[]
+  imageDataUrl: string | string[],
+  options?: { detail?: "low" | "high" | "auto" }
 ): Promise<T> {
   const urls = Array.isArray(imageDataUrl) ? imageDataUrl : [imageDataUrl];
   const client = getOpenAIClient();
+  const detail = options?.detail ?? "low";
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
@@ -48,7 +50,7 @@ export async function visionJSON<T>(
           { type: "text", text: userText },
           ...urls.map((url) => ({
             type: "image_url" as const,
-            image_url: { url, detail: "low" as const },
+            image_url: { url, detail },
           })),
         ],
       },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import Image from "next/image";
 import { Camera, ImageIcon, X, Leaf, Flower2, TreeDeciduous } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,11 @@ import {
   totalDataUrlBytes,
   validatePhotoPayload,
 } from "@/lib/scanner/upload-limits";
+import {
+  PhotoCaptureInputs,
+  usePhotoCapture,
+  CameraFallbackHint,
+} from "@/components/scanner/photo-capture-actions";
 
 export type PhotoRole = "whole" | "leaf" | "flower";
 
@@ -63,7 +68,6 @@ export function MultiPhotoCapture({
   activePreview,
   onLimitError,
 }: MultiPhotoCaptureProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
   const pendingRole = useRef<PhotoRole>("whole");
 
   const preview =
@@ -72,24 +76,33 @@ export function MultiPhotoCapture({
     photos[0]?.dataUrl ??
     null;
 
-  function openPicker(role: PhotoRole) {
+  const ingestFile = useCallback(
+    async (file: File) => {
+      const dataUrl = await compressImageFile(file);
+      const role = pendingRole.current;
+      const next = photos.filter((p) => p.role !== role);
+      next.push({ role, dataUrl });
+      const sorted = next.sort((a, b) => slotIndex(a.role) - slotIndex(b.role));
+      const limitError = validatePhotoPayload(sorted.map((p) => p.dataUrl));
+      if (limitError) {
+        onLimitError?.(limitError);
+        return;
+      }
+      onChange(sorted);
+    },
+    [onChange, onLimitError, photos]
+  );
+
+  const capture = usePhotoCapture(ingestFile);
+
+  function setRoleAndOpenCamera(role: PhotoRole) {
     pendingRole.current = role;
-    inputRef.current?.click();
+    capture.openCamera();
   }
 
-  async function handleFile(file: File | undefined) {
-    if (!file) return;
-    const dataUrl = await compressImageFile(file);
-    const role = pendingRole.current;
-    const next = photos.filter((p) => p.role !== role);
-    next.push({ role, dataUrl });
-    const sorted = next.sort((a, b) => slotIndex(a.role) - slotIndex(b.role));
-    const limitError = validatePhotoPayload(sorted.map((p) => p.dataUrl));
-    if (limitError) {
-      onLimitError?.(limitError);
-      return;
-    }
-    onChange(sorted);
+  function setRoleAndOpenGallery(role: PhotoRole) {
+    pendingRole.current = role;
+    capture.openGallery();
   }
 
   function removePhoto(role: PhotoRole) {
@@ -99,6 +112,10 @@ export function MultiPhotoCapture({
   function clearAll() {
     onChange([]);
   }
+
+  const defaultRole = photos.length
+    ? photos[photos.length - 1].role
+    : "whole";
 
   return (
     <>
@@ -144,7 +161,7 @@ export function MultiPhotoCapture({
             <button
               key={slot.role}
               type="button"
-              onClick={() => openPicker(slot.role)}
+              onClick={() => setRoleAndOpenCamera(slot.role)}
               className={cn(
                 "relative rounded-xl border-2 overflow-hidden touch-manipulation transition-colors",
                 captured ? "border-green-300 bg-green-50/50" : "border-dashed border-gray-200 bg-gray-50"
@@ -202,11 +219,14 @@ export function MultiPhotoCapture({
         })}
       </div>
 
+      <PhotoCaptureInputs capture={capture} />
+
       <div className="grid grid-cols-2 gap-3">
         <Button
           size="lg"
           className="h-14 touch-manipulation"
-          onClick={() => openPicker(photos.length ? photos[0].role : "whole")}
+          disabled={loading}
+          onClick={() => setRoleAndOpenCamera(defaultRole)}
         >
           <Camera className="w-5 h-5" />
           Take Photo
@@ -215,20 +235,15 @@ export function MultiPhotoCapture({
           variant="secondary"
           size="lg"
           className="h-14 touch-manipulation"
-          onClick={() => openPicker(photos.length ? photos[photos.length - 1].role : "whole")}
+          disabled={loading}
+          onClick={() => setRoleAndOpenGallery(defaultRole)}
         >
           <ImageIcon className="w-5 h-5" />
           Upload
         </Button>
       </div>
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => handleFile(e.target.files?.[0])}
-      />
+      <CameraFallbackHint />
 
       {photos.length > 0 && (
         <p className="text-xs text-center text-gray-500">
