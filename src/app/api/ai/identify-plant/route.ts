@@ -30,6 +30,13 @@ import {
   getClientKey,
   RATE_LIMITS,
 } from "@/lib/api/rate-limit";
+import { resolveSubscriptionFromRequest } from "@/lib/billing/server-subscription";
+import { FREE_SCAN_LIMIT_MONTHLY } from "@/lib/billing/limits";
+import {
+  serverCanScan,
+  serverIncrementScanUsage,
+} from "@/lib/billing/usage-tracking";
+import { SUBSCRIPTION_USAGE_COOKIE } from "@/lib/billing/subscription-cookie";
 import { recordDataSource } from "@/lib/data-sources/runtime";
 import { formatBytes, totalDataUrlBytes, validatePhotoPayload } from "@/lib/scanner/upload-limits";
 import {
@@ -79,9 +86,20 @@ function plantNetOrganFromRoles(roles?: IdentifyPhotoRole[]): "leaf" | "flower" 
 export async function POST(request: Request) {
   const userId = await getAuthUserId();
   const clientKey = getClientKey(request, userId);
+  const sub = resolveSubscriptionFromRequest(request);
+
+  const monthlyCheck = serverCanScan(sub.tier, sub.scanUsage, sub.unrestricted);
+  if (!monthlyCheck.allowed) {
+    return aiError(
+      `Monthly scan limit reached (${FREE_SCAN_LIMIT_MONTHLY}/month on Free). Upgrade to PlantPal Pro for unlimited scans.`,
+      429
+    );
+  }
+
+  const dailyMax = sub.isPro ? RATE_LIMITS.aiScanDaily : FREE_SCAN_LIMIT_MONTHLY;
   const daily = checkRateLimit(
     dailyLimitKey("ai-scan", clientKey),
-    RATE_LIMITS.aiScanDaily,
+    dailyMax,
     24 * 60 * 60 * 1000,
     { request }
   );
@@ -276,7 +294,16 @@ export async function POST(request: Request) {
       }
     }
 
-    return aiSuccess(enriched, saved, savedPhotoUrl);
+    const response = aiSuccess(enriched, saved, savedPhotoUrl);
+    if (!sub.unrestricted && !sub.isPro) {
+      const nextUsage = serverIncrementScanUsage(sub.scanUsage);
+      response.cookies.set(
+        SUBSCRIPTION_USAGE_COOKIE,
+        encodeURIComponent(JSON.stringify(nextUsage)),
+        { path: "/", maxAge: 60 * 60 * 24 * 400, sameSite: "lax" }
+      );
+    }
+    return response;
   } catch (e) {
     if (e instanceof IdentificationFailedError) {
       logIdentifyDebug(ROUTE, e.debug);

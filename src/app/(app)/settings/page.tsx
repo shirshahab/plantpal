@@ -5,6 +5,7 @@ import Link from "next/link";
 import { User, RotateCcw, Globe } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { BetaBadge } from "@/components/brand/beta-badge";
+import { InviteFriendsPanel } from "@/components/referrals/invite-friends-panel";
 import { FeedbackPanel } from "@/components/feedback/feedback-panel";
 import { AccountTierCard } from "@/components/subscription/account-tier-card";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -109,6 +110,8 @@ export default function SettingsPage() {
           </div>
         }
       />
+
+      <InviteFriendsPanel compact />
 
       <FeedbackPanel />
 

@@ -13,6 +13,7 @@ import { xpForEvent, xpProgressInLevel } from "@/lib/academy/xp";
 import { getRankForXp, getRankInfo } from "@/lib/academy/ranks";
 import { ACADEMY_BADGES } from "@/lib/academy/badges";
 import { ACADEMY_CERTIFICATES } from "@/lib/academy/certificates";
+import { trackEvent } from "@/lib/analytics/track";
 import {
   ACADEMY_PATHS,
   getPathProgress,
@@ -23,6 +24,8 @@ import {
 import { usePlants } from "./plants-provider";
 import { useEngagement } from "./engagement-provider";
 import { subscribeAwardXp } from "@/lib/academy/xp-events";
+import { getAcademyLessonById } from "@/lib/academy/lessons";
+import { publishActivityEvent } from "@/lib/social/events";
 import { useToast } from "./toast-provider";
 
 const STORAGE_KEY = "plantpal-academy";
@@ -349,7 +352,35 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
 
-      if (completion) setLastCompletion(completion);
+      if (completion) {
+        const result: LessonCompleteResult = completion;
+        setLastCompletion(result);
+        trackEvent("lesson_completed", { lessonId });
+        const lesson = getAcademyLessonById(lessonId);
+        void publishActivityEvent({
+          userId: "local-user",
+          eventType: "lesson_completed",
+          title: `completed ${lesson?.title ?? "an Academy lesson"}`,
+          visibility: "friends",
+        });
+        for (const badgeId of result.newBadges) {
+          const badge = ACADEMY_BADGES.find((b) => b.id === badgeId);
+          void publishActivityEvent({
+            userId: "local-user",
+            eventType: "badge_earned",
+            title: `earned ${badge?.title ?? "a badge"}`,
+            visibility: "friends",
+          });
+        }
+        if (result.streakMilestone) {
+          void publishActivityEvent({
+            userId: "local-user",
+            eventType: "streak_milestone",
+            title: `completed a ${result.streak}-day streak`,
+            visibility: "friends",
+          });
+        }
+      }
       return completion;
     },
     [computeStreakUpdate, computeBadges]

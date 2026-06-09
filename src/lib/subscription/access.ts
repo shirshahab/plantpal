@@ -20,8 +20,9 @@ export {
 } from "@/lib/billing/account-tiers";
 export {
   FREE_PLANT_LIMIT,
-  TIER_RANK,
-} from "@/lib/billing/tier-config";
+  FREE_SCAN_LIMIT_MONTHLY,
+} from "@/lib/billing/limits";
+export { TIER_RANK } from "@/lib/billing/tier-config";
 export { isBetaUnlockAll, isBetaUnlocked, isFounderMode, isFounderModeEnabled } from "@/lib/billing/beta-unlock";
 export { getFeatureLockLabel, normalizeFeature } from "@/lib/billing/feature-gates";
 

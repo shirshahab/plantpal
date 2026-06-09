@@ -1,6 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "./config";
+import {
+  applySubscriptionMiddleware,
+  ensureSubscriptionCookie,
+} from "@/lib/billing/subscription-middleware";
 
 const PROTECTED_PREFIXES = [
   "/dashboard",
@@ -25,6 +29,7 @@ const PROTECTED_PREFIXES = [
   "/collection",
   "/community",
   "/upgrade",
+  "/billing",
   "/ar",
   "/price-checker",
   "/garden-map",
@@ -37,7 +42,10 @@ const PROTECTED_PREFIXES = [
 
 export async function updateSession(request: NextRequest) {
   if (!isSupabaseConfigured()) {
-    return NextResponse.next({ request });
+    let response = NextResponse.next({ request });
+    response = applySubscriptionMiddleware(request, response);
+    response = ensureSubscriptionCookie(request, response);
+    return response;
   }
 
   let supabaseResponse = NextResponse.next({ request });
@@ -83,6 +91,9 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
+
+  supabaseResponse = applySubscriptionMiddleware(request, supabaseResponse);
+  supabaseResponse = ensureSubscriptionCookie(request, supabaseResponse);
 
   return supabaseResponse;
 }

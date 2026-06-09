@@ -1,4 +1,6 @@
 import type { LandscapeProject } from "./types";
+import { normalizeGardenStyle } from "./garden-styles";
+import { normalizeDesign } from "./normalize-design";
 
 export const LANDSCAPE_PROJECTS_KEY = "plantpal-landscape-projects";
 
@@ -12,10 +14,10 @@ function normalizeProject(raw: Partial<LandscapeProject> & { inspiration?: strin
     sunExposure: raw.sunExposure ?? "mixed",
     yardSize: raw.yardSize ?? "unknown",
     budgetRange: raw.budgetRange ?? "flexible",
-    styleGoal: raw.styleGoal ?? "low_maintenance",
+    styleGoal: normalizeGardenStyle(raw.styleGoal ?? "modern"),
     notes: raw.notes ?? raw.inspiration ?? "",
     photos: raw.photos?.length ? raw.photos : photo ? [{ dataUrl: photo, label: "Primary" }] : [],
-    design: raw.design!,
+    design: normalizeDesign(raw.design ?? {}),
     visualConceptRequested: raw.visualConceptRequested ?? false,
     createdAt: raw.createdAt ?? new Date().toISOString(),
     updatedAt: raw.updatedAt ?? new Date().toISOString(),

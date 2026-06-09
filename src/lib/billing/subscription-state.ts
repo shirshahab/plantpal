@@ -1,5 +1,6 @@
 import type { UserSubscription } from "@/lib/types/billing";
 import { AccountTier, type AccountTier as Tier } from "./tier-config";
+import { setSubscriptionTierCookie } from "./subscription-cookie";
 
 export const SUBSCRIPTION_STORAGE_KEY = "plantpal-subscription";
 export const LEGACY_TIER_STORAGE_KEY = "plantpal-subscription-tier";
@@ -13,6 +14,34 @@ const DEFAULT_SUBSCRIPTION: UserSubscription = {
   planEndDate: null,
 };
 
+function normalizeSubscription(parsed: Partial<UserSubscription>): UserSubscription {
+  const sub: UserSubscription = {
+    ...DEFAULT_SUBSCRIPTION,
+    ...parsed,
+    subscriptionStatus:
+      parsed.subscriptionStatus === "trialing"
+        ? "trialing"
+        : parsed.subscriptionStatus === "active"
+          ? "active"
+          : "mock",
+  };
+
+  if (
+    sub.trialStatus === "active" &&
+    sub.planEndDate &&
+    new Date(sub.planEndDate).getTime() < Date.now()
+  ) {
+    return {
+      ...sub,
+      tier: AccountTier.FREE,
+      trialStatus: "expired",
+      subscriptionStatus: "expired",
+    };
+  }
+
+  return sub;
+}
+
 export function loadMockSubscription(): UserSubscription {
   if (typeof window === "undefined") return DEFAULT_SUBSCRIPTION;
 
@@ -21,7 +50,7 @@ export function loadMockSubscription(): UserSubscription {
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<UserSubscription>;
       if (parsed.tier === "free" || parsed.tier === "plus" || parsed.tier === "family") {
-        return { ...DEFAULT_SUBSCRIPTION, ...parsed, subscriptionStatus: "mock" };
+        return normalizeSubscription(parsed);
       }
     }
 
@@ -40,6 +69,8 @@ export function saveMockSubscription(subscription: UserSubscription): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(SUBSCRIPTION_STORAGE_KEY, JSON.stringify(subscription));
   localStorage.setItem(LEGACY_TIER_STORAGE_KEY, subscription.tier);
+  setSubscriptionTierCookie(subscription.tier);
+  window.dispatchEvent(new Event("plantpal-subscription-updated"));
 }
 
 export function setMockTier(tier: Tier, billingCycle: UserSubscription["billingCycle"] = "monthly"): UserSubscription {

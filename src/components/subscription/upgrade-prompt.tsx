@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 interface UpgradePromptProps {
   title: string;
   message: string;
-  lockLabel?: "Plus Feature" | "Family Feature";
+  lockLabel?: "Pro Feature" | "Family Feature";
   className?: string;
   compact?: boolean;
   hidden?: boolean;

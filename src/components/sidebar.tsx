@@ -62,6 +62,7 @@ export function Sidebar() {
         pathname.startsWith("/gallery") ||
         pathname.startsWith("/harvest") ||
         pathname.startsWith("/shop-assistant") ||
+        pathname.startsWith("/landscape") ||
         pathname.startsWith("/landscape-designer") ||
         pathname.startsWith("/property") ||
         pathname.startsWith("/collection") ||

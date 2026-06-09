@@ -24,7 +24,7 @@ export default function PricingPageClient() {
         </p>
         {billingCycle === "annual" && (
           <p className="text-sm font-medium text-green-700 mt-4">
-            Save up to {OFFICIAL_PRICING.plus.annualSavingsPercent}% with annual billing on Plus
+            Save up to {OFFICIAL_PRICING.pro.annualSavingsPercent}% with annual billing on Pro
           </p>
         )}
       </div>

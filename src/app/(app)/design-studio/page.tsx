@@ -1,5 +1,5 @@
-import { DesignStudioHub } from "@/components/design-studio/design-studio-hub";
+import { redirect } from "next/navigation";
 
 export default function DesignStudioPage() {
-  return <DesignStudioHub />;
+  redirect("/landscape");
 }

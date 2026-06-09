@@ -6,7 +6,9 @@ import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/loading-state";
+import { EmptyState } from "@/components/empty-state";
 import { useTasks } from "@/lib/store/tasks-provider";
+import { usePlants } from "@/lib/store/plants-provider";
 import type { PlantTask, TaskType } from "@/lib/types/tasks";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +49,7 @@ function tasksForDay(allTasks: PlantTask[], day: Date): PlantTask[] {
 
 export default function CalendarPage() {
   const { groups, ready } = useTasks();
+  const { plants, loading: plantsLoading } = usePlants();
   const [cursor, setCursor] = useState(() => new Date());
   const [selected, setSelected] = useState<Date>(() => {
     const t = new Date();
@@ -79,8 +82,26 @@ export default function CalendarPage() {
     year: "numeric",
   });
 
-  if (!ready) {
+  if (!ready || plantsLoading) {
     return <LoadingState fullPage message="Loading calendar…" />;
+  }
+
+  if (plants.length === 0) {
+    return (
+      <div className="space-y-5 max-w-lg mx-auto">
+        <PageHeader
+          title="Care Calendar"
+          description="Watering, feeding, missions, and seasonal tasks"
+        />
+        <EmptyState
+          icon="📅"
+          title="Your calendar is empty"
+          description="Add a plant to generate watering, feeding, and seasonal care tasks."
+          actionLabel="Add Plant"
+          actionHref="/plants/new"
+        />
+      </div>
+    );
   }
 
   return (

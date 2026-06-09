@@ -31,6 +31,7 @@ import { isBetaUnlocked } from "@/lib/billing/beta-unlock";
 import { loadMockSubscription } from "@/lib/billing/subscription-state";
 import { isDemoMode } from "@/lib/profile/user-profile";
 import { emitAwardXp } from "@/lib/academy/xp-events";
+import { publishActivityEvent } from "@/lib/social/events";
 import { useAuth } from "@/lib/store/auth-provider";
 import type { DbPlant } from "@/lib/types";
 
@@ -211,6 +212,14 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
         };
         persistMock([plant, ...plants]);
         emitAwardXp("plant_added");
+        void publishActivityEvent({
+          userId: user?.id ?? "local-user",
+          eventType: "plant_added",
+          title: `added ${plant.name}`,
+          visibility: "friends",
+          payload: { plantId: plant.id },
+          actorName: user?.user_metadata?.full_name as string | undefined,
+        });
         return plant;
       }
 
@@ -277,6 +286,14 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
 
       setPlants((prev) => [fullPlant, ...prev]);
       emitAwardXp("plant_added");
+      void publishActivityEvent({
+        userId: user.id,
+        eventType: "plant_added",
+        title: `added ${fullPlant.name}`,
+        visibility: "friends",
+        payload: { plantId: fullPlant.id },
+        actorName: user.user_metadata?.full_name as string | undefined,
+      });
       return fullPlant;
     },
     [isMockMode, plants, persistMock, user]

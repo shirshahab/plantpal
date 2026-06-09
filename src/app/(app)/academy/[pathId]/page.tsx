@@ -9,6 +9,9 @@ import { Card } from "@/components/ui/card";
 import { getPathById } from "@/lib/academy/paths";
 import { getAcademyLessonById } from "@/lib/academy/lessons";
 import { useAcademy } from "@/lib/store/academy-provider";
+import { useSubscription } from "@/lib/store/subscription-provider";
+import { UpgradePrompt } from "@/components/subscription/upgrade-prompt";
+import { UPGRADE_COPY } from "@/lib/subscription/types";
 import { cn } from "@/lib/utils";
 
 export default function AcademyPathPage({
@@ -19,6 +22,7 @@ export default function AcademyPathPage({
   const { pathId } = use(params);
   const path = getPathById(pathId);
   const { isLessonComplete, progress } = useAcademy();
+  const { canAccessAcademyPath, betaUnlockAll } = useSubscription();
 
   if (!path) {
     return (
@@ -29,6 +33,22 @@ export default function AcademyPathPage({
         actionLabel="Back to Academy"
         actionHref="/academy"
       />
+    );
+  }
+
+  if (!canAccessAcademyPath(pathId) && !betaUnlockAll) {
+    const copy = UPGRADE_COPY.full_academy;
+    return (
+      <div className="max-w-lg mx-auto space-y-4">
+        <Link
+          href="/academy"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Academy
+        </Link>
+        <UpgradePrompt title={copy.title} message={copy.message} lockLabel={copy.lockLabel} />
+      </div>
     );
   }
 

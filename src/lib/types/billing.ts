@@ -11,6 +11,8 @@ export type SubscriptionStatus =
 
 export type TrialStatus = "none" | "active" | "expired";
 
+export type TrialSource = "referral_invitee" | "referral_referrer" | "promo";
+
 export interface UserSubscription {
   tier: AccountTier;
   billingCycle: BillingCycle;
@@ -18,6 +20,7 @@ export interface UserSubscription {
   subscriptionStatus: SubscriptionStatus;
   planStartDate: string | null;
   planEndDate: string | null;
+  trialSource?: TrialSource;
 }
 
 export interface PlanPricing {

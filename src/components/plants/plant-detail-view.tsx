@@ -13,6 +13,7 @@ import {
   ListTodo,
   StickyNote,
   Trash2,
+  BookOpen,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import { GoalAwareCareSchedule } from "@/components/journey/goal-aware-care-sche
 import { LocalCareCard } from "@/components/climate/local-care-card";
 import { GrowthTimeline } from "@/components/growth/growth-timeline";
 import { PhotoHistory } from "@/components/photos/photo-history";
+import { PlantJournalTab } from "@/components/social/plant-journal-tab";
 import { FirstPlantSuccess } from "@/components/plants/first-plant-success";
 import { HealthScoreBadge, HealthScoreRing } from "@/components/score/health-score-badge";
 import { usePlants } from "@/lib/store/plants-provider";
@@ -40,7 +42,7 @@ import { formatPlantSize } from "@/lib/plants/plant-size";
 import { calculatePlantHealthScore } from "@/lib/scoring";
 import { cn } from "@/lib/utils";
 
-type DetailTab = "care" | "timeline" | "tasks" | "notes";
+type DetailTab = "care" | "timeline" | "journal" | "tasks" | "notes";
 
 const healthVariant = {
   healthy: "success" as const,
@@ -93,6 +95,7 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
   const tabs: { id: DetailTab; label: string; icon: React.ElementType }[] = [
     { id: "care", label: "Care", icon: Sparkles },
     { id: "timeline", label: "Timeline", icon: Clock },
+    { id: "journal", label: "Journal", icon: BookOpen },
     { id: "tasks", label: "Tasks", icon: ListTodo },
     { id: "notes", label: "Notes", icon: StickyNote },
   ];
@@ -286,6 +289,8 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
           <PhotoHistory plantId={plant.id} />
         </div>
       )}
+
+      {tab === "journal" && <PlantJournalTab plantId={plant.id} plantName={plant.name} />}
 
       {tab === "tasks" && (
         <Card>

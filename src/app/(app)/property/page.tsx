@@ -2,6 +2,7 @@
 
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
 import { GardenScoreCard } from "@/components/score/garden-score-card";
 import { MOCK_PROPERTY, SEASONAL_TASKS } from "@/lib/mock/property";
 import { usePlants } from "@/lib/store/plants-provider";
@@ -18,6 +19,16 @@ export default function PropertyPage() {
         description={`Property mode · ZIP ${property.zipCode}`}
       />
 
+      {plants.length === 0 ? (
+        <EmptyState
+          icon="🏡"
+          title="No property plants yet"
+          description="Add plants to see zone health scores and seasonal landscape tasks."
+          actionLabel="Add Plant"
+          actionHref="/plants/new"
+        />
+      ) : (
+        <>
       <GardenScoreCard plants={plants} />
 
       <div className="space-y-3">
@@ -70,6 +81,8 @@ export default function PropertyPage() {
           ))}
         </ul>
       </Card>
+        </>
+      )}
     </div>
   );
 }

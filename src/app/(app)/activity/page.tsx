@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { PageHeader } from "@/components/page-header";
 import { DashboardActivityTimeline } from "@/components/dashboard/activity-timeline-section";
+import { EmptyState } from "@/components/empty-state";
 import { usePlants } from "@/lib/store/plants-provider";
 import { useTasks } from "@/lib/store/tasks-provider";
 import { useAcademy } from "@/lib/store/academy-provider";
@@ -44,7 +45,20 @@ export default function ActivityPage() {
         title="Garden activity"
         description="Recent scans, care logs, and milestones"
       />
-      <DashboardActivityTimeline items={activityItems} />
+      {activityItems.length === 0 ? (
+        <EmptyState
+          icon="📋"
+          compact
+          title="No activity yet"
+          description="Scans, care logs, and badges will show up here as you use PlantPal."
+          actionLabel="Add Plant"
+          actionHref="/plants/new"
+          secondaryLabel="Scan a plant"
+          secondaryHref="/scanner"
+        />
+      ) : (
+        <DashboardActivityTimeline items={activityItems} />
+      )}
     </div>
   );
 }

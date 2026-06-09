@@ -19,17 +19,26 @@ export type BudgetRange =
   | "8000_plus"
   | "flexible";
 
+/** Phase 38 MVP budget tiers ($ – $$$$) */
+export type BudgetTierMvp = "tier_1" | "tier_2" | "tier_3" | "tier_4";
+
+export type MaintenancePreference = "low" | "medium" | "high";
+
 export type StyleGoal =
-  | "fruit_garden"
-  | "low_maintenance"
-  | "native_garden"
-  | "tropical"
+  | "modern"
+  | "japanese"
+  | "cottage"
   | "mediterranean"
-  | "japanese_garden"
-  | "kids_family"
-  | "pollinator"
-  | "privacy"
-  | "outdoor_living";
+  | "tropical"
+  | "desert"
+  | "edible_garden"
+  | "family_friendly"
+  | "pollinator_garden";
+
+export type GardenStyle = StyleGoal;
+
+export type BudgetTier = "budget" | "balanced" | "premium";
+export type MaintenanceLevel = "low" | "moderate" | "high";
 
 export const SPACE_TYPE_LABELS: Record<SpaceType, string> = {
   front_yard: "Front yard",
@@ -71,41 +80,88 @@ export const BUDGET_RANGE_LABELS: Record<BudgetRange, string> = {
   flexible: "Flexible — show all options",
 };
 
+export const BUDGET_MVP_LABELS: Record<BudgetTierMvp, string> = {
+  tier_1: "$ — Under $1,000",
+  tier_2: "$$ — $1,000 – $5,000",
+  tier_3: "$$$ — $5,000 – $15,000",
+  tier_4: "$$$$ — $15,000+",
+};
+
+export const BUDGET_MVP_SYMBOLS: Record<BudgetTierMvp, string> = {
+  tier_1: "$",
+  tier_2: "$$",
+  tier_3: "$$$",
+  tier_4: "$$$$",
+};
+
+export const MAINTENANCE_PREF_LABELS: Record<MaintenancePreference, string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+};
+
 export const STYLE_GOAL_LABELS: Record<StyleGoal, string> = {
-  fruit_garden: "Fruit garden",
-  low_maintenance: "Low maintenance",
-  native_garden: "Native garden",
-  tropical: "Tropical",
+  modern: "Modern",
+  japanese: "Japanese",
+  cottage: "Cottage",
   mediterranean: "Mediterranean",
-  japanese_garden: "Japanese garden",
-  kids_family: "Kids / family yard",
-  pollinator: "Pollinator garden",
-  privacy: "Privacy",
-  outdoor_living: "Outdoor living",
+  tropical: "Tropical",
+  desert: "Desert",
+  edible_garden: "Edible Garden",
+  family_friendly: "Family Friendly",
+  pollinator_garden: "Pollinator Garden",
 };
 
 export const STYLE_GOAL_ICONS: Record<StyleGoal, string> = {
-  fruit_garden: "🍊",
-  low_maintenance: "🌵",
-  native_garden: "🦋",
-  tropical: "🌴",
+  modern: "✨",
+  japanese: "⛩️",
+  cottage: "🏡",
   mediterranean: "🫒",
-  japanese_garden: "🎋",
-  kids_family: "⚽",
-  pollinator: "🐝",
-  privacy: "🧱",
-  outdoor_living: "🪑",
+  tropical: "🌴",
+  desert: "🌵",
+  edible_garden: "🥬",
+  family_friendly: "👨‍👩‍👧",
+  pollinator_garden: "🦋",
 };
+
+export function budgetMvpToRange(tier: BudgetTierMvp): BudgetRange {
+  const map: Record<BudgetTierMvp, BudgetRange> = {
+    tier_1: "under_500",
+    tier_2: "500_2500",
+    tier_3: "2500_8000",
+    tier_4: "8000_plus",
+  };
+  return map[tier];
+}
+
+export function maintenancePrefToLevel(pref: MaintenancePreference): MaintenanceLevel {
+  if (pref === "low") return "low";
+  if (pref === "high") return "high";
+  return "moderate";
+}
+
+export interface LandscapePropertyProfile {
+  zipCode: string;
+  hardinessZone: string;
+  sunExposure: SunExposure;
+  yardSize: YardSize;
+  budgetTier: BudgetTierMvp;
+  maintenancePreference: MaintenancePreference;
+}
 
 export interface LandscapeDesignRequest {
   imageDataUrl: string;
+  /** Additional yard photos (front/back/side) */
+  additionalPhotos?: LandscapeProjectPhoto[];
   spaceType: SpaceType;
   zipCode: string;
   sunExposure: SunExposure;
   yardSize: YardSize;
   budgetRange: BudgetRange;
   styleGoal: StyleGoal;
+  maintenancePreference?: MaintenancePreference;
   notes?: string;
+  generateConceptImage?: boolean;
 }
 
 export interface SpaceAnalysis {
@@ -138,9 +194,6 @@ export interface IrrigationRecommendation {
   notes: string;
 }
 
-export type BudgetTier = "budget" | "balanced" | "premium";
-export type MaintenanceLevel = "low" | "moderate" | "high";
-
 export interface BudgetOption {
   tier: BudgetTier;
   label: string;
@@ -148,6 +201,30 @@ export interface BudgetOption {
   summary: string;
   plant_list: string[];
   highlights: string[];
+}
+
+export interface LandscapePlantListItem {
+  name: string;
+  category: "tree" | "shrub" | "flower" | "ground_cover" | "edible" | "accent";
+  quantity: string;
+  est_price?: string;
+  suitability_score?: number;
+  suitability_label?: string;
+}
+
+export interface AfterConcept {
+  headline: string;
+  description: string;
+  key_changes: string[];
+  accent_color: string;
+}
+
+export interface PhasedPlanPhase {
+  phase: 1 | 2 | 3;
+  title: string;
+  timeframe: string;
+  tasks: string[];
+  estimated_cost: string;
 }
 
 export interface LandscapeDesignResponse {
@@ -158,15 +235,24 @@ export interface LandscapeDesignResponse {
   soil_prep: string;
   maintenance_level: MaintenanceLevel;
   maintenance_notes: string;
+  /** 0–100 upkeep score for the design */
+  maintenance_score: number;
   estimated_budget: string;
   first_steps: string[];
   budget_options: BudgetOption[];
   design_summary: string;
+  layout_suggestions: string[];
+  phased_plan: PhasedPlanPhase[];
+  after_concept: AfterConcept;
+  /** AI-generated concept render URL */
+  after_image_url: string | null;
+  plant_list: LandscapePlantListItem[];
   source: AIResponseSource;
 }
 
 export interface LandscapeProjectPhoto {
   dataUrl: string;
+  storageUrl?: string;
   label?: string;
 }
 
@@ -178,6 +264,8 @@ export interface LandscapeProject {
   sunExposure: SunExposure;
   yardSize: YardSize;
   budgetRange: BudgetRange;
+  budgetTier?: BudgetTierMvp;
+  maintenancePreference?: MaintenancePreference;
   styleGoal: StyleGoal;
   notes: string;
   photos: LandscapeProjectPhoto[];
@@ -185,7 +273,6 @@ export interface LandscapeProject {
   visualConceptRequested: boolean;
   createdAt: string;
   updatedAt: string;
-  /** Primary photo for list thumbnails */
   photoDataUrl: string;
 }
 
@@ -200,3 +287,10 @@ export const MAINTENANCE_LABELS: Record<MaintenanceLevel, string> = {
   moderate: "Moderate upkeep",
   high: "High touch / seasonal",
 };
+
+/** MVP yard photo slots */
+export const YARD_PHOTO_SLOTS: { id: SpaceType; label: string }[] = [
+  { id: "front_yard", label: "Front yard" },
+  { id: "back_yard", label: "Backyard" },
+  { id: "side_yard", label: "Side yard" },
+];

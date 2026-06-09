@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BetaAccessBanner } from "@/components/billing/beta-access-banner";
 import { FeatureLockLabel } from "@/components/billing/feature-lock-label";
+import { UsageMeters } from "@/components/billing/billing-dashboard";
 import { useSubscription } from "@/lib/store/subscription-provider";
 import { buildSubscriptionPlans } from "@/lib/subscription/plans";
 import { TIER_LABELS } from "@/lib/subscription/types";
@@ -35,6 +36,7 @@ export function SubscriptionSettingsPanel() {
     subscription,
     betaUnlockAll,
     founderMode,
+    usage,
   } = useSubscription();
 
   const plan = buildSubscriptionPlans(subscription.billingCycle).find((p) => p.id === tier);
@@ -96,6 +98,13 @@ export function SubscriptionSettingsPanel() {
             </div>
           </div>
 
+          {!betaUnlockAll && (
+            <div>
+              <p className="text-sm font-semibold text-gray-900 mb-3">Monthly usage</p>
+              <UsageMeters usage={usage} />
+            </div>
+          )}
+
           <div>
             <p className="text-sm font-semibold text-gray-900 mb-3">Feature access</p>
             <ul className="space-y-2">
@@ -125,12 +134,19 @@ export function SubscriptionSettingsPanel() {
           </div>
 
           {!betaUnlockAll && tier === "free" && (
-            <Link href="/upgrade">
-              <Button className="w-full sm:w-auto touch-manipulation">
-                <Sparkles className="w-4 h-4" />
-                Upgrade to Plus
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Link href="/upgrade">
+                <Button className="w-full sm:w-auto touch-manipulation">
+                  <Sparkles className="w-4 h-4" />
+                  Upgrade to Pro
+                </Button>
+              </Link>
+              <Link href="/billing">
+                <Button variant="outline" className="w-full sm:w-auto">
+                  Billing & usage
+                </Button>
+              </Link>
+            </div>
           )}
 
           {!betaUnlockAll && tier !== "free" && (

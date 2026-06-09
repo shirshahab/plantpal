@@ -32,3 +32,12 @@ export function isDemoMode(): boolean {
 export function isOnboardingComplete(): boolean {
   return loadUserProfile().onboardingComplete;
 }
+
+export function hasFirstPlant(): boolean {
+  const profile = loadUserProfile();
+  return profile.firstPlantAdded === true || profile.demoMode;
+}
+
+export function markFirstPlantAdded(): UserProfile {
+  return saveUserProfile({ firstPlantAdded: true });
+}

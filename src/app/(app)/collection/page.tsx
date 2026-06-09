@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { usePlants } from "@/lib/store/plants-provider";
 import { useEngagement } from "@/lib/store/engagement-provider";
 import type { RarityLevel } from "@/lib/types/phase6";
+import { EmptyState } from "@/components/empty-state";
 
 const RARITY_COLORS: Record<RarityLevel, string> = {
   Common: "default",
@@ -38,6 +39,16 @@ export default function CollectionPage() {
         description="Track rarity, value, and collector notes."
       />
 
+      {plants.length === 0 ? (
+        <EmptyState
+          icon="💎"
+          title="Start your collection"
+          description="Add plants to track rarity, estimated value, and collector notes."
+          actionLabel="Add Plant"
+          actionHref="/plants/new"
+        />
+      ) : (
+        <>
       <div className="grid grid-cols-3 gap-3">
         <Card padding="md" className="text-center">
           <p className="text-2xl font-bold text-gray-900">{plants.length}</p>
@@ -67,6 +78,8 @@ export default function CollectionPage() {
           </Card>
         ))}
       </div>
+        </>
+      )}
     </div>
   );
 }

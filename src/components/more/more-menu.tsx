@@ -18,10 +18,10 @@ import {
   Tag,
   GraduationCap,
   CalendarDays,
-  Trees,
   ClipboardList,
   Map,
   Palette,
+  Gift,
   Heart,
   CalendarRange,
   Target,
@@ -38,10 +38,10 @@ function buildSections(hideUpgrade: boolean) {
       title: "PlantPal OS",
       items: [
         { href: "/garden-map", label: "My Garden Map", icon: Map, desc: "Digital twin · zones & health" },
-        { href: "/design-studio", label: "Design Studio", icon: Palette, desc: "AI yard concepts & shopping lists" },
+        { href: "/friends", label: "PlantPal Circles", icon: Users, desc: "Friends, feed & family gardens" },
+        { href: "/family", label: "Family Garden", icon: Heart, desc: "Shared XP, leaderboard & challenges" },
         { href: "/seasonal", label: "Seasonal Engine", icon: CalendarRange, desc: "Location-aware care tasks" },
         { href: "/missions", label: "Missions", icon: Target, desc: "Daily goals · streaks · XP" },
-        { href: "/family", label: "PlantPal Family", icon: Heart, desc: "Family XP & leaderboard" },
         { href: "/marketplace", label: "Marketplace", icon: Store, desc: "Plants, soil, tools & more" },
       ],
     },
@@ -78,7 +78,7 @@ function buildSections(hideUpgrade: boolean) {
       title: "Plan & Discover",
       items: [
         { href: "/shop-assistant", label: "Shop Assistant", icon: ShoppingBag, desc: "Find plants to buy" },
-        { href: "/landscape-designer", label: "Landscape Designer", icon: Trees, desc: "AI yard plans & budgets" },
+        { href: "/landscape", label: "AI Landscape Designer", icon: Palette, desc: "Yard photo · 9 styles · phased plan" },
         { href: "/property", label: "Property Mode", icon: Home, desc: "Landscape management" },
         { href: "/community", label: "Community", icon: Users, desc: "Tips, stories & gardens" },
         { href: "/ar", label: "AR Garden", icon: Sparkles, desc: "Concept preview" },
@@ -91,7 +91,11 @@ function buildSections(hideUpgrade: boolean) {
         { href: "/tester-guide", label: "Tester Guide", icon: Target, desc: "5-step beta testing checklist" },
         ...(hideUpgrade
           ? []
-          : [{ href: "/upgrade", label: "Upgrade", icon: Sparkles, desc: "Plans & limits" }]),
+          : [
+              { href: "/billing", label: "Billing & usage", icon: Sparkles, desc: "Plan, limits & monthly usage" },
+              { href: "/upgrade", label: "Upgrade to Pro", icon: Sparkles, desc: "PlantPal Pro — $7.99/mo" },
+            ]),
+        { href: "/invite", label: "Invite Friends", icon: Gift, desc: "Share PlantPal — both get Plus trial" },
         { href: "/settings", label: "Settings", icon: Settings, desc: "Profile & preferences" },
         { href: "/setup", label: "Setup checker", icon: Database, desc: "Supabase & API health" },
         { href: "/demo-script", label: "Demo Script", icon: Sparkles, desc: "Live pitch guide" },

@@ -1,10 +1,14 @@
 import { normalizeFeature, FEATURE_REQUIRED_TIER, type BillingFeature } from "./feature-gates";
 import {
   AccountTier,
-  FREE_PLANT_LIMIT,
   TIER_RANK,
   type AccountTier as Tier,
 } from "./tier-config";
+import {
+  FREE_PLANT_LIMIT,
+  canAccessAcademyPath,
+  isProTier,
+} from "./limits";
 
 export interface AccessOptions {
   betaUnlockAll?: boolean;
@@ -20,8 +24,9 @@ export function isFree(tier: Tier): boolean {
   return tier === AccountTier.FREE;
 }
 
+/** @deprecated Use isProTier from limits */
 export function isPlus(tier: Tier): boolean {
-  return tier === AccountTier.PLUS;
+  return isProTier(tier);
 }
 
 export function isFamily(tier: Tier): boolean {
@@ -43,11 +48,28 @@ export function canAccessFeature(
   if (!normalized) return false;
 
   if (normalized === "unlimited_plants") {
-    return !isFree(tier);
+    return isProTier(tier);
+  }
+
+  if (normalized === "unlimited_scans") {
+    return isProTier(tier);
+  }
+
+  if (normalized === "academy_basics") {
+    return true;
   }
 
   const required = FEATURE_REQUIRED_TIER[normalized];
   return TIER_RANK[tier] >= TIER_RANK[required];
+}
+
+export function canAccessAcademyPathForTier(
+  tier: Tier,
+  pathId: string,
+  options: AccessOptions = {}
+): boolean {
+  if (isAccessUnrestricted(options)) return true;
+  return canAccessAcademyPath(tier, pathId);
 }
 
 export function getPlantLimit(tier: Tier, options: AccessOptions = {}): number | null {
@@ -74,3 +96,5 @@ export function plantsRemaining(
   if (limit === null) return null;
   return Math.max(0, limit - currentCount);
 }
+
+export { isProTier } from "./limits";

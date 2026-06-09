@@ -43,6 +43,11 @@ import { useEngagement } from "@/lib/store/engagement-provider";
 import { useToast } from "@/lib/store/toast-provider";
 import { friendlyAiError } from "@/lib/errors/user-messages";
 import { isDemoMode } from "@/lib/profile/user-profile";
+import { trackEvent } from "@/lib/analytics/track";
+import { recordScanUsage } from "@/lib/billing/usage-tracking";
+import { useSubscription } from "@/lib/store/subscription-provider";
+import { useUpgradeModal } from "@/components/billing/upgrade-modal-provider";
+import { UPGRADE_COPY } from "@/lib/subscription/types";
 import { isScannerDebugUI } from "@/lib/dev/dev-tools";
 import { ScannerDebugErrorPanel } from "@/components/scanner/scanner-debug-error";
 import type { IdentifyDebugLog } from "@/lib/ai/identify-errors";
@@ -87,6 +92,8 @@ export function CameraHub() {
   const { addPhoto } = usePhotos();
   const { addGrowthEntry, recordScan } = useEngagement();
   const { toast } = useToast();
+  const { canScan, scansRemaining, scanLimit, scansUsed, betaUnlockAll } = useSubscription();
+  const { showUpgradeModal } = useUpgradeModal();
 
   const selectedPlant = plants.find((p) => p.id === selectedPlantId);
   const identifyPreview =
@@ -138,6 +145,12 @@ export function CameraHub() {
 
   async function runIdentify() {
     if (identifyPhotos.length === 0) return;
+    if (!canScan() && !betaUnlockAll) {
+      const copy = UPGRADE_COPY.unlimited_scans;
+      showUpgradeModal({ headline: copy.title, copy: copy.message });
+      toast(`Monthly scan limit reached (${scanLimit}/month on Free).`);
+      return;
+    }
     setLoading(true);
     setIdentifyResult(null);
     setScanError(null);
@@ -159,6 +172,13 @@ export function CameraHub() {
       }
 
       setIdentifyResult(res.data);
+      if (!betaUnlockAll) {
+        recordScanUsage();
+      }
+      trackEvent("scan", {
+        source: res.data.source ?? "unknown",
+        confident: !(res.data.not_fully_confident ?? false),
+      });
 
       try {
         const { entry, warning } = await saveScanToHistory({
@@ -308,6 +328,24 @@ export function CameraHub() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto pb-6">
+      {isIdentify && !betaUnlockAll && scanLimit !== null && (
+        <Card padding="sm" className="bg-gray-50 border-gray-100">
+          <p className="text-xs text-gray-600">
+            {scansUsed} / {scanLimit} scans used this month
+            {scansRemaining !== null && scansRemaining > 0
+              ? ` · ${scansRemaining} remaining`
+              : " · limit reached"}
+            {!canScan() && (
+              <>
+                {" · "}
+                <Link href="/upgrade" className="text-green-700 font-medium hover:underline">
+                  Upgrade to Pro
+                </Link>
+              </>
+            )}
+          </p>
+        </Card>
+      )}
       {isIdentify ? (
         <>
           <LiveCameraScanner

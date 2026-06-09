@@ -1,9 +1,11 @@
 "use client";
 
-import { Copy, Trophy, Users } from "lucide-react";
+import { useState } from "react";
+import { Copy, Trophy, Users, Home } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MoatProgressBar, MoatProgressRing } from "@/components/moat/moat-progress";
 import { useMoat } from "@/lib/store/moat-provider";
 import { useToast } from "@/lib/store/toast-provider";
@@ -17,12 +19,41 @@ const ROLE_LABELS = {
 export function FamilyDashboard() {
   const { household } = useMoat();
   const { toast } = useToast();
+  const [inviteCode, setInviteCode] = useState("");
+  const [joining, setJoining] = useState(false);
   const sorted = [...household.members].sort((a, b) => b.totalXp - a.totalXp);
   const challenge = household.activeChallenge;
 
   function copyInvite() {
     void navigator.clipboard.writeText(household.inviteCode);
     toast("Invite code copied!");
+  }
+
+  async function createFamilyGarden() {
+    const res = await fetch("/api/social/groups", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "create", name: household.name, groupType: "family" }),
+    });
+    const json = (await res.json()) as { ok: boolean; inviteCode?: string };
+    if (json.ok && json.inviteCode) {
+      toast(`Family garden created! Code: ${json.inviteCode}`);
+    } else {
+      toast("Family garden ready (demo mode).");
+    }
+  }
+
+  async function joinFamilyGarden() {
+    if (!inviteCode.trim()) return;
+    setJoining(true);
+    const res = await fetch("/api/social/groups", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "join", inviteCode: inviteCode.trim() }),
+    });
+    const json = (await res.json()) as { ok: boolean };
+    setJoining(false);
+    toast(json.ok ? "Joined family garden!" : "Invalid invite code.");
   }
 
   return (
@@ -55,6 +86,33 @@ export function FamilyDashboard() {
         </p>
       </Card>
 
+      <Card padding="md" className="border-green-100">
+        <div className="flex items-start gap-3">
+          <Home className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold text-gray-900">Shared family garden</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Owner · Editor · Viewer roles. Shared plants, tasks, milestones & feed.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Button size="sm" onClick={() => void createFamilyGarden()}>
+                Create family garden
+              </Button>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Input
+                placeholder="Enter invite code"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+              />
+              <Button size="sm" loading={joining} onClick={() => void joinFamilyGarden()}>
+                Join
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
       {challenge && (
         <Card padding="md" className="border-amber-100 bg-amber-50/30">
           <div className="flex items-start gap-3">
@@ -81,7 +139,7 @@ export function FamilyDashboard() {
 
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 px-1">
-          Leaderboard
+          Family leaderboard · XP · Streaks · Plants · Lessons · Harvests
         </p>
         <div className="space-y-2">
           {sorted.map((member, i) => (

@@ -10,8 +10,7 @@ import {
 import type { SubscriptionPlan } from "./types";
 
 export function buildSubscriptionPlans(cycle: BillingCycle = "monthly"): SubscriptionPlan[] {
-  const plus = OFFICIAL_PRICING.plus;
-  const family = OFFICIAL_PRICING.family;
+  const pro = OFFICIAL_PRICING.pro;
 
   return [
     {
@@ -19,42 +18,26 @@ export function buildSubscriptionPlans(cycle: BillingCycle = "monthly"): Subscri
       name: "Free",
       price: "$0",
       period: "forever",
-      description: "Start tracking your first plants.",
+      description: "Start tracking plants with sensible limits.",
       featured: false,
       features: PLAN_INCLUDES[Tier.FREE],
       restrictions: [
-        "No AI Doctor",
-        "No AI Care Plans",
-        "No Climate Intelligence",
-        "No Price Checker",
-        "No Plant Genome",
-        "No Concierge",
-        "No Landscape Designer",
+        "20 scans per month",
+        "25 plants max",
+        "Academy basics only",
       ],
     },
     {
       id: Tier.PLUS,
-      name: "PlantPal Plus",
-      price: cycle === "monthly" ? formatPrice(plus.monthly) : formatPrice(plus.annual),
+      name: "PlantPal Pro",
+      price: cycle === "monthly" ? formatPrice(pro.monthly) : formatPrice(pro.annual),
       period: cycle === "monthly" ? "/month" : "/year",
-      annualPrice: formatMonthlyEquivalent(plus.annual),
+      annualPrice: formatMonthlyEquivalent(pro.annual),
       annualPeriod: "/mo billed annually",
-      description: "For serious plant parents and gardeners.",
+      description: "Unlimited scans, plants, and pro-grade AI tools.",
       featured: true,
       badge: PLAN_BADGES[Tier.PLUS],
       features: PLAN_INCLUDES[Tier.PLUS],
-    },
-    {
-      id: Tier.FAMILY,
-      name: "Family",
-      price: cycle === "monthly" ? formatPrice(family.monthly) : formatPrice(family.annual),
-      period: cycle === "monthly" ? "/month" : "/year",
-      annualPrice: formatMonthlyEquivalent(family.annual),
-      annualPeriod: "/mo billed annually",
-      description: "For households and full properties.",
-      featured: false,
-      badge: PLAN_BADGES[Tier.FAMILY],
-      features: PLAN_INCLUDES[Tier.FAMILY],
     },
   ];
 }

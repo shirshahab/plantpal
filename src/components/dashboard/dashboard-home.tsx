@@ -13,9 +13,12 @@ import { DashboardTopTasks } from "@/components/dashboard/top-tasks-section";
 import { DashboardSeasonalAlert } from "@/components/dashboard/seasonal-alert-section";
 import { DashboardContinueLearning } from "@/components/dashboard/continue-learning-section";
 import { DashboardQuickActions } from "@/components/dashboard/quick-actions-section";
+import { DashboardActivityFeed } from "@/components/social/dashboard-activity-feed";
+import { DashboardActiveChallenge } from "@/components/social/dashboard-active-challenge";
 import { DashboardEmptyState } from "@/components/dashboard/empty-state";
 import { FounderModeBadge } from "@/components/settings/founder-mode-badge";
 import { SendFeedbackButton } from "@/components/feedback/send-feedback-button";
+import { SocialNotificationsBell } from "@/components/social/notifications-bell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { usePlants } from "@/lib/store/plants-provider";
@@ -67,6 +70,7 @@ export function DashboardHome() {
         description={`${plants.length} plant${plants.length === 1 ? "" : "s"} in your garden`}
         action={
           <div className="flex items-center gap-2 flex-wrap justify-end">
+            <SocialNotificationsBell />
             <SendFeedbackButton />
             <FounderModeBadge />
             <SyncStatusBadge />
@@ -98,6 +102,8 @@ export function DashboardHome() {
           </Card>
         ) : null}
         <DashboardSeasonalAlert plants={plants} seasonalTasks={seasonalTasks} />
+        <DashboardActivityFeed />
+        <DashboardActiveChallenge />
         <DashboardContinueLearning />
         <DashboardQuickActions />
       </div>

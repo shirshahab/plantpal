@@ -24,7 +24,8 @@ import { useToast } from "@/lib/store/toast-provider";
 import { friendlySaveError } from "@/lib/errors/user-messages";
 import { DEFAULT_PLANT_IMAGE } from "@/lib/plants";
 import { getPlantSpeciesById } from "@/lib/knowledge";
-import { loadUserProfile } from "@/lib/profile/user-profile";
+import { loadUserProfile, markFirstPlantAdded } from "@/lib/profile/user-profile";
+import { trackEvent } from "@/lib/analytics/track";
 import type { LocationType, PlantingType, SunExposure } from "@/lib/types";
 import {
   LOCATION_TYPE_LABELS,
@@ -94,6 +95,7 @@ export function AddPlantWizard() {
   });
 
   const atPlantLimit = !canAddPlant() && !betaUnlockAll;
+  const isFirstPlantFlow = searchParams.get("first") === "1" || plants.length === 0;
 
   useEffect(() => {
     const profile = loadUserProfile();
@@ -334,6 +336,13 @@ export function AddPlantWizard() {
         photoFile
       );
       initPlantJourney(plant, effectiveGoals, effectivePrimary);
+      if (isFirstPlant) {
+        markFirstPlantAdded();
+      }
+      trackEvent("plant_added", {
+        isFirst: isFirstPlant,
+        species: form.species || "unknown",
+      });
       toast("Plant added to your garden.");
       router.push(
         isFirstPlant ? `/plants/${plant.id}?welcome=1` : `/plants/${plant.id}`
@@ -365,6 +374,14 @@ export function AddPlantWizard() {
 
   return (
     <div className="max-w-lg mx-auto pb-28 md:pb-8">
+      {isFirstPlantFlow && (
+        <Card padding="md" className="mb-4 bg-green-50 border-green-100">
+          <p className="text-sm font-medium text-green-900">Your first plant</p>
+          <p className="text-sm text-green-800 mt-1">
+            Add one plant to unlock daily tasks, care schedules, and your garden dashboard.
+          </p>
+        </Card>
+      )}
       {atPlantLimit && (
         <div className="mb-6">
           <UpgradePrompt

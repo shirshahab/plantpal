@@ -13,16 +13,21 @@ import { TasksProvider } from "@/lib/store/tasks-provider";
 import { ToastProvider } from "@/lib/store/toast-provider";
 import { GenomeProvider } from "@/lib/store/genome-provider";
 import { SubscriptionProvider } from "@/lib/store/subscription-provider";
+import { AnalyticsProvider } from "@/lib/store/analytics-provider";
 import { UpgradeModalProvider } from "@/components/billing/upgrade-modal-provider";
 import { FounderHydrator } from "@/components/billing/founder-hydrator";
 import { MoatProvider } from "@/lib/store/moat-provider";
+import { OnboardingGuard } from "@/components/onboarding/onboarding-guard";
+import { GlobalErrorHandler } from "@/components/errors/global-error-handler";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
+      <GlobalErrorHandler>
       <SyncProvider>
         <PlantsProvider>
         <SubscriptionProvider>
+        <AnalyticsProvider>
         <FounderHydrator />
         <UpgradeModalProvider>
         <JourneyProvider>
@@ -36,7 +41,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         <TasksProvider>
                           <MoatProvider>
                           <GenomeProvider>
-                            <AppShell>{children}</AppShell>
+                            <OnboardingGuard>
+                              <AppShell>{children}</AppShell>
+                            </OnboardingGuard>
                           </GenomeProvider>
                           </MoatProvider>
                         </TasksProvider>
@@ -49,9 +56,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </AiProvider>
         </JourneyProvider>
         </UpgradeModalProvider>
+        </AnalyticsProvider>
         </SubscriptionProvider>
       </PlantsProvider>
       </SyncProvider>
+      </GlobalErrorHandler>
     </AuthProvider>
   );
 }

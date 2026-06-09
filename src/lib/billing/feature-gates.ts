@@ -15,6 +15,7 @@ const FEATURE_ALIASES: Record<string, BillingFeature> = {
   shared_gardens: "family_sharing",
   household_access: "family_sharing",
   plant_limit: "unlimited_plants",
+  scan_limit: "unlimited_scans",
 };
 
 export function normalizeFeature(feature: string): BillingFeature | null {
@@ -30,8 +31,8 @@ export function getRequiredTier(feature: BillingFeature | string): Tier {
   return FEATURE_REQUIRED_TIER[normalized];
 }
 
-export function getFeatureLockLabel(feature: BillingFeature | string): "Plus Feature" | "Family Feature" {
-  return getRequiredTier(feature) === AccountTier.FAMILY ? "Family Feature" : "Plus Feature";
+export function getFeatureLockLabel(feature: BillingFeature | string): "Pro Feature" | "Family Feature" {
+  return getRequiredTier(feature) === AccountTier.FAMILY ? "Family Feature" : "Pro Feature";
 }
 
 export function featuresForTier(tier: Tier): BillingFeature[] {

@@ -1,15 +1,14 @@
 import type {
+  AfterConcept,
+  GardenStyle,
   LandscapeDesignRequest,
   LandscapeDesignResponse,
-  SpaceAnalysis,
+  LandscapePlantListItem,
   StyleGoal,
 } from "./types";
-import {
-  BUDGET_RANGE_LABELS,
-  SPACE_TYPE_LABELS,
-  STYLE_GOAL_LABELS,
-  YARD_SIZE_LABELS,
-} from "./types";
+import { BUDGET_RANGE_LABELS, SPACE_TYPE_LABELS, YARD_SIZE_LABELS } from "./types";
+import { getGardenStyleOption } from "./garden-styles";
+import { enrichPlantListWithSuitability } from "./enrich-plants";
 import { lookupZipRecord } from "@/lib/location/usda-zones";
 
 function seasonNote(): string {
@@ -22,6 +21,8 @@ function seasonNote(): string {
     return "Fall is excellent for trees and climate-native planting.";
   return "Winter dormancy — plan structure; plant bare-root trees where appropriate.";
 }
+
+type SpaceType = LandscapeDesignRequest["spaceType"];
 
 const SPACE_DEFAULTS: Record<
   SpaceType,
@@ -59,73 +60,146 @@ const SPACE_DEFAULTS: Record<
   },
 };
 
-type SpaceType = LandscapeDesignRequest["spaceType"];
-
 const STYLE_PLANTS: Record<
   StyleGoal,
   { trees: string[]; shrubs: string[]; flowers: string[]; ground_cover: string[] }
 > = {
-  fruit_garden: {
-    trees: ["Meyer lemon", "Fig (Brown Turkey)", "Dwarf peach"],
-    shrubs: ["Blueberry (Southern highbush)", "Pomegranate", "Goji berry"],
-    flowers: ["Comfrey (companion)", "Marigolds (pest deterrent)"],
-    ground_cover: ["Strawberry runners", "Creeping thyme between paths"],
+  modern: {
+    trees: ["Multi-stem birch", "Olive standard (dwarf)"],
+    shrubs: ["Boxwood hedge", "Ornamental grass (Miscanthus)", "Agave accent"],
+    flowers: ["Minimal — structural green focus"],
+    ground_cover: ["Decomposed granite", "Black mulch beds"],
   },
-  low_maintenance: {
-    trees: ["Olive (dwarf)", "Desert willow"],
-    shrubs: ["Rosemary", "Lavender", "Agave (accent)"],
-    flowers: ["Gaura", "Yarrow (minimal deadheading)"],
-    ground_cover: ["Dymondia", "Decomposed granite + sedum"],
-  },
-  native_garden: {
-    trees: ["Coast live oak (where space allows)", "Western redbud"],
-    shrubs: ["California lilac (Ceanothus)", "Manzanita", "Toyon"],
-    flowers: ["California poppy", "Penstemon", "Yarrow"],
-    ground_cover: ["Creeping sage", "Native sedge mix"],
-  },
-  tropical: {
-    trees: ["Banana (ornamental)", "Bird of paradise (Strelitzia)"],
-    shrubs: ["Hibiscus", "Plumeria (container in cold zones)"],
-    flowers: ["Bromeliads", "Canna lily"],
-    ground_cover: ["Liriope", "Sweet potato vine (seasonal)"],
-  },
-  mediterranean: {
-    trees: ["Olive", "Italian cypress (narrow spaces)"],
-    shrubs: ["Lavender", "Rosemary", "Santolina"],
-    flowers: ["Sage", "Catmint"],
-    ground_cover: ["Creeping thyme", "Gravel mulch beds"],
-  },
-  japanese_garden: {
+  japanese: {
     trees: ["Japanese maple", "Weeping cherry"],
     shrubs: ["Azalea", "Nandina", "Boxwood (sheared)"],
     flowers: ["Japanese iris (seasonal)", "Camellia"],
     ground_cover: ["Moss patches", "Fine gravel raked paths"],
   },
-  kids_family: {
-    trees: ["Shade tree (maple or oak)", "Dwarf apple"],
-    shrubs: ["Hydrangea", "Loropetalum (soft texture)"],
-    flowers: ["Sunflowers", "Zinnias (easy color)"],
-    ground_cover: ["Durable lawn or play-safe mulch zone"],
+  cottage: {
+    trees: ["Crabapple", "Dogwood"],
+    shrubs: ["Hydrangea", "Rose bush", "Lavender"],
+    flowers: ["Delphinium", "Foxglove", "Catmint"],
+    ground_cover: ["Creeping thyme", "Strawberry ground cover"],
   },
-  pollinator: {
-    trees: ["Crabapple", "Eastern redbud"],
-    shrubs: ["Butterfly bush (Buddleia)", "Lilac"],
-    flowers: ["Salvia", "Echinacea", "Milkweed (Asclepias)"],
-    ground_cover: ["Creeping phlox", "Native wildflower mix"],
+  tropical: {
+    trees: ["Banana (ornamental)", "Bird of paradise"],
+    shrubs: ["Hibiscus", "Plumeria (container in cold zones)"],
+    flowers: ["Bromeliads", "Canna lily"],
+    ground_cover: ["Liriope", "Sweet potato vine (seasonal)"],
   },
-  privacy: {
-    trees: ["Italian cypress", "Clumping bamboo (contained)"],
-    shrubs: ["Viburnum", "Privet (formal hedge)", "Photinia"],
-    flowers: ["Minimal — focus on evergreen structure"],
-    ground_cover: ["Mulched beds under hedge line"],
+  desert: {
+    trees: ["Desert willow", "Palo verde (where hardy)"],
+    shrubs: ["Agave", "Red yucca", "Brittlebush"],
+    flowers: ["Desert marigold", "Penstemon (native)"],
+    ground_cover: ["Gravel mulch", "Dymondia", "Decomposed granite"],
   },
-  outdoor_living: {
-    trees: ["Patio shade tree (palo verde or maple)"],
-    shrubs: ["Ornamental grass screens", "Lavender border"],
-    flowers: ["Container seasonal color near seating"],
-    ground_cover: ["Pavers + planted joints", "Low herbs near kitchen zone"],
+  edible_garden: {
+    trees: ["Meyer lemon", "Fig (Brown Turkey)", "Dwarf peach"],
+    shrubs: ["Blueberry", "Pomegranate", "Rosemary hedge"],
+    flowers: ["Marigolds (companion)", "Nasturtium"],
+    ground_cover: ["Strawberry runners", "Creeping thyme between paths"],
+  },
+  mediterranean: {
+    trees: ["Olive (dwarf)", "Italian cypress (where hardy)"],
+    shrubs: ["Lavender", "Rosemary", "Santolina"],
+    flowers: ["Society garlic", "Catmint"],
+    ground_cover: ["Dymondia", "Decomposed granite paths"],
+  },
+  family_friendly: {
+    trees: ["Crabapple", "Serviceberry"],
+    shrubs: ["Hydrangea", "Spirea", "Boxwood (soft hedge)"],
+    flowers: ["Sunflowers", "Zinnias", "Marigolds"],
+    ground_cover: ["Clover lawn patch", "Straw mulch play border"],
+  },
+  pollinator_garden: {
+    trees: ["Eastern redbud", "Chokecherry (native)"],
+    shrubs: ["Butterfly bush ( sterile cultivar)", "Ninebark", "Viburnum"],
+    flowers: ["Coneflower", "Black-eyed Susan", "Milkweed"],
+    ground_cover: ["Creeping phlox", "Native sedge mix"],
   },
 };
+
+const AFTER_CHANGES: Record<StyleGoal, string[]> = {
+  modern: [
+    "Replace scattered lawn with geometric gravel beds",
+    "Add architectural evergreens along sight lines",
+    "Install linear drip irrigation and dark mulch",
+  ],
+  japanese: [
+    "Add curved stone path and raked gravel zone",
+    "Layer maples for height with low moss groundcover",
+    "Frame focal tree with pruned shrubs",
+  ],
+  cottage: [
+    "Soft curved beds with mixed height perennials",
+    "Add picket or natural stone edging",
+    "Layer roses, herbs, and seasonal color at entry",
+  ],
+  tropical: [
+    "Bold layered foliage along fence and patio",
+    "Add palms or banana as vertical anchors",
+    "Rich mulch and regular drip zones for lush look",
+  ],
+  desert: [
+    "Replace thirsty lawn with gravel and sculptural succulents",
+    "Group agave and yucca on berms for drainage",
+    "Minimal irrigation — deep soak zones only",
+  ],
+  edible_garden: [
+    "Install raised beds along sunniest edge",
+    "Add espalier fruit on fence line",
+    "Herb strip near kitchen or patio access",
+  ],
+  mediterranean: [
+    "Replace lawn with gravel and terracotta accents",
+    "Plant olive and lavender in sunniest zones",
+    "Add decomposed granite paths between beds",
+  ],
+  family_friendly: [
+    "Define soft-edged play zone with durable ground cover",
+    "Add wide paths for strollers and bikes",
+    "Choose non-toxic, thorn-free plants near activity areas",
+  ],
+  pollinator_garden: [
+    "Layer native flowers for spring-through-fall bloom",
+    "Add shallow water feature or bird bath edge",
+    "Group milkweed and nectar plants in sunny clusters",
+  ],
+};
+
+function buildPlantList(
+  style: StyleGoal,
+  rec: LandscapeDesignResponse["recommendations"]
+): LandscapePlantListItem[] {
+  const items: LandscapePlantListItem[] = [];
+  rec.trees.forEach((name, i) =>
+    items.push({
+      name,
+      category: "tree",
+      quantity: i === 0 ? "1–2" : "1",
+      est_price: i === 0 ? "$45–$180" : "$35–$120",
+    })
+  );
+  rec.shrubs.slice(0, 4).forEach((name) =>
+    items.push({ name, category: "shrub", quantity: "2–6", est_price: "$12–$45 each" })
+  );
+  rec.flowers.slice(0, 3).forEach((name) =>
+    items.push({ name, category: "flower", quantity: "6–12", est_price: "$4–$8 each" })
+  );
+  rec.ground_cover.slice(0, 2).forEach((name) =>
+    items.push({ name, category: "ground_cover", quantity: "1 flat–3 bags", est_price: "$25–$80" })
+  );
+  if (style === "edible_garden") {
+    items.push({
+      name: "Raised bed kit (4×8 ft)",
+      category: "edible",
+      quantity: "1–2",
+      est_price: "$120–$280",
+    });
+  }
+  return items;
+}
 
 function yardSizeMultiplier(size: LandscapeDesignRequest["yardSize"]): {
   costFactor: number;
@@ -161,6 +235,7 @@ export function mockLandscapeDesign(
 ): LandscapeDesignResponse {
   const record = lookupZipRecord(req.zipCode);
   const defaults = SPACE_DEFAULTS[req.spaceType];
+  const styleOpt = getGardenStyleOption(req.styleGoal);
   const stylePlants = STYLE_PLANTS[req.styleGoal];
   const isSmall =
     req.spaceType === "balcony" ||
@@ -173,34 +248,35 @@ export function mockLandscapeDesign(
     ? stylePlants.trees.slice(0, 2).map((t) => `${t} (container)`)
     : stylePlants.trees;
 
-  const maintenance =
-    req.styleGoal === "low_maintenance" || req.styleGoal === "native_garden"
-      ? "low"
-      : req.styleGoal === "japanese_garden" || req.styleGoal === "tropical"
-        ? "high"
-        : "moderate";
+  const recommendations = {
+    trees,
+    shrubs: stylePlants.shrubs,
+    flowers: stylePlants.flowers,
+    ground_cover: isSlope
+      ? ["Creeping rosemary (erosion control)", ...stylePlants.ground_cover.slice(0, 2)]
+      : stylePlants.ground_cover,
+  };
+
+  const maintenance = styleOpt.defaultMaintenance;
 
   const soilPrep = isSlope
-    ? "Terrace steep sections with retaining timbers or boulders; amend planting pockets with compost; install jute erosion netting on bare slopes before planting."
+    ? "Terrace steep sections with retaining timbers or boulders; amend planting pockets with compost."
     : isSmall
       ? "Refresh container mix; ensure drainage holes; top-dress beds with 2 in. compost."
-      : "Remove weeds, loosen compacted soil 8–12 in., incorporate 3 in. compost, and grade for drainage away from structures.";
-
-  const firstSteps = [
-    "Clear weeds and mark utility lines before digging.",
-    isSlope
-      ? "Address erosion with temporary netting; plant deep-rooted shrubs on contour."
-      : "Lay out beds and paths with hose or spray paint.",
-    `Source climate-appropriate plants for Zone ${record.usdaZone}.`,
-    "Install drip irrigation before mulching.",
-    "Mulch all beds 2–3 inches after planting.",
-  ];
+      : "Remove weeds, loosen soil 8–12 in., incorporate 3 in. compost, grade for drainage.";
 
   const budgetBase = isSmall
     ? { budget: "$150–400", balanced: "$400–900", premium: "$900–2,000" }
     : { budget: "$800–2,500", balanced: "$2,500–8,000", premium: "$8,000–25,000+" };
 
-  return {
+  const afterConcept: AfterConcept = {
+    headline: `${styleOpt.label} transformation`,
+    description: `Your ${SPACE_TYPE_LABELS[req.spaceType].toLowerCase()} reimagined as a ${styleOpt.label.toLowerCase()} garden — ${styleOpt.description.toLowerCase()} Plants are selected for Zone ${record.usdaZone} and ${record.climateType} climate.`,
+    key_changes: AFTER_CHANGES[req.styleGoal],
+    accent_color: styleOpt.afterGradient.split(" ")[1]?.replace("via-", "") ?? "green-100",
+  };
+
+  const response: LandscapeDesignResponse = {
     analysis: {
       space_type: req.spaceType,
       estimated_sq_ft: sqOverride ?? defaults.sqFt,
@@ -209,15 +285,13 @@ export function mockLandscapeDesign(
       sunlight: req.sunExposure,
       sunlight_notes:
         req.sunExposure === "full_sun"
-          ? "Open exposure — 6+ hours direct sun expected for most of the space."
-          : req.sunExposure === "partial_sun"
-            ? "Mixed sun/shade — morning sun with afternoon protection from structures."
-            : req.sunExposure === "shade"
-              ? "Limited direct sun — prioritize shade-tolerant understory plants."
-              : "Variable light — zone plants by microclimate (north vs south facing).",
+          ? "Open exposure — 6+ hours direct sun expected."
+          : req.sunExposure === "shade"
+            ? "Limited direct sun — shade-tolerant plants prioritized."
+            : "Mixed light — zone plants by microclimate.",
       site_notes:
         req.notes?.trim() ||
-        `${STYLE_GOAL_LABELS[req.styleGoal]} layout with ${YARD_SIZE_LABELS[req.yardSize].toLowerCase()}.`,
+        `${styleOpt.label} layout · ${YARD_SIZE_LABELS[req.yardSize].toLowerCase()}.`,
     },
     climate: {
       zip_code: req.zipCode,
@@ -226,77 +300,101 @@ export function mockLandscapeDesign(
       climate_type: record.climateType,
       season_note: seasonNote(),
     },
-    recommendations: {
-      trees,
-      shrubs: stylePlants.shrubs,
-      flowers: stylePlants.flowers,
-      ground_cover: isSlope
-        ? ["Creeping rosemary (erosion control)", ...stylePlants.ground_cover.slice(0, 2)]
-        : stylePlants.ground_cover,
-    },
+    recommendations,
     irrigation: {
       approach: isSmall
-        ? "Drip irrigation to containers + hand-watering backup"
-        : isSlope
-          ? "Drip on contour lines + bubblers at tree wells; avoid overhead spray on slopes"
-          : "Smart drip zones by hydrozone + 2–3× weekly deep soak in summer",
-      notes:
-        record.climateType === "Mediterranean"
-          ? "Mediterranean climate — group plants by water need; reduce frequency in winter."
-          : "Match irrigation to local heat; mulch all beds 2–3 inches to retain moisture.",
+        ? "Drip to containers + hand-watering backup"
+        : "Smart drip zones by hydrozone",
+      notes: "Mulch all beds 2–3 inches to retain moisture.",
     },
     soil_prep: soilPrep,
     maintenance_level: maintenance,
     maintenance_notes:
       maintenance === "low"
-        ? "Seasonal pruning and mulch refresh; minimal deadheading."
+        ? "Seasonal pruning and mulch refresh."
         : maintenance === "high"
-          ? "Regular shaping, seasonal color rotation, and attentive watering."
-          : "Monthly check-ins, seasonal pruning, and spring/fall feeding.",
-    estimated_budget: BUDGET_RANGE_LABELS[req.budgetRange],
-    first_steps: firstSteps,
+          ? "Regular shaping, seasonal planting, attentive watering."
+          : "Monthly check-ins and seasonal pruning.",
+    estimated_budget: styleOpt.costRange,
+    first_steps: [
+      "Clear weeds and mark utility lines.",
+      "Lay out beds and paths.",
+      `Source Zone ${record.usdaZone} plants.`,
+      "Install drip before mulching.",
+    ],
     budget_options: [
       {
         tier: "budget",
         label: "Budget Plan",
         estimated_cost: formatCostRange(budgetBase.budget, costFactor),
-        summary: "Starter plants, mulch, basic drip, DIY install over a weekend.",
-        plant_list: [
-          "1 focal tree or large shrub",
-          "Seasonal color packs",
-          "Ground cover flats",
-          "Basic drip kit",
-        ],
-        highlights: ["Big-box nursery finds", "Mulch-heavy beds", "Hand watering first season"],
+        summary: "Starter plants, mulch, basic drip — DIY weekend install.",
+        plant_list: recommendations.trees.slice(0, 1).concat(recommendations.shrubs.slice(0, 2)),
+        highlights: ["Big-box nursery", "Mulch-heavy beds"],
       },
       {
         tier: "balanced",
         label: "Balanced Plan",
         estimated_cost: formatCostRange(budgetBase.balanced, costFactor),
-        summary: "Quality nursery stock, zoned drip, layered structure — best long-term value.",
+        summary: "Quality nursery stock, zoned drip, layered structure.",
         plant_list: [
-          "1–2 structural trees",
-          "Mixed perennial border",
-          "Climate-appropriate ground cover",
-          "3-zone drip + timer",
+          ...recommendations.trees,
+          ...recommendations.shrubs.slice(0, 3),
         ],
-        highlights: ["Local nursery quality", `${STYLE_GOAL_LABELS[req.styleGoal]} palette`, "Smart timer"],
+        highlights: [styleOpt.label, "Smart timer"],
       },
       {
         tier: "premium",
         label: "Premium Plan",
         estimated_cost: formatCostRange(budgetBase.premium, costFactor),
-        summary: "Designer layout, mature specimens, pro irrigation, hardscape coordination.",
+        summary: "Mature specimens, pro irrigation, designer layout.",
         plant_list: [
-          "Mature specimen tree(s)",
-          "Designer shrub palette",
-          "Seasonal color program",
-          "Premium soil prep + pro irrigation",
+          ...recommendations.trees,
+          ...recommendations.shrubs,
+          ...recommendations.flowers.slice(0, 2),
         ],
-        highlights: ["Instant impact", "Designer consult", "Premium soil amendment"],
+        highlights: ["Instant impact", "Pro install"],
       },
     ],
-    design_summary: `A ${STYLE_GOAL_LABELS[req.styleGoal].toLowerCase()} concept for your ${SPACE_TYPE_LABELS[req.spaceType].toLowerCase()} in ${record.city} (Zone ${record.usdaZone}). The plan balances ${YARD_SIZE_LABELS[req.yardSize].toLowerCase()} with ${req.sunExposure.replace("_", " ")} exposure and targets ${BUDGET_RANGE_LABELS[req.budgetRange].toLowerCase()}. ${seasonNote()}`,
+    design_summary: `${styleOpt.label} concept for your ${SPACE_TYPE_LABELS[req.spaceType].toLowerCase()} in ${record.city} (Zone ${record.usdaZone}). ${seasonNote()}`,
+    layout_suggestions: [
+      "Anchor tall trees at corners or fence lines for structure.",
+      "Place thirstiest plants near the hose bib or drip manifold.",
+      "Leave circulation paths 3–4 ft wide for maintenance access.",
+    ],
+    phased_plan: [
+      {
+        phase: 1,
+        title: "Site prep & layout",
+        timeframe: "Weeks 1–2",
+        tasks: ["Remove weeds", "Mark beds and paths", "Soil amendment"],
+        estimated_cost: formatCostRange("$300–$800", costFactor),
+      },
+      {
+        phase: 2,
+        title: "Hardscape & irrigation",
+        timeframe: "Weeks 3–5",
+        tasks: ["Install drip zones", "Lay paths or edging", "Mulch beds"],
+        estimated_cost: formatCostRange("$800–$2,500", costFactor),
+      },
+      {
+        phase: 3,
+        title: "Planting & finish",
+        timeframe: "Weeks 6–8",
+        tasks: ["Plant trees and shrubs", "Add ground cover", "Final mulch layer"],
+        estimated_cost: formatCostRange(budgetBase.balanced, costFactor),
+      },
+    ],
+    after_concept: afterConcept,
+    after_image_url: null,
+    plant_list: enrichPlantListWithSuitability(
+      buildPlantList(req.styleGoal, recommendations),
+      req.zipCode,
+      req.sunExposure
+    ),
+    maintenance_score:
+      maintenance === "low" ? 88 : maintenance === "high" ? 42 : 65,
     source: "mock",
   };
+
+  return response;
 }

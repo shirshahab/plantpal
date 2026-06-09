@@ -17,6 +17,7 @@ interface PlanCardsProps {
   billingCycle?: BillingCycle;
   onBillingCycleChange?: (cycle: BillingCycle) => void;
   hideUpgradePrompts?: boolean;
+  plansFilter?: AccountTier[];
 }
 
 export function PlanCards({
@@ -27,8 +28,12 @@ export function PlanCards({
   billingCycle = "monthly",
   onBillingCycleChange,
   hideUpgradePrompts = false,
+  plansFilter,
 }: PlanCardsProps) {
-  const plans = buildSubscriptionPlans(billingCycle);
+  const allPlans = buildSubscriptionPlans(billingCycle);
+  const plans = plansFilter
+    ? allPlans.filter((p) => plansFilter.includes(p.id))
+    : allPlans;
   const hideCta = hideUpgradePrompts;
 
   return (
@@ -60,14 +65,14 @@ export function PlanCards({
             >
               Annual
               <span className="ml-1.5 text-xs text-green-600 font-semibold">
-                Save {OFFICIAL_PRICING.plus.annualSavingsPercent}%
+                Save {OFFICIAL_PRICING.pro.annualSavingsPercent}%
               </span>
             </button>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
+      <div className={cn("grid gap-6 lg:gap-8 items-stretch", plans.length === 2 ? "grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto" : "grid-cols-1 md:grid-cols-3")}>
         {plans.map((plan) => {
           const isCurrent = currentTier === plan.id;
           return (
@@ -133,7 +138,7 @@ export function PlanCards({
                   ) : plan.id === "plus" ? (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      Upgrade to Plus
+                      Upgrade to Pro
                     </>
                   ) : (
                     <>

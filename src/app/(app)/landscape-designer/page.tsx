@@ -1,5 +1,5 @@
-import { LandscapeDesignerHub } from "@/components/landscape/landscape-designer-hub";
+import { redirect } from "next/navigation";
 
 export default function LandscapeDesignerPage() {
-  return <LandscapeDesignerHub />;
+  redirect("/landscape");
 }

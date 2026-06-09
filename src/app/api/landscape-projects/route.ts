@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { LandscapeDesignResponse, LandscapeProject } from "@/lib/landscape/types";
+import { normalizeGardenStyle } from "@/lib/landscape/garden-styles";
 
 interface DbRow {
   id: string;
@@ -33,7 +34,6 @@ function rowToProject(row: DbRow): LandscapeProject {
     sunExposure: meta.sun_exposure ?? "mixed",
     yardSize: meta.yard_size ?? "unknown",
     budgetRange: row.budget_range,
-    styleGoal: row.style_goal,
     notes: meta.notes ?? "",
     photos: row.photos,
     design: {
@@ -44,16 +44,23 @@ function rowToProject(row: DbRow): LandscapeProject {
       soil_prep: meta.soil_prep,
       maintenance_level: meta.maintenance_level,
       maintenance_notes: meta.maintenance_notes,
+      maintenance_score: meta.maintenance_score ?? 65,
       estimated_budget: meta.estimated_budget,
       first_steps: meta.first_steps,
       budget_options: meta.budget_options,
       design_summary: meta.design_summary,
+      layout_suggestions: meta.layout_suggestions ?? [],
+      phased_plan: meta.phased_plan ?? [],
+      after_concept: meta.after_concept,
+      after_image_url: meta.after_image_url ?? null,
+      plant_list: meta.plant_list ?? [],
       source: meta.source,
     },
     visualConceptRequested: meta.visual_concept_requested ?? false,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     photoDataUrl: photo,
+    styleGoal: normalizeGardenStyle(row.style_goal),
   };
 }
 

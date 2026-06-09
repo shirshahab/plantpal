@@ -3,239 +3,180 @@
 import Image from "next/image";
 import {
   CheckCircle2,
-  Droplets,
-  Flower2,
+  DollarSign,
   ImageIcon,
-  Leaf,
-  ListOrdered,
-  Shovel,
-  Sun,
-  TreeDeciduous,
+  Sparkles,
   Wrench,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BudgetOptionCards } from "@/components/landscape/budget-option-cards";
-import type { LandscapeDesignResponse } from "@/lib/landscape/types";
-import { MAINTENANCE_LABELS, SPACE_TYPE_LABELS, SUN_EXPOSURE_LABELS } from "@/lib/landscape/types";
+import { Badge } from "@/components/ui/badge";
+import type { LandscapeDesignResponse, StyleGoal } from "@/lib/landscape/types";
+import { MAINTENANCE_LABELS } from "@/lib/landscape/types";
+import { getGardenStyleOption } from "@/lib/landscape/garden-styles";
+import { cn } from "@/lib/utils";
 
 interface DesignResultsProps {
   design: LandscapeDesignResponse;
+  styleGoal: StyleGoal;
   photoPreview?: string | null;
   onSave?: () => void;
-  onVisualConcept?: () => void;
   saving?: boolean;
-  visualConceptRequested?: boolean;
 }
 
-function PlantList({
-  title,
-  icon: Icon,
-  items,
+function BeforeAfterPanel({
+  beforeUrl,
+  after,
+  styleGoal,
 }: {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  items: string[];
+  beforeUrl: string;
+  after: LandscapeDesignResponse["after_concept"];
+  styleGoal: StyleGoal;
 }) {
-  if (items.length === 0) return null;
+  const style = getGardenStyleOption(styleGoal);
+
   return (
-    <Card padding="md">
-      <div className="flex items-center gap-2 mb-3">
-        <Icon className="w-4 h-4 text-green-600" />
-        <p className="font-semibold text-gray-900">{title}</p>
+    <Card padding="md" className="space-y-4">
+      <p className="text-sm font-semibold text-gray-900">Before & after</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Before</p>
+          <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
+            <Image src={beforeUrl} alt="Your yard before" fill className="object-cover" unoptimized />
+          </div>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold text-green-700 uppercase mb-2">After · AI concept</p>
+          <div
+            className={cn(
+              "relative aspect-[4/3] rounded-xl overflow-hidden border border-green-100 bg-gradient-to-br p-4 flex flex-col justify-end",
+              style.afterGradient
+            )}
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.5),transparent_50%)]" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-green-700" />
+                <p className="font-semibold text-gray-900 text-sm">{after.headline}</p>
+              </div>
+              <p className="text-xs text-gray-700 leading-relaxed line-clamp-4">
+                {after.description}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
-      <ul className="space-y-1.5">
-        {items.map((item) => (
-          <li key={item} className="text-sm text-gray-700 flex gap-2">
-            <span className="text-green-500 shrink-0">•</span>
-            {item}
-          </li>
-        ))}
-      </ul>
+      {after.key_changes.length > 0 && (
+        <ul className="space-y-1.5">
+          {after.key_changes.map((change) => (
+            <li key={change} className="text-sm text-gray-600 flex gap-2">
+              <span className="text-green-500 shrink-0">→</span>
+              {change}
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }
 
 export function DesignResults({
   design,
+  styleGoal,
   photoPreview,
   onSave,
-  onVisualConcept,
   saving,
-  visualConceptRequested,
 }: DesignResultsProps) {
-  const { analysis, climate, recommendations, irrigation } = design;
+  const style = getGardenStyleOption(styleGoal);
 
   return (
     <div className="space-y-6">
-      {photoPreview && (
-        <Card padding="none" className="overflow-hidden">
-          <div className="relative aspect-video max-h-56 bg-gray-100">
-            <Image
-              src={photoPreview}
-              alt="Your space"
-              fill
-              className="object-cover"
-              unoptimized
-            />
-          </div>
-        </Card>
+      {photoPreview && design.after_concept && (
+        <BeforeAfterPanel
+          beforeUrl={photoPreview}
+          after={design.after_concept}
+          styleGoal={styleGoal}
+        />
       )}
 
-      <Card padding="md" className="bg-green-50/50 border-green-100">
-        <p className="text-xs font-medium text-green-700 uppercase tracking-wide mb-1">
-          Design concept
-        </p>
-        <p className="text-sm text-gray-700 leading-relaxed">{design.design_summary}</p>
-        <p className="text-xs text-gray-500 mt-2">
-          {design.source === "ai" ? "AI analysis" : "Demo analysis"} ·{" "}
-          {SPACE_TYPE_LABELS[analysis.space_type]} · Zone {climate.usda_zone} ·{" "}
-          Est. {design.estimated_budget}
-        </p>
-      </Card>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card padding="md">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
-            Space estimate
-          </p>
-          <p className="font-semibold text-gray-900">{analysis.estimated_sq_ft}</p>
-          <p className="text-sm text-gray-600 mt-1">{analysis.estimated_dimensions}</p>
+      <div className="grid grid-cols-2 gap-3">
+        <Card padding="md" className="bg-green-50/50 border-green-100">
+          <div className="flex items-center gap-2 mb-1">
+            <DollarSign className="w-4 h-4 text-green-600" />
+            <p className="text-xs font-medium text-gray-500 uppercase">Estimated cost</p>
+          </div>
+          <p className="text-xl font-bold text-gray-900">{design.estimated_budget}</p>
+          <p className="text-xs text-gray-500 mt-1">{style.label} · typical install</p>
         </Card>
         <Card padding="md">
-          <div className="flex items-center gap-2 mb-2">
-            <Sun className="w-4 h-4 text-amber-500" />
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Sun exposure
-            </p>
+          <div className="flex items-center gap-2 mb-1">
+            <Wrench className="w-4 h-4 text-amber-600" />
+            <p className="text-xs font-medium text-gray-500 uppercase">Maintenance</p>
           </div>
-          <p className="font-semibold text-gray-900">
-            {SUN_EXPOSURE_LABELS[analysis.sunlight]}
-          </p>
-          <p className="text-sm text-gray-600 mt-1">{analysis.sunlight_notes}</p>
-        </Card>
-        <Card padding="md">
-          <div className="flex items-center gap-2 mb-2">
-            <Wrench className="w-4 h-4 text-gray-500" />
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Maintenance
-            </p>
-          </div>
-          <p className="font-semibold text-gray-900">
+          <p className="text-lg font-bold text-gray-900">
             {MAINTENANCE_LABELS[design.maintenance_level]}
           </p>
-          <p className="text-sm text-gray-600 mt-1">{design.maintenance_notes}</p>
-        </Card>
-        <Card padding="md">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
-            Climate · {climate.city}
-          </p>
-          <p className="text-sm text-gray-700">
-            ZIP {climate.zip_code} · Zone {climate.usda_zone} · {climate.climate_type}
-          </p>
-          <p className="text-sm text-green-700 mt-2">{climate.season_note}</p>
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{design.maintenance_notes}</p>
         </Card>
       </div>
 
-      {analysis.existing_plants.length > 0 && (
-        <Card padding="md">
-          <div className="flex items-center gap-2 mb-3">
-            <Leaf className="w-4 h-4 text-green-600" />
-            <p className="font-semibold text-gray-900">Existing plants detected</p>
-          </div>
-          <ul className="flex flex-wrap gap-2">
-            {analysis.existing_plants.map((p) => (
-              <li
-                key={p}
-                className="text-sm bg-green-50 text-green-800 px-3 py-1 rounded-full"
-              >
-                {p}
-              </li>
-            ))}
-          </ul>
-          {analysis.site_notes && (
-            <p className="text-sm text-gray-600 mt-3">{analysis.site_notes}</p>
-          )}
-        </Card>
+      <Card padding="md">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <p className="font-semibold text-gray-900">Plant list</p>
+          <Badge variant="outline">{design.plant_list.length} items</Badge>
+        </div>
+        <div className="overflow-x-auto -mx-1">
+          <table className="w-full text-sm min-w-[320px]">
+            <thead>
+              <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
+                <th className="pb-2 pr-3 font-medium">Plant</th>
+                <th className="pb-2 pr-3 font-medium">Qty</th>
+                <th className="pb-2 font-medium text-right">Est.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {design.plant_list.map((item) => (
+                <tr key={`${item.name}-${item.quantity}`} className="border-b border-gray-50 last:border-0">
+                  <td className="py-2.5 pr-3">
+                    <p className="font-medium text-gray-900">{item.name}</p>
+                    <p className="text-xs text-gray-400 capitalize">{item.category.replace("_", " ")}</p>
+                  </td>
+                  <td className="py-2.5 pr-3 text-gray-600">{item.quantity}</td>
+                  <td className="py-2.5 text-right text-green-700 font-medium text-xs">
+                    {item.est_price ?? "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card padding="md" className="bg-gray-50/50 border-gray-100">
+        <p className="text-xs font-medium text-gray-400 uppercase mb-1">Design summary</p>
+        <p className="text-sm text-gray-700 leading-relaxed">{design.design_summary}</p>
+        <p className="text-xs text-gray-400 mt-2">
+          {design.source === "ai" ? "AI analysis" : "Demo analysis"} · Zone {design.climate.usda_zone} ·{" "}
+          {design.climate.city}
+        </p>
+      </Card>
+
+      {onSave && (
+        <Button className="w-full touch-manipulation" size="lg" loading={saving} onClick={onSave}>
+          <CheckCircle2 className="w-5 h-5" />
+          Save design to my account
+        </Button>
       )}
 
-      <div>
-        <p className="text-sm font-semibold text-gray-900 mb-3">Plant recommendations</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <PlantList title="Trees" icon={TreeDeciduous} items={recommendations.trees} />
-          <PlantList title="Shrubs" icon={Leaf} items={recommendations.shrubs} />
-          <PlantList title="Flowers" icon={Flower2} items={recommendations.flowers} />
-          <PlantList title="Ground cover" icon={Leaf} items={recommendations.ground_cover} />
-        </div>
-      </div>
-
-      <Card padding="md">
-        <div className="flex items-center gap-2 mb-2">
-          <Droplets className="w-4 h-4 text-blue-500" />
-          <p className="font-semibold text-gray-900">Irrigation</p>
-        </div>
-        <p className="text-sm font-medium text-gray-800">{irrigation.approach}</p>
-        <p className="text-sm text-gray-600 mt-2">{irrigation.notes}</p>
-      </Card>
-
-      <Card padding="md">
-        <div className="flex items-center gap-2 mb-2">
-          <Shovel className="w-4 h-4 text-amber-700" />
-          <p className="font-semibold text-gray-900">Soil prep</p>
-        </div>
-        <p className="text-sm text-gray-700 leading-relaxed">{design.soil_prep}</p>
-      </Card>
-
-      <Card padding="md">
-        <div className="flex items-center gap-2 mb-3">
-          <ListOrdered className="w-4 h-4 text-green-600" />
-          <p className="font-semibold text-gray-900">What to do first</p>
-        </div>
-        <ol className="space-y-2">
-          {design.first_steps.map((step, i) => (
-            <li key={step} className="flex gap-3 text-sm text-gray-700">
-              <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center shrink-0">
-                {i + 1}
-              </span>
-              {step}
-            </li>
-          ))}
-        </ol>
-      </Card>
-
-      <div>
-        <p className="text-sm font-semibold text-gray-900 mb-3">Plan options</p>
-        <BudgetOptionCards options={design.budget_options} />
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3">
-        {onSave && (
-          <Button className="flex-1 touch-manipulation" loading={saving} onClick={onSave}>
-            <CheckCircle2 className="w-5 h-5" />
-            Save Landscape Project
-          </Button>
-        )}
-        {onVisualConcept && (
-          <Button
-            variant="secondary"
-            className="flex-1 touch-manipulation"
-            onClick={onVisualConcept}
-            disabled={visualConceptRequested}
-          >
-            <ImageIcon className="w-5 h-5" />
-            {visualConceptRequested ? "Visual concept queued" : "Generate Visual Concept"}
-          </Button>
-        )}
-      </div>
-
-      {visualConceptRequested && (
-        <Card padding="md" className="border-dashed border-amber-200 bg-amber-50/30">
-          <p className="text-sm text-gray-700">
-            <span className="font-medium">Visual concept — coming soon.</span> AI-generated
-            landscape mockups will appear here in a future release.
+      <Card padding="sm" className="border-dashed border-gray-200 bg-gray-50/30">
+        <div className="flex items-start gap-2 text-xs text-gray-500">
+          <ImageIcon className="w-4 h-4 shrink-0 mt-0.5" />
+          <p>
+            After preview is an AI concept description. Photorealistic renders will be added in a
+            future update.
           </p>
-        </Card>
-      )}
+        </div>
+      </Card>
     </div>
   );
 }

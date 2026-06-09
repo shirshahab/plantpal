@@ -17,12 +17,18 @@ export type MainGoal =
 
 export interface UserProfile {
   onboardingComplete: boolean;
+  /** Set when user adds a plant or loads demo garden. */
+  firstPlantAdded?: boolean;
   demoMode: boolean;
   growTypes: GrowType[];
   experienceLevel: ExperienceLevel | null;
   zipCode: string;
   mainGoal: MainGoal | null;
   completedAt: string | null;
+  /** Unique invite code for referral program. */
+  referralCode?: string;
+  /** Referral code used at signup, if any. */
+  referredBy?: string;
   /** Founder Mode — unrestricted access for testing (local only). */
   founderMode?: boolean;
 }
