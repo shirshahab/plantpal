@@ -37,6 +37,14 @@ export function isDevEnvironment(): boolean {
   return process.env.NODE_ENV === "development";
 }
 
+/** Show raw scanner API errors in UI (dev, /debug/*, or ?scanner_debug=1). */
+export function isScannerDebugUI(): boolean {
+  if (process.env.NODE_ENV === "development") return true;
+  if (typeof window === "undefined") return false;
+  if (window.location.pathname.startsWith("/debug")) return true;
+  return new URLSearchParams(window.location.search).get("scanner_debug") === "1";
+}
+
 export function clearLocalData(): void {
   for (const key of PLANTPAL_STORAGE_KEYS) {
     localStorage.removeItem(key);

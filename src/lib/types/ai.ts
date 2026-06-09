@@ -2,7 +2,7 @@ import type { HealthStatus, LocationType, PlantingType, SunExposure } from "@/li
 
 export type AIResponseSource = "ai" | "mock";
 
-export type IdentificationProvider = "plantid" | "openai" | "mock";
+export type IdentificationProvider = "plantid" | "openai" | "plantnet" | "mock";
 
 export type CareDifficulty = "Easy" | "Moderate" | "Advanced";
 

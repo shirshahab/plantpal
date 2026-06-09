@@ -43,6 +43,9 @@ import { useEngagement } from "@/lib/store/engagement-provider";
 import { useToast } from "@/lib/store/toast-provider";
 import { friendlyAiError } from "@/lib/errors/user-messages";
 import { isDemoMode } from "@/lib/profile/user-profile";
+import { isScannerDebugUI } from "@/lib/dev/dev-tools";
+import { ScannerDebugErrorPanel } from "@/components/scanner/scanner-debug-error";
+import type { IdentifyDebugLog } from "@/lib/ai/identify-errors";
 import { cn } from "@/lib/utils";
 
 type TabId = "identify" | "diagnose" | "tag" | "progress";
@@ -66,6 +69,10 @@ export function CameraHub() {
     null
   );
   const [scanHistoryId, setScanHistoryId] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [scanFailureStep, setScanFailureStep] = useState<string | null>(null);
+  const [scanDebug, setScanDebug] = useState<IdentifyDebugLog | null>(null);
+  const debugUI = isScannerDebugUI();
 
   const [identifyResult, setIdentifyResult] = useState<PlantIdentificationResponse | null>(null);
   const [diagnoseResult, setDiagnoseResult] = useState<AIPhotoAnalyzeResponse | null>(null);
@@ -94,6 +101,9 @@ export function CameraHub() {
     setProgressSaved(false);
     setClientPhotoQuality(null);
     setScanHistoryId(null);
+    setScanError(null);
+    setScanFailureStep(null);
+    setScanDebug(null);
   }
 
   async function handleIdentifyPhotosChange(photos: CapturedPhoto[]) {
@@ -130,6 +140,9 @@ export function CameraHub() {
     if (identifyPhotos.length === 0) return;
     setLoading(true);
     setIdentifyResult(null);
+    setScanError(null);
+    setScanFailureStep(null);
+    setScanDebug(null);
     try {
       const { imageDataUrls, photoRoles } = photosToRequest(identifyPhotos);
       const res = await requestIdentifyPlant({
@@ -137,7 +150,13 @@ export function CameraHub() {
         photoRoles,
         demoMode: isDemoMode(),
       });
-      if (!res.ok) throw new Error(res.error);
+      if (!res.ok) {
+        const msg = res.failureReason ?? res.error ?? "Identification failed";
+        setScanError(msg);
+        setScanFailureStep(res.failureStep ?? null);
+        setScanDebug(res.debug ?? null);
+        throw new Error(msg);
+      }
 
       const entry = saveScanToHistory({
         photoUrl: identifyPreview ?? imageDataUrls[0],
@@ -162,11 +181,11 @@ export function CameraHub() {
         toast("Plant identified");
       }
     } catch (e) {
+      const msg = e instanceof Error ? e.message : undefined;
       toast(
-        friendlyAiError(
-          e instanceof Error ? e.message : undefined,
-          "identification"
-        )
+        debugUI
+          ? msg ?? "Identification failed"
+          : friendlyAiError(msg, "identification")
       );
       console.error("[scanner] identify failed:", e);
     } finally {
@@ -292,6 +311,13 @@ export function CameraHub() {
             cameraActive={!identifyResult}
           />
           {showClientBadPhoto && <BadPhotoGuidance quality={clientPhotoQuality} />}
+          {scanError && debugUI && (
+            <ScannerDebugErrorPanel
+              error={scanError}
+              failureStep={scanFailureStep}
+              debug={scanDebug}
+            />
+          )}
         </>
       ) : (
         <LegacySingleCapture

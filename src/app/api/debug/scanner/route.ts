@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { IdentifyPhotoRole } from "@/lib/ai/plant-identify";
 import { parseJsonBody } from "@/lib/ai/parse-request-body";
-import { runScannerDebug } from "@/lib/scanner/scanner-debug";
+import { probeScannerEnvironment, runScannerDebug } from "@/lib/scanner/scanner-debug";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -33,11 +33,14 @@ function parseImages(body: Record<string, unknown>): {
   return { urls: [] };
 }
 
+/** Environment-only probe — no image required. */
 export async function GET() {
+  const environment = await probeScannerEnvironment();
   return NextResponse.json({
     ok: true,
     route: ROUTE,
-    usage: "POST JSON with imageDataUrl or imageDataUrls (data URLs)",
+    environment,
+    usage: "POST JSON with imageDataUrl or imageDataUrls (data URLs) for full trace",
   });
 }
 
@@ -48,6 +51,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error: "Could not parse request body as JSON",
+        failureStep: "request_parse",
         rejectionSource: parsed.rejectionSource,
         payloadBytes: parsed.payloadBytes,
       },
@@ -61,6 +65,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error: "At least one data: image URL is required (imageDataUrl or imageDataUrls)",
+        failureStep: "request_validation",
         payloadBytes: parsed.data.payloadBytes,
       },
       { status: 400 }
@@ -74,5 +79,6 @@ export async function POST(request: Request) {
     payloadBytes: parsed.data.payloadBytes,
     report,
     failureReason: report.final.failureReason,
+    failureStep: report.final.failureStep,
   });
 }

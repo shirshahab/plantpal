@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { compressImageFile } from "@/lib/scanner/compress-image";
-import type { ScannerDebugReport } from "@/lib/scanner/scanner-debug";
+import type { ScannerDebugReport, ScannerEnvDebug } from "@/lib/scanner/scanner-debug";
 
 function BoolBadge({ value, label }: { value: boolean; label: string }) {
   return (
@@ -39,15 +39,33 @@ function JsonBlock({ value }: { value: unknown }) {
 export default function ScannerDebugPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [envLoading, setEnvLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [env, setEnv] = useState<ScannerEnvDebug | null>(null);
   const [report, setReport] = useState<ScannerDebugReport | null>(null);
   const [failureReason, setFailureReason] = useState<string | null>(null);
+  const [failureStep, setFailureStep] = useState<string | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch("/api/debug/scanner", { cache: "no-store" });
+        const json = (await res.json()) as { environment?: ScannerEnvDebug };
+        if (json.environment) setEnv(json.environment);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Could not load environment probe");
+      } finally {
+        setEnvLoading(false);
+      }
+    })();
+  }, []);
 
   const runDebug = useCallback(async (dataUrl: string) => {
     setLoading(true);
     setError(null);
     setReport(null);
     setFailureReason(null);
+    setFailureStep(null);
 
     try {
       const res = await fetch("/api/debug/scanner", {
@@ -60,11 +78,16 @@ export default function ScannerDebugPage() {
         ok: boolean;
         report?: ScannerDebugReport;
         failureReason?: string | null;
+        failureStep?: string | null;
         error?: string;
       };
 
-      if (json.report) setReport(json.report);
+      if (json.report) {
+        setReport(json.report);
+        setEnv(json.report.environment);
+      }
       setFailureReason(json.failureReason ?? json.error ?? null);
+      setFailureStep(json.failureStep ?? json.report?.final.failureStep ?? null);
 
       if (!res.ok && !json.report) {
         setError(json.error ?? `HTTP ${res.status}`);
@@ -86,6 +109,8 @@ export default function ScannerDebugPage() {
     }
   }
 
+  const displayEnv = report?.environment ?? env;
+
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-4xl space-y-6">
@@ -95,15 +120,56 @@ export default function ScannerDebugPage() {
           </Link>
           <h1 className="mt-3 text-2xl font-bold text-gray-900">Scanner debug</h1>
           <p className="text-sm text-gray-600 mt-1">
-            Upload a photo to trace OpenAI and PlantNet requests. Errors are shown in full — nothing
-            is hidden.
+            Production-safe diagnostics for OpenAI Vision and Pl@ntNet. Upload a photo to trace
+            every step — errors are shown in full.
           </p>
         </div>
+
+        <Section title="Production environment (runtime)">
+          {envLoading && !displayEnv && (
+            <p className="text-sm text-gray-500">Probing server environment…</p>
+          )}
+          {displayEnv && (
+            <>
+              <div className="flex flex-wrap gap-2">
+                <BoolBadge value={displayEnv.openaiKeyDetected} label="OpenAI Key Detected" />
+                <BoolBadge value={displayEnv.plantnetKeyDetected} label="PlantNet Key Detected" />
+                {displayEnv.openaiAuthOk != null && (
+                  <BoolBadge value={displayEnv.openaiAuthOk} label="OpenAI Auth OK" />
+                )}
+              </div>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li>
+                  Runtime: {displayEnv.nodeEnv}
+                  {displayEnv.onVercel
+                    ? ` · Vercel (${displayEnv.vercelEnv ?? "unknown"})`
+                    : " · local"}
+                </li>
+                <li>Vision model: {displayEnv.visionModel}</li>
+                <li>Supported formats: {displayEnv.supportedFormats.join(", ")}</li>
+                {displayEnv.openaiKeyPrefix && <li>OpenAI key: {displayEnv.openaiKeyPrefix}</li>}
+                {displayEnv.plantnetKeyPrefix && (
+                  <li>PlantNet key: {displayEnv.plantnetKeyPrefix}</li>
+                )}
+              </ul>
+              {displayEnv.openaiAuthError && (
+                <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2 font-mono">
+                  OpenAI auth: {displayEnv.openaiAuthError}
+                </p>
+              )}
+              {displayEnv.scannerDemoMode && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                  SCANNER_DEMO_MODE is enabled — scanner returns demo data, not live ID.
+                </p>
+              )}
+            </>
+          )}
+        </Section>
 
         <Section title="Submit test image">
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/*"
             capture="environment"
             disabled={loading}
             onChange={(e) => {
@@ -126,30 +192,7 @@ export default function ScannerDebugPage() {
 
         {report && (
           <>
-            <Section title="API keys (server)">
-              <div className="flex flex-wrap gap-2">
-                <BoolBadge value={report.environment.openaiKeyDetected} label="OpenAI Key Detected" />
-                <BoolBadge
-                  value={report.environment.plantnetKeyDetected}
-                  label="PlantNet Key Detected"
-                />
-              </div>
-              <p className="text-xs text-gray-500">
-                Env: {report.environment.nodeEnv}
-                {report.environment.onVercel ? " · Vercel" : " · local"}
-                {report.environment.openaiKeyPrefix &&
-                  ` · OpenAI ${report.environment.openaiKeyPrefix}`}
-                {report.environment.plantnetKeyPrefix &&
-                  ` · PlantNet ${report.environment.plantnetKeyPrefix}`}
-              </p>
-              {report.environment.scannerDemoMode && (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
-                  SCANNER_DEMO_MODE is enabled — production scanner returns demo data, not live ID.
-                </p>
-              )}
-            </Section>
-
-            <Section title="Images">
+            <Section title="Uploaded photos">
               {report.images.map((img) => (
                 <div key={img.index} className="text-sm border-b border-gray-100 pb-2 last:border-0">
                   <p className="font-medium">
@@ -157,14 +200,21 @@ export default function ScannerDebugPage() {
                     {img.role ? ` (${img.role})` : ""}
                   </p>
                   <ul className="text-xs text-gray-600 mt-1 space-y-0.5">
-                    <li>Count in payload: {report.payload.count}</li>
-                    <li>Size: {img.estimatedBytes.toLocaleString()} bytes (~{img.dataUrlChars.toLocaleString()} data URL chars)</li>
+                    <li>Photos in payload: {report.payload.count}</li>
+                    <li>
+                      Size: {img.estimatedBytes.toLocaleString()} bytes (~
+                      {img.dataUrlChars.toLocaleString()} data URL chars)
+                    </li>
                     <li>
                       Dimensions:{" "}
                       {img.width && img.height ? `${img.width}×${img.height}` : "unknown"}
                       {img.dimensionError ? ` — ${img.dimensionError}` : ""}
                     </li>
-                    <li>MIME: {img.mime}</li>
+                    <li>
+                      MIME: {img.mime}
+                      {img.converted ? ` (converted from ${img.originalMime})` : ""}
+                    </li>
+                    <li>Base64 valid: {img.base64Valid ? "yes" : "NO"}</li>
                   </ul>
                 </div>
               ))}
@@ -180,10 +230,13 @@ export default function ScannerDebugPage() {
 
             <Section title="OpenAI request">
               <div className="flex flex-wrap gap-2 text-xs">
-                <BoolBadge value={report.openai.sent} label="Sent" />
+                <BoolBadge value={report.openai.sent} label="Request Sent" />
                 <BoolBadge value={report.openai.success} label="Success" />
               </div>
               <p className="text-xs text-gray-500">Model: {report.openai.model}</p>
+              {report.openai.httpStatus != null && (
+                <p className="text-xs text-gray-500">Response status: HTTP {report.openai.httpStatus}</p>
+              )}
               {report.openai.durationMs != null && (
                 <p className="text-xs text-gray-500">Duration: {report.openai.durationMs}ms</p>
               )}
@@ -192,17 +245,23 @@ export default function ScannerDebugPage() {
                   {report.openai.error}
                 </p>
               )}
-              <p className="text-xs font-semibold text-gray-700">Raw OpenAI response</p>
+              {report.openai.errorBody != null && (
+                <>
+                  <p className="text-xs font-semibold text-gray-700">OpenAI error body</p>
+                  <JsonBlock value={report.openai.errorBody} />
+                </>
+              )}
+              <p className="text-xs font-semibold text-gray-700">OpenAI response</p>
               <JsonBlock value={report.openai.rawResponse} />
             </Section>
 
             <Section title="PlantNet request">
               <div className="flex flex-wrap gap-2 text-xs">
-                <BoolBadge value={report.plantnet.sent} label="Sent" />
+                <BoolBadge value={report.plantnet.sent} label="Request Sent" />
                 <BoolBadge value={report.plantnet.success} label="Success" />
               </div>
               {report.plantnet.httpStatus != null && (
-                <p className="text-xs text-gray-500">HTTP status: {report.plantnet.httpStatus}</p>
+                <p className="text-xs text-gray-500">Response status: HTTP {report.plantnet.httpStatus}</p>
               )}
               {report.plantnet.durationMs != null && (
                 <p className="text-xs text-gray-500">Duration: {report.plantnet.durationMs}ms</p>
@@ -212,11 +271,17 @@ export default function ScannerDebugPage() {
                   {report.plantnet.error}
                 </p>
               )}
-              <p className="text-xs font-semibold text-gray-700">Raw PlantNet response</p>
+              {report.plantnet.errorBody != null && (
+                <>
+                  <p className="text-xs font-semibold text-gray-700">PlantNet error body</p>
+                  <JsonBlock value={report.plantnet.errorBody} />
+                </>
+              )}
+              <p className="text-xs font-semibold text-gray-700">PlantNet response</p>
               <JsonBlock value={report.plantnet.rawResponse} />
             </Section>
 
-            <Section title="Final result">
+            <Section title="Final identification result">
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <p>
                   <span className="text-gray-500">Success:</span>{" "}
@@ -224,6 +289,9 @@ export default function ScannerDebugPage() {
                 </p>
                 <p>
                   <span className="text-gray-500">Source:</span> {report.final.source ?? "—"}
+                </p>
+                <p>
+                  <span className="text-gray-500">Provider:</span> {report.final.provider ?? "—"}
                 </p>
                 <p>
                   <span className="text-gray-500">Species:</span> {report.final.species ?? "—"}
@@ -237,10 +305,19 @@ export default function ScannerDebugPage() {
                   {report.final.confidence ?? "—"}
                 </p>
               </div>
-              {failureReason && (
-                <p className="text-sm text-red-800 bg-red-50 border border-red-300 rounded-lg p-3 font-semibold">
-                  Exact failure reason: {failureReason}
-                </p>
+              {(failureStep || failureReason) && (
+                <div className="text-sm text-red-800 bg-red-50 border border-red-300 rounded-lg p-3 space-y-1">
+                  {failureStep && (
+                    <p>
+                      <span className="font-semibold">Failing step:</span> {failureStep}
+                    </p>
+                  )}
+                  {failureReason && (
+                    <p className="font-mono whitespace-pre-wrap">
+                      <span className="font-semibold font-sans">Exact error:</span> {failureReason}
+                    </p>
+                  )}
+                </div>
               )}
             </Section>
           </>

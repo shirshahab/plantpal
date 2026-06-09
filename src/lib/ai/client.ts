@@ -1,24 +1,19 @@
 import type {
   AIApiResponse,
-  AICarePlanResponse,
-  AIDoctorResponse,
-  AIGoalPlanResponse,
-  AIPhotoAnalyzeResponse,
-  AIPriceCheckResponse,
-  AnalyzePhotoRequest,
-  CarePlanRequest,
-  DoctorRequest,
-  GoalPlanRequest,
   IdentifyPlantRequest,
   PlantIdentificationResponse,
-  PriceCheckerAIRequest,
-  ScanTagRequest,
-  TagScanResponse,
 } from "@/lib/types/ai";
+import type { IdentifyDebugLog } from "@/lib/ai/identify-errors";
 import {
   FRIENDLY_ANALYSIS_FAILED,
   FRIENDLY_PAYLOAD_TOO_LARGE,
 } from "@/lib/ai/messages";
+
+export type IdentifyPlantApiResponse = AIApiResponse<PlantIdentificationResponse> & {
+  failureReason?: string;
+  failureStep?: string;
+  debug?: IdentifyDebugLog;
+};
 
 function friendlyNonJsonError(status: number, bodyText: string): string {
   if (
@@ -58,10 +53,18 @@ async function post<T>(path: string, body: unknown): Promise<AIApiResponse<T>> {
   }
 
   if (!res.ok && json.ok === false) {
-    return {
-      ...json,
-      error: (json as { failureReason?: string }).failureReason ?? json.error,
+    const fail = json as Extract<AIApiResponse<T>, { ok: false }> & {
+      failureReason?: string;
+      failureStep?: string;
+      debug?: IdentifyDebugLog;
     };
+    return {
+      ok: false,
+      error: fail.failureReason ?? fail.error ?? FRIENDLY_ANALYSIS_FAILED,
+      failureReason: fail.failureReason,
+      failureStep: fail.failureStep,
+      debug: fail.debug,
+    } as AIApiResponse<T>;
   }
   if (!res.ok) {
     return {
@@ -75,12 +78,12 @@ async function post<T>(path: string, body: unknown): Promise<AIApiResponse<T>> {
   return json;
 }
 
-export function requestCarePlan(body: CarePlanRequest) {
-  return post<AICarePlanResponse>("/api/ai/care-plan", body);
+export function requestCarePlan(body: import("@/lib/types/ai").CarePlanRequest) {
+  return post<import("@/lib/types/ai").AICarePlanResponse>("/api/ai/care-plan", body);
 }
 
-export function requestDoctor(body: DoctorRequest) {
-  return post<AIDoctorResponse>("/api/ai/doctor", body);
+export function requestDoctor(body: import("@/lib/types/ai").DoctorRequest) {
+  return post<import("@/lib/types/ai").AIDoctorResponse>("/api/ai/doctor", body);
 }
 
 export function requestConciergePlan(body: import("@/lib/concierge/types").ConciergePlanRequest) {
@@ -89,24 +92,29 @@ export function requestConciergePlan(body: import("@/lib/concierge/types").Conci
   >("/api/ai/concierge-plan", body);
 }
 
-export function requestGoalPlan(body: GoalPlanRequest) {
-  return post<AIGoalPlanResponse>("/api/ai/goal-plan", body);
+export function requestGoalPlan(body: import("@/lib/types/ai").GoalPlanRequest) {
+  return post<import("@/lib/types/ai").AIGoalPlanResponse>("/api/ai/goal-plan", body);
 }
 
-export function requestPriceCheck(body: PriceCheckerAIRequest) {
-  return post<AIPriceCheckResponse>("/api/ai/price-checker", body);
+export function requestPriceCheck(body: import("@/lib/types/ai").PriceCheckerAIRequest) {
+  return post<import("@/lib/types/ai").AIPriceCheckResponse>("/api/ai/price-checker", body);
 }
 
-export function requestIdentifyPlant(body: IdentifyPlantRequest) {
-  return post<PlantIdentificationResponse>("/api/ai/identify-plant", body);
+export function requestIdentifyPlant(
+  body: IdentifyPlantRequest
+): Promise<IdentifyPlantApiResponse> {
+  return post<PlantIdentificationResponse>(
+    "/api/ai/identify-plant",
+    body
+  ) as Promise<IdentifyPlantApiResponse>;
 }
 
-export function requestScanTag(body: ScanTagRequest) {
-  return post<TagScanResponse>("/api/ai/scan-tag", body);
+export function requestScanTag(body: import("@/lib/types/ai").ScanTagRequest) {
+  return post<import("@/lib/types/ai").TagScanResponse>("/api/ai/scan-tag", body);
 }
 
-export function requestAnalyzePhoto(body: AnalyzePhotoRequest) {
-  return post<AIPhotoAnalyzeResponse>("/api/ai/analyze-photo", body);
+export function requestAnalyzePhoto(body: import("@/lib/types/ai").AnalyzePhotoRequest) {
+  return post<import("@/lib/types/ai").AIPhotoAnalyzeResponse>("/api/ai/analyze-photo", body);
 }
 
 export function requestLandscapeDesign(body: import("@/lib/landscape/types").LandscapeDesignRequest) {

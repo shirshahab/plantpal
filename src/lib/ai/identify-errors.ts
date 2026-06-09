@@ -12,6 +12,8 @@ export interface IdentifyDebugLog {
   openaiRawPreview: string | null;
   openaiError: string | null;
   plantnetRawPreview: string | null;
+  plantnetError: string | null;
+  failureStep: string | null;
 }
 
 export class IdentificationFailedError extends Error {
@@ -35,6 +37,8 @@ export function logIdentifyDebug(route: string, debug: IdentifyDebugLog): void {
     identificationProvider: debug.identificationProvider,
     fallbackReason: debug.fallbackReason,
     openaiError: debug.openaiError,
+    plantnetError: debug.plantnetError,
+    failureStep: debug.failureStep,
     openaiRawPreview: debug.openaiRawPreview,
     plantnetRawPreview: debug.plantnetRawPreview,
   });

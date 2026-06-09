@@ -1,4 +1,4 @@
-const CACHE = "plantpal-v4";
+const CACHE = "plantpal-v5";
 const OFFLINE_URL = "/offline";
 const PRECACHE = [
   OFFLINE_URL,

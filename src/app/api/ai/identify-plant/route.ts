@@ -16,8 +16,7 @@ import {
   logIdentifyDebug,
 } from "@/lib/ai/identify-errors";
 import { parseJsonBody } from "@/lib/ai/parse-request-body";
-import { isOpenAIConfigured } from "@/lib/ai/openai";
-import { LIVE_IDENTIFICATION_FAILED } from "@/lib/ai/messages";
+import { isOpenAIConfigured, OPENAI_VISION_MODEL } from "@/lib/ai/openai";
 import type { AIApiResponse } from "@/lib/types/ai";
 import { isPlantIdEnabled } from "@/lib/integrations/plantid";
 import { isScannerDemoModeEnabled } from "@/lib/scanner/demo-mode";
@@ -32,7 +31,14 @@ import {
   RATE_LIMITS,
 } from "@/lib/api/rate-limit";
 import { recordDataSource } from "@/lib/data-sources/runtime";
-import { formatBytes, totalDataUrlBytes } from "@/lib/scanner/upload-limits";
+import { formatBytes, totalDataUrlBytes, validatePhotoPayload } from "@/lib/scanner/upload-limits";
+import {
+  ImageNormalizeError,
+  normalizeDataUrlsForVision,
+} from "@/lib/scanner/normalize-image";
+import { redactSecrets } from "@/lib/ai/redact-secrets";
+import { probeOpenAI } from "@/lib/integrations/probe";
+import { isOpenAIKeyConfigured, isPlantNetKeyConfigured } from "@/lib/integrations/env-config";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -93,18 +99,77 @@ export async function POST(request: Request) {
   }
 
   const { body, payloadBytes } = parsed.data;
-  const { urls, roles } = parseImages(body);
-  if (urls.length === 0) {
-    return aiError("At least one image (imageDataUrl or imageDataUrls) is required");
+  const { urls: rawUrls, roles } = parseImages(body);
+  if (rawUrls.length === 0) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "At least one image (imageDataUrl or imageDataUrls) is required",
+        failureReason: "No image data in request",
+        failureStep: "request_validation",
+      },
+      { status: 400 }
+    );
   }
 
-  const primaryUrl = urls[0];
+  const payloadError = validatePhotoPayload(rawUrls);
+  if (payloadError) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: payloadError,
+        failureReason: payloadError,
+        failureStep: "payload_validation",
+      },
+      { status: 413 }
+    );
+  }
 
-  console.info(`[${ROUTE}] keys`, {
-    openai: isOpenAIConfigured(),
-    plantnet: isPlantNetEnabled(),
+  let urls: string[];
+  let imageMeta: Awaited<ReturnType<typeof normalizeDataUrlsForVision>>;
+  try {
+    imageMeta = await normalizeDataUrlsForVision(rawUrls);
+    urls = imageMeta.map((img) => img.dataUrl);
+  } catch (e) {
+    const message =
+      e instanceof ImageNormalizeError
+        ? e.message
+        : e instanceof Error
+          ? e.message
+          : "Image encoding failed";
+    console.error(`[${ROUTE}] image normalize failed`, { error: message });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: message,
+        failureReason: message,
+        failureStep: "image_encoding",
+      },
+      { status: 400 }
+    );
+  }
+
+  const primaryUrl = urls[0]!;
+
+  const openaiKeyPresent = isOpenAIKeyConfigured();
+  const plantnetKeyPresent = isPlantNetKeyConfigured();
+  const openaiProbe = openaiKeyPresent ? await probeOpenAI() : null;
+
+  console.info(`[${ROUTE}] start`, {
+    openaiKeyPresent,
+    openaiAuthOk: openaiProbe?.authOk ?? null,
+    plantnetKeyPresent,
     plantId: isPlantIdEnabled(),
+    model: OPENAI_VISION_MODEL,
     imageCount: urls.length,
+    images: imageMeta.map((img, i) => ({
+      index: i,
+      originalMime: img.originalMime,
+      converted: img.converted,
+      width: img.width,
+      height: img.height,
+      bytes: img.bytes,
+    })),
     totalImageBytes: totalDataUrlBytes(urls),
     payload: formatBytes(payloadBytes),
   });
@@ -120,36 +185,42 @@ export async function POST(request: Request) {
       plantnetKeyConfigured: isPlantNetEnabled(),
       plantIdKeyConfigured: isPlantIdEnabled(),
       imageCount: urls.length,
-      imageBytes: urls.map((u) => Math.round(u.length * 0.75)),
+      imageBytes: imageMeta.map((img) => img.bytes),
       responseSource: result.source,
       identificationProvider: result.identification_provider,
       fallbackReason: result.source === "mock" ? "demo_or_no_keys" : null,
       openaiRawPreview: null,
       openaiError: null,
       plantnetRawPreview: null,
+      plantnetError: null,
+      failureStep: null,
     });
 
     if (result.source === "ai") {
-      recordDataSource("openai", "real_api");
+      recordDataSource(
+        result.identification_provider === "plantnet" ? "plantnet" : "openai",
+        "real_api"
+      );
     } else {
       recordDataSource("openai", "mock", { fallback: true });
     }
 
     const plantnetEnabled = isPlantNetEnabled();
-    const plantnetSecondOpinion = plantnetEnabled
-      ? await identifyWithPlantNet({
-          imageDataUrl: primaryUrl,
-          organ: plantNetOrganFromRoles(roles),
-        })
-      : [];
+    const plantnetSecondOpinion =
+      plantnetEnabled && result.identification_provider !== "plantnet"
+        ? await identifyWithPlantNet({
+            imageDataUrl: primaryUrl,
+            organ: plantNetOrganFromRoles(roles),
+          })
+        : [];
 
     if (plantnetSecondOpinion.length > 0) {
       console.info(
-        `[${ROUTE}] Pl@ntNet raw:`,
+        `[${ROUTE}] Pl@ntNet second opinion:`,
         JSON.stringify(plantnetSecondOpinion.slice(0, 3)).slice(0, 500)
       );
       recordDataSource("plantnet", "real_api");
-    } else if (plantnetEnabled) {
+    } else if (plantnetEnabled && result.identification_provider !== "plantnet") {
       recordDataSource("plantnet", "real_api", { error: "No matches returned" });
     }
 
@@ -164,7 +235,7 @@ export async function POST(request: Request) {
       plantnetEnabled
     );
 
-    console.info(`[${ROUTE}] final`, {
+    console.info(`[${ROUTE}] success`, {
       source: enriched.source,
       provider: enriched.identification_provider,
       common_name: enriched.common_name,
@@ -210,27 +281,46 @@ export async function POST(request: Request) {
         fallback: true,
         error: e.debug.fallbackReason ?? "identification_failed",
       });
-      const failureReason =
-        e.debug.openaiError ?? e.debug.fallbackReason ?? e.message;
+      const failureReason = redactSecrets(
+        e.debug.plantnetError ??
+          e.debug.openaiError ??
+          e.debug.fallbackReason ??
+          e.message
+      );
+      const failureStep = e.debug.failureStep ?? "identification";
+      console.error(`[${ROUTE}] identification failed`, {
+        failureStep,
+        failureReason,
+        openaiError: e.debug.openaiError,
+        plantnetError: e.debug.plantnetError,
+        imageCount: e.debug.imageCount,
+        imageBytes: e.debug.imageBytes,
+      });
       return NextResponse.json(
         {
           ok: false,
-          error: e.message,
+          error: redactSecrets(e.message),
           failureReason,
+          failureStep,
           debug: e.debug,
-        } satisfies AIApiResponse<never> & { failureReason: string; debug: typeof e.debug },
+        } satisfies AIApiResponse<never> & {
+          failureReason: string;
+          failureStep: string;
+          debug: typeof e.debug;
+        },
         { status: 502 }
       );
     }
 
     recordDataSource("openai", "mock", { fallback: true, error: "Identification failed" });
     const message = e instanceof Error ? e.message : String(e);
-    console.error(`[${ROUTE}] unexpected error`, e);
+    console.error(`[${ROUTE}] unexpected error`, { error: message });
     return NextResponse.json(
       {
         ok: false,
-        error: LIVE_IDENTIFICATION_FAILED,
+        error: message,
         failureReason: message,
+        failureStep: "unexpected",
       },
       { status: 502 }
     );

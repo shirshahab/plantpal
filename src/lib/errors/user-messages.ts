@@ -1,5 +1,4 @@
 import type { PostgrestError } from "@supabase/supabase-js";
-import { LIVE_IDENTIFICATION_FAILED } from "@/lib/ai/messages";
 import { isMissingTableError } from "@/lib/supabase/errors";
 
 type ErrorLike = Pick<PostgrestError, "message" | "code" | "details" | "hint">;
@@ -39,56 +38,61 @@ export function friendlySaveError(error: ErrorLike | string): string {
 }
 
 /** User-facing message for AI API failures shown in UI. */
-export function friendlyAiError(error: string | undefined, feature = "AI"): string {
-  if (!error) {
+export function friendlyAiError(error: string | undefined, _feature = "AI"): string {
+  if (!error?.trim()) {
     return `We couldn't analyze those photos. Please try again.`;
   }
 
-  const lower = error.toLowerCase();
-
-  if (lower.includes("live identification failed")) {
-    return error;
-  }
+  const trimmed = error.trim();
+  const lower = trimmed.toLowerCase();
 
   if (
     lower.includes("too large") ||
     lower.includes("entity too large") ||
-    lower.includes("unexpected token") ||
-    lower.includes("not valid json")
+    (lower.includes("maximum") && lower.includes("photo"))
   ) {
-    return "Photos are too large. Try again with smaller images.";
+    return trimmed.includes("Photos are too large")
+      ? trimmed
+      : "Photos are too large. Try again with smaller images.";
   }
 
-  if (
-    lower.includes("couldn't analyze") ||
-    lower.includes("please try again")
-  ) {
-    return error;
+  if (lower.includes("invalid image format") || lower.includes("image encoding failed")) {
+    return trimmed;
   }
 
-  if (lower.includes("maximum") && lower.includes("photo")) {
-    return error;
+  if (lower.includes("openai http") || lower.includes("openai request failed")) {
+    return trimmed;
   }
 
-  if (lower.includes("openai") || lower.includes("api key") || lower.includes("401")) {
-    return `We couldn't analyze those photos. Please try again.`;
+  if (lower.includes("plantnet")) {
+    return trimmed;
   }
 
-  if (lower.includes("invalid json") || lower.includes("invalid request")) {
-    return "Photos are too large. Try again with smaller images.";
+  if (lower.includes("timed out") || lower.includes("timeout")) {
+    return trimmed;
   }
 
-  if (lower.includes("photo analysis failed")) {
-    return "We couldn't analyze those photos. Please try again.";
+  if (lower.includes("daily plant scan limit") || lower.includes("too many scans")) {
+    return trimmed;
   }
 
   if (lower.includes("care plan")) {
-    return `${error} — showing smart mock result instead.`;
+    return `${trimmed} — showing smart mock result instead.`;
   }
 
-  return error.length > 120
-    ? "We couldn't analyze those photos. Please try again."
-    : error;
+  // Pass through detailed server errors (failureReason) for identification/debugging.
+  if (
+    lower.includes("failed") ||
+    lower.includes("invalid") ||
+    lower.includes("unauthorized") ||
+    lower.includes("401") ||
+    lower.includes("403") ||
+    lower.includes("api key")
+  ) {
+    return trimmed;
+  }
+
+  return trimmed.length > 200 ? `${trimmed.slice(0, 197)}…` : trimmed;
 }
 
 /** Short toast-friendly AI status when mock is used intentionally. */

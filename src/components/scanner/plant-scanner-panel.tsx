@@ -16,6 +16,9 @@ import { saveScanToHistory } from "@/lib/scanner/scan-history";
 import { useToast } from "@/lib/store/toast-provider";
 import { friendlyAiError } from "@/lib/errors/user-messages";
 import { isDemoMode } from "@/lib/profile/user-profile";
+import { isScannerDebugUI } from "@/lib/dev/dev-tools";
+import { ScannerDebugErrorPanel } from "@/components/scanner/scanner-debug-error";
+import type { IdentifyDebugLog } from "@/lib/ai/identify-errors";
 import type { PhotoQualityAssessment, PlantIdentificationResponse } from "@/lib/types/ai";
 
 interface PlantScannerPanelProps {
@@ -32,6 +35,10 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
     null
   );
   const [scanHistoryId, setScanHistoryId] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [scanFailureStep, setScanFailureStep] = useState<string | null>(null);
+  const [scanDebug, setScanDebug] = useState<IdentifyDebugLog | null>(null);
+  const debugUI = isScannerDebugUI();
 
   const preview =
     photos.find((p) => p.role === "whole")?.dataUrl ?? photos[0]?.dataUrl ?? null;
@@ -39,6 +46,9 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
   async function handlePhotosChange(next: CapturedPhoto[]) {
     setPhotos(next);
     setResult(null);
+    setScanError(null);
+    setScanFailureStep(null);
+    setScanDebug(null);
     setScanHistoryId(null);
     if (next.length > 0) {
       const primary = next.find((p) => p.role === "whole") ?? next[0];
@@ -51,6 +61,9 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
   function clearCapture() {
     setPhotos([]);
     setResult(null);
+    setScanError(null);
+    setScanFailureStep(null);
+    setScanDebug(null);
     setClientPhotoQuality(null);
     setScanHistoryId(null);
   }
@@ -59,6 +72,9 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
     if (photos.length === 0) return;
     setLoading(true);
     setResult(null);
+    setScanError(null);
+    setScanFailureStep(null);
+    setScanDebug(null);
     try {
       const { imageDataUrls, photoRoles } = photosToRequest(photos);
       const res = await requestIdentifyPlant({
@@ -66,7 +82,13 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
         photoRoles,
         demoMode: isDemoMode(),
       });
-      if (!res.ok) throw new Error(res.error);
+      if (!res.ok) {
+        const msg = res.failureReason ?? res.error ?? "Identification failed";
+        setScanError(msg);
+        setScanFailureStep(res.failureStep ?? null);
+        setScanDebug(res.debug ?? null);
+        throw new Error(msg);
+      }
 
       const entry = saveScanToHistory({
         photoUrl: preview ?? imageDataUrls[0],
@@ -84,7 +106,8 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
         toast("Plant identified");
       }
     } catch (e) {
-      toast(friendlyAiError(e instanceof Error ? e.message : undefined, "identification"));
+      const msg = e instanceof Error ? e.message : undefined;
+      toast(debugUI ? msg ?? "Identification failed" : friendlyAiError(msg, "identification"));
     } finally {
       setLoading(false);
     }
@@ -116,6 +139,14 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
       />
 
       {showBadPhoto && <BadPhotoGuidance quality={clientPhotoQuality} />}
+
+      {scanError && debugUI && (
+        <ScannerDebugErrorPanel
+          error={scanError}
+          failureStep={scanFailureStep}
+          debug={scanDebug}
+        />
+      )}
 
       {loading && (
         <div className="flex items-center justify-center gap-2 text-sm text-green-700 py-1">
