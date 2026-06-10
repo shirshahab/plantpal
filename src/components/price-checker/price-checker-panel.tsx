@@ -138,7 +138,7 @@ export function PriceCheckerPanel() {
       toast(
         res.data.source === "ai"
           ? "AI price check ready."
-          : "Price check ready (mock mode)."
+          : "Price check ready — based on typical nursery pricing."
       );
     } else {
       setError(friendlyAiError(res.error, "price check"));

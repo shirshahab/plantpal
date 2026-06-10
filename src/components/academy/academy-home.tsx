@@ -154,31 +154,19 @@ export function FamilyLeaderboard() {
   const { progress } = useAcademy();
   if (!progress.familyMode) return null;
 
-  const members = [
-    { name: "You", xp: progress.totalXp, highlight: true },
-    { name: "Alex", xp: Math.max(0, progress.totalXp - 40), highlight: false },
-    { name: "Sam", xp: Math.max(0, progress.totalXp - 120), highlight: false },
-  ].sort((a, b) => b.xp - a.xp);
-
   return (
     <Card padding="md" className="border-purple-100 bg-purple-50/30">
-      <p className="text-sm font-semibold text-gray-900 mb-3">👨‍👩‍👧 Family leaderboard</p>
-      <div className="space-y-2">
-        {members.map((m, i) => (
-          <div
-            key={m.name}
-            className={cn(
-              "flex items-center justify-between rounded-lg px-3 py-2 text-sm",
-              m.highlight ? "bg-white border border-purple-200 font-medium" : "text-gray-600"
-            )}
-          >
-            <span>
-              #{i + 1} {m.name}
-            </span>
-            <span className="tabular-nums">{m.xp} XP</span>
-          </div>
-        ))}
+      <p className="text-sm font-semibold text-gray-900 mb-1">👨‍👩‍👧 Family leaderboard</p>
+      <div className="flex items-center justify-between rounded-lg px-3 py-2 text-sm bg-white border border-purple-200 font-medium mt-2">
+        <span>#1 You</span>
+        <span className="tabular-nums">{progress.totalXp} XP</span>
       </div>
+      <Link
+        href="/family"
+        className="text-xs text-purple-700 font-medium mt-3 inline-block"
+      >
+        Invite family to compete →
+      </Link>
     </Card>
   );
 }

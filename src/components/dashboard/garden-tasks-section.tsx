@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Droplets,
   Flower2,
+  HeartPulse,
   Leaf,
   Scissors,
   Shovel,
@@ -25,6 +26,7 @@ import {
 import type { PlantTask, TaskGroups } from "@/lib/types/tasks";
 
 const GROUP_ICONS: Record<TaskGroupKey, React.ElementType> = {
+  recovery: HeartPulse,
   water: Droplets,
   health: Stethoscope,
   fertilize: Leaf,
@@ -36,6 +38,7 @@ const GROUP_ICONS: Record<TaskGroupKey, React.ElementType> = {
 };
 
 const GROUP_ICON_STYLES: Record<TaskGroupKey, string> = {
+  recovery: "bg-red-100 text-red-600",
   water: "bg-sky-100 text-sky-600",
   health: "bg-amber-100 text-amber-600",
   fertilize: "bg-lime-100 text-lime-700",

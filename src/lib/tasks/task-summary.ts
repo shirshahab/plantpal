@@ -18,8 +18,10 @@ import type {
   TaskType,
 } from "@/lib/types/tasks";
 import { parseDateKey } from "./task-engine";
+import { isRecoveryTask } from "@/lib/health/recovery-tasks";
 
 export type TaskGroupKey =
+  | "recovery"
   | "water"
   | "health"
   | "fertilize"
@@ -63,6 +65,7 @@ const GROUP_OF_TYPE: Record<TaskType, TaskGroupKey> = {
 };
 
 const GROUP_ORDER: TaskGroupKey[] = [
+  "recovery",
   "water",
   "health",
   "harvest",
@@ -95,6 +98,11 @@ function groupCopy(
 ): { title: string; subtitle: string } {
   const n = plantCountIn(tasks);
   switch (key) {
+    case "recovery":
+      return {
+        title: "Recovery Plan",
+        subtitle: `${plural(tasks.length, "check-in")} for ${plural(n, "recovering plant")}.`,
+      };
     case "water":
       return {
         title: manyPlants ? `Water ${n} Plants` : "Water Garden",
@@ -184,7 +192,9 @@ export function buildGardenTaskView(
 
   const buckets = new Map<TaskGroupKey, PlantTask[]>();
   for (const task of active) {
-    const key = GROUP_OF_TYPE[task.taskType] ?? "other";
+    const key: TaskGroupKey = isRecoveryTask(task)
+      ? "recovery"
+      : (GROUP_OF_TYPE[task.taskType] ?? "other");
     const list = buckets.get(key) ?? [];
     list.push(task);
     buckets.set(key, list);

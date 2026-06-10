@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { TaskSection } from "@/components/tasks/task-card";
 import { useTasks } from "@/lib/store/tasks-provider";
 import { usePlants } from "@/lib/store/plants-provider";
+import { isRecoveryTask } from "@/lib/health/recovery-tasks";
 import { InstallPrompt } from "@/components/mobile/install-prompt";
 import { SyncStatusBadge } from "@/components/sync/sync-status-badge";
 
@@ -73,10 +74,21 @@ export default function TodayPage() {
             </Card>
           )}
 
+          {/* Recovery Plan check-ins from active health reports, grouped. */}
+          <TaskSection
+            title="Recovery Plan"
+            tasks={[...groups.overdue, ...groups.dueToday].filter(isRecoveryTask)}
+            onComplete={completeTask}
+            onSkip={skipTask}
+            onSnooze={snoozeTask}
+          />
+
           {/* Each task appears exactly once — no duplicate sections. */}
           <TaskSection
             title="Needs you now"
-            tasks={[...groups.overdue, ...groups.dueToday]}
+            tasks={[...groups.overdue, ...groups.dueToday].filter(
+              (t) => !isRecoveryTask(t)
+            )}
             emptyMessage="Nothing needs you right now."
             onComplete={completeTask}
             onSkip={skipTask}
@@ -85,7 +97,7 @@ export default function TodayPage() {
 
           <TaskSection
             title="Coming up"
-            tasks={groups.upcoming.slice(0, 5)}
+            tasks={groups.upcoming.filter((t) => !isRecoveryTask(t)).slice(0, 5)}
             onComplete={completeTask}
             onSkip={skipTask}
             onSnooze={snoozeTask}

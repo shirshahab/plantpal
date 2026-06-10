@@ -21,6 +21,18 @@ function enqueue(report: ClientErrorReport): void {
   }
 }
 
+/** Most recent client errors (newest last) — used in bug report diagnostics. */
+export function getRecentClientErrors(limit = 3): ClientErrorReport[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(ERROR_QUEUE_KEY);
+    const queue: ClientErrorReport[] = raw ? JSON.parse(raw) : [];
+    return queue.slice(-limit);
+  } catch {
+    return [];
+  }
+}
+
 export function reportClientError(report: ClientErrorReport): void {
   if (typeof window === "undefined") return;
   enqueue(report);

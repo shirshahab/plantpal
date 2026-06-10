@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { SafeImage } from "@/components/plants/plant-image";
-import { Stethoscope } from "lucide-react";
+import { ArrowRight, HeartPulse, Stethoscope } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,23 @@ export default function DoctorPage() {
           selected goals. Uses likely/possible language — not medical certainty.
         </p>
       </Card>
+
+      <Link href="/doctor/pro" className="block">
+        <Card padding="md" className="flex items-center gap-3 border-indigo-100 bg-indigo-50/40 hover:bg-indigo-50 transition-colors">
+          <span className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+            <HeartPulse className="w-5 h-5" />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-semibold text-gray-900">
+              Advanced Plant Doctor
+            </span>
+            <span className="block text-xs text-gray-500 mt-0.5">
+              Multi-photo diagnosis, remedy plan, prognosis, and recovery tracking.
+            </span>
+          </span>
+          <ArrowRight className="w-4 h-4 text-indigo-400 shrink-0" />
+        </Card>
+      </Link>
 
       <FeatureGate feature="ai_doctor">
         <Card padding="md" className="space-y-4">

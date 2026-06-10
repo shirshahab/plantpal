@@ -25,7 +25,11 @@ import {
   loadMissionState,
   type MissionState,
 } from "@/lib/moat/community-missions";
-import { DEMO_HOUSEHOLD, type FamilyHousehold } from "@/lib/moat/family-data";
+import {
+  createHousehold,
+  loadHousehold,
+  type FamilyHousehold,
+} from "@/lib/moat/family-data";
 import {
   generateSeasonalTasks,
   groupTasksByHorizon,
@@ -46,7 +50,8 @@ interface MoatContextValue {
   addSpacePlacement: (spaceId: string, placement: Omit<ZonePlantPlacement, "id">) => void;
   missions: MissionState;
   completeCommunityMission: (missionId: string) => void;
-  household: FamilyHousehold;
+  household: FamilyHousehold | null;
+  createFamilyHousehold: (name: string, memberName: string) => FamilyHousehold;
   seasonalTasks: SeasonalTask[];
   seasonalGrouped: ReturnType<typeof groupTasksByHorizon>;
   completeSeasonalTask: (taskId: string) => void;
@@ -78,7 +83,7 @@ export function MoatProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [spaces, setSpaces] = useState<GardenSpace[]>([]);
   const [missions, setMissions] = useState<MissionState>(() => loadMissionState());
-  const [household] = useState<FamilyHousehold>(DEMO_HOUSEHOLD);
+  const [household, setHousehold] = useState<FamilyHousehold | null>(null);
   const [completedSeasonalIds, setCompletedSeasonalIds] = useState<string[]>([]);
   const [zipCode, setZipCode] = useState("");
 
@@ -92,8 +97,15 @@ export function MoatProvider({ children }: { children: React.ReactNode }) {
     setMissions(loadMissionState());
     setCompletedSeasonalIds(loadCompletedSeasonal());
     setZipCode(loadUserProfile().zipCode);
+    setHousehold(loadHousehold());
     setReady(true);
   }, [refreshSpaces]);
+
+  const createFamilyHousehold = useCallback((name: string, memberName: string) => {
+    const created = createHousehold(name, memberName);
+    setHousehold(created);
+    return created;
+  }, []);
 
   const plantLabels = useMemo(() => {
     const fromPlants = plants.map((p) => p.name);
@@ -202,6 +214,7 @@ export function MoatProvider({ children }: { children: React.ReactNode }) {
       missions,
       completeCommunityMission,
       household,
+      createFamilyHousehold,
       seasonalTasks,
       seasonalGrouped,
       completeSeasonalTask,
@@ -221,6 +234,7 @@ export function MoatProvider({ children }: { children: React.ReactNode }) {
       missions,
       completeCommunityMission,
       household,
+      createFamilyHousehold,
       seasonalTasks,
       seasonalGrouped,
       completeSeasonalTask,

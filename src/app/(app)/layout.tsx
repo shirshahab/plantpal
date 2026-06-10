@@ -10,6 +10,7 @@ import { AiProvider } from "@/lib/store/ai-provider";
 import { PhotosProvider } from "@/lib/store/photos-provider";
 import { RemindersProvider } from "@/lib/store/reminders-provider";
 import { TasksProvider } from "@/lib/store/tasks-provider";
+import { NotificationsProvider } from "@/lib/store/notifications-provider";
 import { ToastProvider } from "@/lib/store/toast-provider";
 import { GenomeProvider } from "@/lib/store/genome-provider";
 import { SubscriptionProvider } from "@/lib/store/subscription-provider";
@@ -39,6 +40,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <ToastProvider>
                       <AcademyProvider>
                         <TasksProvider>
+                          <NotificationsProvider>
                           <MoatProvider>
                           <GenomeProvider>
                             <OnboardingGuard>
@@ -46,6 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             </OnboardingGuard>
                           </GenomeProvider>
                           </MoatProvider>
+                          </NotificationsProvider>
                         </TasksProvider>
                       </AcademyProvider>
                     </ToastProvider>

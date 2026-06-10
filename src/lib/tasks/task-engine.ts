@@ -29,6 +29,8 @@ export interface GeneratePlantTasksInput {
   taskStates: Record<string, TaskStateRecord>;
   reminders: ReminderSettings;
   completedLessonIds: string[];
+  /** Pre-built tasks from other systems (e.g. health Recovery Plans). */
+  extraTasks?: PlantTask[];
 }
 
 /** Local-timezone YYYY-MM-DD key. Using toISOString here would shift the
@@ -385,6 +387,10 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
         })
       );
     });
+  }
+
+  if (input.extraTasks?.length) {
+    raw.push(...input.extraTasks);
   }
 
   const nextLesson = LESSONS.find((l) => !completedLessonIds.includes(l.id));

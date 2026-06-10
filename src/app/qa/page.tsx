@@ -13,6 +13,11 @@ const QA_ITEMS = [
   { id: "supabase-save", label: "Supabase save", desc: "Plants and tasks sync to cloud when logged in" },
   { id: "ai-care", label: "AI care plan", desc: "Generate care plan on plant detail page" },
   { id: "scanner", label: "Scanner", desc: "Identify, diagnose, tag, and progress tabs work" },
+  { id: "scanner-photo", label: "Scanner accuracy", desc: "Identify a real plant photo — species + confidence look reasonable" },
+  { id: "scanner-fail", label: "Scanner failure path", desc: "Blurry/non-plant photo shows a graceful retry message, not a crash" },
+  { id: "doctor-pro", label: "Plant Doctor Pro", desc: "Pro diagnosis returns report with remedy plan and follow-up tasks" },
+  { id: "notifications", label: "Notifications", desc: "Bell shows alerts; daily push digest fires when enabled" },
+  { id: "feedback", label: "Feedback", desc: "Floating feedback button submits; bug report includes diagnostics" },
   { id: "tasks", label: "Tasks", desc: "Today page shows tasks; complete/skip/snooze work" },
   { id: "weather", label: "Weather", desc: "Local care card shows weather (live or mock)" },
   { id: "database", label: "Database search", desc: "Plant database search returns results" },
@@ -117,10 +122,28 @@ export default function QAPage() {
           })}
         </div>
 
+        <Card padding="md" className="border-blue-100 bg-blue-50/40">
+          <p className="text-sm font-semibold text-gray-900">Scanner not identifying?</p>
+          <p className="text-xs text-gray-500 mt-1">
+            The scanner diagnostics page traces every step — API keys, payload size, AI
+            response, and the exact failure point.
+          </p>
+          <Link href="/debug/scanner" className="inline-block mt-3">
+            <Button variant="secondary" size="sm">
+              Open scanner diagnostics
+            </Button>
+          </Link>
+        </Card>
+
         <div className="flex gap-3">
           <Link href="/dashboard" className="flex-1">
             <Button variant="outline" className="w-full">
               Open App
+            </Button>
+          </Link>
+          <Link href="/setup" className="flex-1">
+            <Button variant="outline" className="w-full">
+              Setup Checker
             </Button>
           </Link>
         </div>

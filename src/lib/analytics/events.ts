@@ -5,7 +5,9 @@ export type AnalyticsEventName =
   | "plant_added"
   | "session_start"
   | "onboarding_complete"
-  | "referral_redeemed";
+  | "referral_redeemed"
+  | "page_view"
+  | "feedback_submitted";
 
 export interface AnalyticsEventPayload {
   event: AnalyticsEventName;

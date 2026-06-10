@@ -11,6 +11,8 @@ import { BetaBadge } from "@/components/brand/beta-badge";
 import { cn } from "@/lib/utils";
 import { saveUserProfile } from "@/lib/profile/user-profile";
 import { trackEvent } from "@/lib/analytics/track";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   capturePendingReferral,
   getPendingReferral,
@@ -71,6 +73,40 @@ export default function OnboardingPageClient() {
     }
   }
 
+  /** Stable per-device key so referral redemption can't repeat on reload. */
+  function getReferralUserKey(): string {
+    const KEY = "plantpal-referral-user-key";
+    let key = localStorage.getItem(KEY);
+    if (!key) {
+      key = crypto.randomUUID();
+      localStorage.setItem(KEY, key);
+    }
+    return key;
+  }
+
+  /** Best-effort mirror of onboarding answers to the cloud profile. */
+  function syncProfileToCloud() {
+    if (!isSupabaseConfigured()) return;
+    const supabase = createClient();
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      void supabase
+        .from("profiles")
+        .update({
+          zip_code: zipCode.trim(),
+          experience_level: experience,
+          main_goal: mainGoal,
+          grow_types: growTypes,
+          onboarding_complete: true,
+          onboarding_completed_at: new Date().toISOString(),
+        })
+        .eq("id", user.id)
+        .then(({ error }) => {
+          if (error) console.warn("[onboarding] profile sync skipped:", error.message);
+        });
+    });
+  }
+
   function persistProfile(extra: { firstPlantAdded?: boolean } = {}) {
     saveUserProfile({
       onboardingComplete: true,
@@ -82,6 +118,8 @@ export default function OnboardingPageClient() {
       ...extra,
     });
 
+    syncProfileToCloud();
+
     trackEvent("onboarding_complete", {
       experience: experience ?? "unknown",
       gardenTypes: growTypes.join(","),
@@ -90,8 +128,7 @@ export default function OnboardingPageClient() {
 
     const pendingRef = getPendingReferral();
     if (pendingRef) {
-      const userKey = crypto.randomUUID();
-      const result = redeemReferral(pendingRef, userKey);
+      const result = redeemReferral(pendingRef, getReferralUserKey());
       if (result.trialGranted) {
         setReferralMessage(result.message);
       }

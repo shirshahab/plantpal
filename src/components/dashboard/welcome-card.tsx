@@ -18,8 +18,8 @@ export function DashboardWelcomeCard({ streak }: WelcomeCardProps) {
   const { user, isMockMode } = useAuth();
   const [displayName, setDisplayName] = useState<string | null>(null);
   const profile = loadUserProfile();
-  const zip = profile.zipCode || "91107";
-  const location = getLocationProfile(zip);
+  const zip = profile.zipCode;
+  const location = zip ? getLocationProfile(zip) : null;
   const { weather } = useWeather(zip);
 
   useEffect(() => {
@@ -59,17 +59,29 @@ export function DashboardWelcomeCard({ streak }: WelcomeCardProps) {
         <p className="text-sm text-green-100 mt-1">Here&apos;s what your garden needs today.</p>
 
         <div className="flex flex-wrap items-center gap-3 mt-4">
-          <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-sm">
-            <CloudSun className="w-4 h-4 text-green-100" />
-            <span>
-              {location.city}, {location.state}
-              {weather.tempF != null ? ` · ${weather.tempF}°F` : ""}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-sm">
-            <span className="text-green-100 text-xs">ZIP</span>
-            <span className="font-medium">{zip}</span>
-          </div>
+          {location ? (
+            <>
+              <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-sm">
+                <CloudSun className="w-4 h-4 text-green-100" />
+                <span>
+                  {location.city}, {location.state}
+                  {weather.tempF != null ? ` · ${weather.tempF}°F` : ""}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-sm">
+                <span className="text-green-100 text-xs">ZIP</span>
+                <span className="font-medium">{zip}</span>
+              </div>
+            </>
+          ) : (
+            <a
+              href="/settings"
+              className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-sm hover:bg-white/25 transition-colors"
+            >
+              <CloudSun className="w-4 h-4 text-green-100" />
+              <span>Add your ZIP for local weather →</span>
+            </a>
+          )}
           {streak > 0 && (
             <div className="flex items-center gap-1.5 rounded-xl bg-orange-400/25 px-3 py-2 text-sm">
               <Flame className="w-4 h-4 text-orange-200" />

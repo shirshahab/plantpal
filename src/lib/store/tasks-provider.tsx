@@ -40,6 +40,12 @@ import {
   upsertGeneratedTasks,
 } from "@/lib/db";
 import { appendGenomeEvent } from "@/lib/genome/storage";
+import {
+  getActiveHealthReports,
+  HEALTH_REPORTS_CHANGED_EVENT,
+} from "@/lib/health/report-storage";
+import { buildRecoveryTasks } from "@/lib/health/recovery-tasks";
+import type { ProHealthReport } from "@/lib/types/health";
 
 const STATES_KEY = "plantpal-task-states";
 const LOGS_KEY = "plantpal-care-logs";
@@ -128,6 +134,20 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  // Active health reports drive Recovery Plan follow-up tasks.
+  const [healthReports, setHealthReports] = useState<ProHealthReport[]>([]);
+  useEffect(() => {
+    const load = () => setHealthReports(getActiveHealthReports());
+    load();
+    window.addEventListener(HEALTH_REPORTS_CHANGED_EVENT, load);
+    return () => window.removeEventListener(HEALTH_REPORTS_CHANGED_EVENT, load);
+  }, []);
+
+  const recoveryTasks = useMemo(
+    () => buildRecoveryTasks(healthReports, new Date()),
+    [healthReports]
+  );
+
   const zip = plants[0]?.zipCode ?? "91107";
   const locationProfile = useMemo(() => getLocationProfile(zip), [zip]);
   const { weather } = useWeather(zip);
@@ -160,6 +180,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       taskStates,
       reminders,
       completedLessonIds: progress.completedLessons,
+      extraTasks: recoveryTasks,
     });
   }, [
     plants,
@@ -171,6 +192,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     locationProfile,
     progress.completedLessons,
     remindersReady,
+    recoveryTasks,
   ]);
 
   // Sync generated tasks to Supabase (deduped by task_key)

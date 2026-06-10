@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Bell, BellOff, ChevronLeft } from "lucide-react";
+import { Bell, BellOff, BellRing, ChevronLeft, Mail } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useReminders } from "@/lib/store/reminders-provider";
+import { useNotifications } from "@/lib/store/notifications-provider";
+import { showLocalNotification } from "@/lib/notifications/push";
 
 function ToggleRow({
   label,
@@ -36,6 +39,8 @@ function ToggleRow({
 
 export default function RemindersSettingsPage() {
   const { settings, updateSettings, requestNotificationPermission } = useReminders();
+  const { prefs, updatePrefs } = useNotifications();
+  const [testStatus, setTestStatus] = useState<"idle" | "sent" | "failed">("idle");
 
   const permLabel =
     settings.notificationPermission === "unsupported"
@@ -45,6 +50,16 @@ export default function RemindersSettingsPage() {
         : settings.notificationPermission === "denied"
           ? "Blocked — enable in browser settings"
           : "Not requested yet";
+
+  const sendTest = async () => {
+    const ok = await showLocalNotification(
+      "PlantPal reminders are working",
+      "You'll get a daily digest like this at your reminder time.",
+      "/dashboard"
+    );
+    setTestStatus(ok ? "sent" : "failed");
+    setTimeout(() => setTestStatus("idle"), 4000);
+  };
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
@@ -114,6 +129,39 @@ export default function RemindersSettingsPage() {
         </CardContent>
       </Card>
 
+      <Card padding="none">
+        <CardHeader className="px-4 pt-4 pb-0">
+          <h2 className="font-semibold text-gray-900">Alerts</h2>
+          <p className="text-sm text-gray-500">What shows up in your notification center</p>
+        </CardHeader>
+        <CardContent className="divide-y divide-gray-50 px-4">
+          <ToggleRow
+            label="Academy streak"
+            description="A nudge when your learning streak is at risk"
+            checked={prefs.academyStreak}
+            onChange={(v) => updatePrefs({ academyStreak: v })}
+          />
+          <ToggleRow
+            label="Friend activity"
+            description="When friends share updates in your circle"
+            checked={prefs.friendActivity}
+            onChange={(v) => updatePrefs({ friendActivity: v })}
+          />
+          <ToggleRow
+            label="Weather alerts"
+            description="Heat, frost, wind, and rain that affect your plants"
+            checked={prefs.weatherAlerts}
+            onChange={(v) => updatePrefs({ weatherAlerts: v })}
+          />
+          <ToggleRow
+            label="Pest & disease risk"
+            description="Seasonal risks worth a quick plant check"
+            checked={prefs.pestAlerts}
+            onChange={(v) => updatePrefs({ pestAlerts: v })}
+          />
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -132,12 +180,61 @@ export default function RemindersSettingsPage() {
           {settings.notificationPermission !== "unsupported" &&
             settings.notificationPermission !== "granted" && (
               <Button onClick={() => requestNotificationPermission()}>
-                Enable reminders
+                Enable push notifications
               </Button>
             )}
+          {settings.notificationPermission === "granted" && (
+            <div className="space-y-2">
+              <Button variant="secondary" onClick={() => void sendTest()}>
+                <BellRing className="w-4 h-4" />
+                Send test notification
+              </Button>
+              {testStatus === "sent" && (
+                <p className="text-sm text-green-700">Test sent — check your notifications.</p>
+              )}
+              {testStatus === "failed" && (
+                <p className="text-sm text-red-600">
+                  Couldn&apos;t send. Check browser notification settings for this site.
+                </p>
+              )}
+            </div>
+          )}
           <p className="text-sm text-gray-500 bg-gray-50 rounded-xl px-3 py-2">
-            Push notifications coming next. Permission is saved so we can wire real alerts in a future update.
+            With push enabled, PlantPal sends one daily digest at your reminder time covering
+            water, feeding, recovery check-ins, and alerts. Install PlantPal to your home
+            screen for the best experience on mobile.
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Mail className="w-5 h-5 text-gray-500" />
+            <div>
+              <h2 className="font-semibold text-gray-900">Email fallback</h2>
+              <p className="text-sm text-gray-500">
+                Get a daily email digest when push isn&apos;t available
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <ToggleRow
+            label="Email me my reminders"
+            description="Only used on days when push notifications can't reach you"
+            checked={prefs.emailFallback}
+            onChange={(v) => updatePrefs({ emailFallback: v })}
+          />
+          {prefs.emailFallback && (
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={prefs.emailAddress}
+              onChange={(e) => updatePrefs({ emailAddress: e.target.value })}
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900"
+            />
+          )}
         </CardContent>
       </Card>
     </div>

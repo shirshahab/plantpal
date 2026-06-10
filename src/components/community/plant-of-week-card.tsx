@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Sparkles, Heart, Leaf } from "lucide-react";
+import { Sparkles, Leaf } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { PlantOfWeek } from "@/lib/mock/community";
@@ -43,10 +43,6 @@ export function PlantOfWeekCard({ plant }: { plant: PlantOfWeek }) {
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
           <div className="flex items-center gap-3 text-sm text-gray-500">
             <Badge variant="outline">{plant.zone}</Badge>
-            <span className="inline-flex items-center gap-1">
-              <Heart className="w-3.5 h-3.5 text-red-400" />
-              {plant.cheers} cheers
-            </span>
           </div>
           <Link
             href="/database/plants/species-meyer-lemon-tree"

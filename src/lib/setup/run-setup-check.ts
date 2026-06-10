@@ -24,6 +24,14 @@ const REQUIRED_TABLES = [
   "user_reminder_settings",
   "plant_species",
   "health_reports",
+  // Observability — beta launch readiness (Phase 42)
+  "beta_feedback",
+  "client_errors",
+  "analytics_events",
+  // Pro health intelligence (Phase 39/40)
+  "pro_health_reports",
+  "expert_review_requests",
+  "diagnosis_feedback",
 ] as const;
 
 function item(

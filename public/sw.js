@@ -1,4 +1,4 @@
-const CACHE = "plantpal-v5";
+const CACHE = "plantpal-v6";
 const OFFLINE_URL = "/offline";
 const PRECACHE = [
   OFFLINE_URL,
@@ -51,5 +51,41 @@ self.addEventListener("fetch", (event) => {
     fetch(event.request)
       .then((response) => response)
       .catch(() => caches.match(event.request))
+  );
+});
+
+// Open the right page when a reminder notification is tapped.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const href = (event.notification.data && event.notification.data.href) || "/dashboard";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ("focus" in client) {
+          client.focus();
+          if ("navigate" in client) client.navigate(href);
+          return;
+        }
+      }
+      return self.clients.openWindow(href);
+    })
+  );
+});
+
+// Server-sent push (future web-push backend); payload: { title, body, href }.
+self.addEventListener("push", (event) => {
+  let payload = { title: "PlantPal", body: "You have a new plant care update.", href: "/dashboard" };
+  try {
+    if (event.data) payload = { ...payload, ...event.data.json() };
+  } catch {
+    /* keep defaults */
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { href: payload.href },
+    })
   );
 });

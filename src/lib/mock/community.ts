@@ -313,7 +313,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Backyard Orchard",
     subtitle: "Citrus, stone fruit & pollinators",
     description:
-      "A Pasadena backyard with Meyer lemon, avocado, and peach trees — designed for staggered harvests and bee-friendly understory.",
+      "A zone 10 backyard with Meyer lemon, avocado, and peach trees — designed for staggered harvests and bee-friendly understory.",
     imageUrl:
       "https://images.unsplash.com/photo-1466692476860-a088c219fe7a?w=800&h=500&fit=crop&q=80",
     owner: "Elena Martinez",
@@ -329,7 +329,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Bonsai Collection",
     subtitle: "12 trees · wired & refined",
     description:
-      "David's patio collection spans maple, juniper, and ficus — each on its own care rhythm with seasonal repotting notes.",
+      "A patio collection spanning maple, juniper, and ficus — each on its own care rhythm with seasonal repotting notes.",
     imageUrl:
       "https://images.unsplash.com/photo-1509228468518-180dd4863644?w=800&h=500&fit=crop&q=80",
     owner: "David Chen",
@@ -345,7 +345,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Houseplant Jungle",
     subtitle: "67 plants · one living room",
     description:
-      "Marcus turned a bright corner into a layered indoor ecosystem — pothos trails, monsteras, and a humidifier on a timer.",
+      "A bright corner turned into a layered indoor ecosystem — pothos trails, monsteras, and a humidifier on a timer.",
     imageUrl:
       "https://images.unsplash.com/photo-1614594975524-2aba8ac3cb18?w=800&h=500&fit=crop&q=80",
     owner: "Marcus Webb",
@@ -361,7 +361,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Vegetable Garden",
     subtitle: "Raised beds · year-round",
     description:
-      "Aisha's four-bed rotation keeps tomatoes, peppers, and greens producing through SoCal's mild winters.",
+      "A four-bed rotation that keeps tomatoes, peppers, and greens producing through mild winters.",
     imageUrl:
       "https://images.unsplash.com/photo-1592840064570-884177fccc7a?w=800&h=500&fit=crop&q=80",
     owner: "Aisha Okonkwo",
@@ -377,7 +377,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Mediterranean Yard",
     subtitle: "Olive, lavender & gravel paths",
     description:
-      "Sofia's front yard trades lawn for drought-tolerant structure — Italian cypress anchors, lavender borders, and smart drip zones.",
+      "A front yard that trades lawn for drought-tolerant structure — Italian cypress anchors, lavender borders, and smart drip zones.",
     imageUrl:
       "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&h=500&fit=crop&q=80",
     owner: "Sofia Navarro",
@@ -393,7 +393,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Pollinator Garden",
     subtitle: "Native blooms · year-round visitors",
     description:
-      "Chris converted a narrow side strip into a hummingbird highway — salvia, penstemon, milkweed, and a shallow water dish.",
+      "A narrow side strip converted into a hummingbird highway — salvia, penstemon, milkweed, and a shallow water dish.",
     imageUrl:
       "https://images.unsplash.com/photo-1499006089348-7297094601c2?w=800&h=500&fit=crop&q=80",
     owner: "Chris Park",

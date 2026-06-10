@@ -8,6 +8,7 @@ import { SyncStatusBadge } from "@/components/sync/sync-status-badge";
 import { DashboardHealthScore } from "@/components/dashboard/health-score-section";
 import { DashboardGardenTasks } from "@/components/dashboard/garden-tasks-section";
 import { DashboardSeasonalAlert } from "@/components/dashboard/seasonal-alert-section";
+import { DashboardHealthAlert } from "@/components/dashboard/health-alert-section";
 import { DashboardContinueLearning } from "@/components/dashboard/continue-learning-section";
 import { DashboardQuickActions } from "@/components/dashboard/quick-actions-section";
 import { DashboardNeedsAttention } from "@/components/dashboard/needs-attention-section";
@@ -19,7 +20,8 @@ import { DashboardActiveChallenge } from "@/components/social/dashboard-active-c
 import { DashboardEmptyState } from "@/components/dashboard/empty-state";
 import { FounderModeBadge } from "@/components/settings/founder-mode-badge";
 import { SendFeedbackButton } from "@/components/feedback/send-feedback-button";
-import { SocialNotificationsBell } from "@/components/social/notifications-bell";
+import { NotificationCenter } from "@/components/notifications/notification-center";
+import { BetaWelcomeBanner } from "@/components/dashboard/beta-welcome-banner";
 import { usePlants } from "@/lib/store/plants-provider";
 import { useTasks } from "@/lib/store/tasks-provider";
 import { useMoat } from "@/lib/store/moat-provider";
@@ -77,7 +79,7 @@ export function DashboardHome() {
         description={`${plants.length} plant${plants.length === 1 ? "" : "s"} in your garden`}
         action={
           <div className="flex items-center gap-2 flex-wrap justify-end">
-            <SocialNotificationsBell />
+            <NotificationCenter />
             <SendFeedbackButton />
             <FounderModeBadge />
             <SyncStatusBadge />
@@ -89,6 +91,12 @@ export function DashboardHome() {
       <InstallPrompt />
 
       <div className="flex flex-col gap-5">
+        {/* Beta welcome — one-time pointer to the tester guide */}
+        <BetaWelcomeBanner />
+
+        {/* 0. Plant health alert — active diagnosis reports come first */}
+        <DashboardHealthAlert />
+
         {/* 1. Weather / local alert */}
         <DashboardSeasonalAlert plants={plants} seasonalTasks={seasonalTasks} />
 

@@ -145,7 +145,7 @@ export function PlantIdentificationResults({
       <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">
         <Sparkles className="w-3 h-3" />
         {PROVIDER_LABELS[result.identification_provider] ?? "AI"}
-        {result.source === "mock" && " · add PLANT_ID_API_KEY or OPENAI_API_KEY for live ID"}
+        {result.source === "mock" && " · live identification temporarily unavailable"}
       </p>
     </Card>
   );

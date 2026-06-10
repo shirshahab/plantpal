@@ -10,9 +10,8 @@ import { useMoat } from "@/lib/store/moat-provider";
 export function DashboardFamilyPreview() {
   const { progress } = useAcademy();
   const { household } = useMoat();
-  const sorted = [...household.members].sort((a, b) => b.totalXp - a.totalXp);
 
-  if (!progress.familyMode) {
+  if (!progress.familyMode || !household) {
     return (
       <Card padding="md" className="border-pink-100 bg-gradient-to-br from-pink-50/40 to-white">
         <div className="flex items-start gap-3">
@@ -36,15 +35,20 @@ export function DashboardFamilyPreview() {
     );
   }
 
+  const sorted = household.members
+    .map((m) => (m.id === "you" ? { ...m, totalXp: progress.totalXp } : m))
+    .sort((a, b) => b.totalXp - a.totalXp);
+  const totalXp = sorted.reduce((sum, m) => sum + m.totalXp, 0);
+
   return (
     <Card padding="md">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-green-600" />
-          <p className="text-xs font-semibold text-gray-400 uppercase">Family leaderboard</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase">{household.name}</p>
         </div>
         <span className="text-xs font-bold text-green-600">
-          {household.totalFamilyXp.toLocaleString()} XP
+          {totalXp.toLocaleString()} XP
         </span>
       </div>
       <div className="space-y-2">
