@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { InstallPrompt } from "@/components/mobile/install-prompt";
 import { SyncStatusBadge } from "@/components/sync/sync-status-badge";
 import { DashboardHealthScore } from "@/components/dashboard/health-score-section";
-import { DashboardTopTasks } from "@/components/dashboard/top-tasks-section";
+import { DashboardGardenTasks } from "@/components/dashboard/garden-tasks-section";
 import { DashboardSeasonalAlert } from "@/components/dashboard/seasonal-alert-section";
 import { DashboardContinueLearning } from "@/components/dashboard/continue-learning-section";
 import { DashboardQuickActions } from "@/components/dashboard/quick-actions-section";
@@ -22,8 +20,6 @@ import { DashboardEmptyState } from "@/components/dashboard/empty-state";
 import { FounderModeBadge } from "@/components/settings/founder-mode-badge";
 import { SendFeedbackButton } from "@/components/feedback/send-feedback-button";
 import { SocialNotificationsBell } from "@/components/social/notifications-bell";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { usePlants } from "@/lib/store/plants-provider";
 import { useTasks } from "@/lib/store/tasks-provider";
 import { useMoat } from "@/lib/store/moat-provider";
@@ -33,7 +29,7 @@ import { loadUserProfile } from "@/lib/profile/user-profile";
 
 export function DashboardHome() {
   const { plants, loading, refreshPlants } = usePlants();
-  const { topTasks, completeTask, skipTask, snoozeTask, ready: tasksReady } = useTasks();
+  const { groups: taskGroups, completeTask, ready: tasksReady } = useTasks();
   const { gardenHealth, seasonalTasks, ready: moatReady } = useMoat();
   const { toast } = useToast();
   const [profileZip, setProfileZip] = useState("");
@@ -99,24 +95,13 @@ export function DashboardHome() {
         {/* 2. Garden score */}
         <DashboardHealthScore health={gardenHealth} plants={plants} />
 
-        {/* 3. Today's tasks */}
-        <DashboardTopTasks
-          tasks={topTasks}
+        {/* 3. Today's tasks — grouped & capped so the garden feels under control */}
+        <DashboardGardenTasks
+          groups={taskGroups}
+          plantCount={plants.length}
           ready={tasksReady}
           onComplete={completeTask}
-          onSkip={skipTask}
-          onSnooze={snoozeTask}
         />
-        {!tasksReady || topTasks.length === 0 ? (
-          <Card padding="md" className="text-center">
-            <p className="text-sm text-gray-600">No tasks due today — your garden is on track.</p>
-            <Link href="/today" className="inline-block mt-3">
-              <Button variant="outline" size="sm" className="touch-manipulation">
-                View calendar <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            </Link>
-          </Card>
-        ) : null}
 
         {/* 4. Plants needing attention */}
         <DashboardNeedsAttention plants={plants} />

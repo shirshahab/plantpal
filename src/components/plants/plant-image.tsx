@@ -1,21 +1,43 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { Plant } from "@/lib/types";
 import type { PlaceholderImageType } from "@/lib/plants/plant-size";
 import {
+  getPlantDisplayImage,
+  getArtworkForText,
+  GENERIC_PLANT_ARTWORK,
+} from "@/lib/plants/plant-artwork";
+import {
   getPlaceholderImageUrl,
-  getPlaceholderStyle,
-  isPlaceholderImageUrl,
-  resolvePlantImageUrl,
+  getPlaceholderLabel,
 } from "@/lib/plants/plant-placeholders";
 import { Badge } from "@/components/ui/badge";
+
+/** Hosts configured in next.config.ts — anything else must skip optimization,
+ * otherwise next/image throws instead of firing onError. */
+function skipOptimization(src: string): boolean {
+  if (src.startsWith("/")) return false;
+  if (src.startsWith("data:") || src.startsWith("blob:")) return true;
+  try {
+    const host = new URL(src).hostname;
+    return !(
+      host === "images.unsplash.com" ||
+      host.endsWith(".supabase.co") ||
+      host === "perenual.com" ||
+      host.endsWith(".perenual.com")
+    );
+  } catch {
+    return true;
+  }
+}
 
 interface PlantImageProps {
   plant: Pick<
     Plant,
-    "image" | "photoStatus" | "placeholderImageType" | "name"
+    "image" | "photoStatus" | "placeholderImageType" | "name" | "species"
   >;
   className?: string;
   fill?: boolean;
@@ -32,35 +54,22 @@ export function PlantImage({
   sizes,
   showBadge = false,
 }: PlantImageProps) {
-  const src = resolvePlantImageUrl(plant);
-  const isPlaceholder =
-    plant.photoStatus === "placeholder" ||
-    isPlaceholderImageUrl(src) ||
-    (plant.photoStatus !== "real_photo" && plant.placeholderImageType);
+  const display = getPlantDisplayImage(plant);
+  const [src, setSrc] = useState(display.src);
 
-  if (isPlaceholder && plant.placeholderImageType) {
-    const style = getPlaceholderStyle(plant.placeholderImageType);
-    return (
-      <div
-        className={cn(
-          "relative flex flex-col items-center justify-center overflow-hidden",
-          className
-        )}
-        style={{ background: style.gradient }}
-      >
-        <span className="text-5xl sm:text-6xl drop-shadow-sm">{style.emoji}</span>
-        <span className="text-xs font-semibold text-white/90 mt-2 uppercase tracking-wide">
-          {style.label}
-        </span>
-        {showBadge && plant.photoStatus === "needs_photo" && (
-          <NeedsPhotoBadge className="absolute top-3 left-3" />
-        )}
-      </div>
-    );
-  }
+  // Re-sync when the plant's photo changes (e.g. after upload).
+  useEffect(() => {
+    setSrc(display.src);
+  }, [display.src]);
+
+  const handleError = () => {
+    // Fall through the guaranteed-local chain so the box is never blank.
+    if (src !== display.fallbackSrc) setSrc(display.fallbackSrc);
+    else if (src !== GENERIC_PLANT_ARTWORK) setSrc(GENERIC_PLANT_ARTWORK);
+  };
 
   return (
-    <div className={cn("relative overflow-hidden bg-green-50", className)}>
+    <div className={cn("relative overflow-hidden bg-[#eef4e3]", className)}>
       <Image
         src={src}
         alt={plant.name}
@@ -68,7 +77,8 @@ export function PlantImage({
         className="object-cover"
         priority={priority}
         sizes={sizes}
-        unoptimized={src.startsWith("data:")}
+        unoptimized={skipOptimization(src)}
+        onError={handleError}
       />
       {showBadge && plant.photoStatus === "needs_photo" && (
         <NeedsPhotoBadge className="absolute top-3 left-3" />
@@ -86,26 +96,67 @@ export function PlaceholderPickerCard({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const style = getPlaceholderStyle(type);
   return (
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        "rounded-xl overflow-hidden border-2 transition-all text-left touch-manipulation",
+        "rounded-xl overflow-hidden border-2 transition-all text-left touch-manipulation bg-white",
         selected ? "border-green-600 ring-2 ring-green-200" : "border-gray-200"
       )}
     >
-      <div
-        className="h-20 flex flex-col items-center justify-center"
-        style={{ background: style.gradient }}
-      >
-        <span className="text-2xl">{style.emoji}</span>
+      <div className="relative h-20 bg-[#eef4e3]">
+        <Image
+          src={getPlaceholderImageUrl(type)}
+          alt={getPlaceholderLabel(type)}
+          fill
+          className="object-cover"
+          sizes="120px"
+        />
       </div>
       <p className="text-[10px] font-medium text-gray-700 px-2 py-1.5 text-center">
-        {style.label}
+        {getPlaceholderLabel(type)}
       </p>
     </button>
+  );
+}
+
+/**
+ * next/image with a guaranteed-local artwork fallback — never renders a
+ * broken/blank image box. Pass plant text (name/species) to pick the artwork.
+ */
+export function SafeImage({
+  src,
+  alt,
+  plantText,
+  sizes,
+  className,
+}: {
+  src: string;
+  alt: string;
+  plantText: string;
+  sizes?: string;
+  className?: string;
+}) {
+  const [current, setCurrent] = useState(src);
+  useEffect(() => setCurrent(src), [src]);
+
+  const handleError = () => {
+    const artwork = getArtworkForText(plantText);
+    if (current !== artwork) setCurrent(artwork);
+    else if (current !== GENERIC_PLANT_ARTWORK) setCurrent(GENERIC_PLANT_ARTWORK);
+  };
+
+  return (
+    <Image
+      src={current}
+      alt={alt}
+      fill
+      className={cn("object-cover", className)}
+      sizes={sizes}
+      unoptimized={skipOptimization(current)}
+      onError={handleError}
+    />
   );
 }
 

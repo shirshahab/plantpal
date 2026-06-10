@@ -18,16 +18,16 @@ export type DataSourceLabel =
 
 const LABELS: Record<DataSourceLabel, string> = {
   live_weather: "Live weather",
-  mock_weather: "Mock fallback",
+  mock_weather: "Typical conditions",
   perenual: "Perenual plant data",
   plantpal_db: "PlantPal database",
   ai_generated: "AI generated",
   ai_suggestion: "AI suggestion",
-  mock_fallback: "Mock fallback",
+  mock_fallback: "PlantPal library",
   live_shopping: "Live shopping result",
   estimated_price: "Estimated price",
   plantnet: "Pl@ntNet",
-  seed_data: "Internal seed data",
+  seed_data: "PlantPal library",
 };
 
 const VARIANTS: Record<DataSourceLabel, "success" | "warning" | "outline" | "danger"> = {

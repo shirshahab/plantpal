@@ -286,5 +286,5 @@ export function defaultCareForSpecies(species: string): BaseCareValues {
   };
 }
 
-export const DEFAULT_PLANT_IMAGE =
-  "https://images.unsplash.com/photo-1466692476860-aef1dfb1e735?w=800&q=80";
+/** Generic PlantPal artwork — guaranteed local asset, never a broken image. */
+export const DEFAULT_PLANT_IMAGE = "/artwork/plantpal-generic.webp";

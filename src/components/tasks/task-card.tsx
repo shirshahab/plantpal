@@ -15,6 +15,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { PlantTask, TaskPriority, TaskType } from "@/lib/types/tasks";
+import { parseDateKey } from "@/lib/tasks/task-engine";
 import { cn } from "@/lib/utils";
 
 const TYPE_ICONS: Partial<Record<TaskType, React.ElementType>> = {
@@ -33,14 +34,14 @@ const PRIORITY_STYLES: Record<TaskPriority, string> = {
 };
 
 function formatDue(dueDate: string) {
-  const d = new Date(dueDate);
+  // Parse YYYY-MM-DD as local midnight — new Date(str) would treat it as UTC
+  // and label "today" tasks as overdue for users west of Greenwich.
+  const due = parseDateKey(dueDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const due = new Date(d);
-  due.setHours(0, 0, 0, 0);
   if (due.getTime() === today.getTime()) return "Today";
   if (due.getTime() < today.getTime()) return "Overdue";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return due.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 function quickActionHref(task: PlantTask): string | null {

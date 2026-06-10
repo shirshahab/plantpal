@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/components/plants/plant-image";
 import { Stethoscope } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
@@ -109,11 +109,10 @@ export default function DoctorPage() {
         <Card padding="md" className="space-y-4 border-green-100">
           <div className="flex gap-3">
             <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-green-50">
-              <Image
+              <SafeImage
                 src={plant.image}
                 alt={plant.name}
-                fill
-                className="object-cover"
+                plantText={`${plant.name} ${plant.species}`}
                 sizes="64px"
               />
             </div>

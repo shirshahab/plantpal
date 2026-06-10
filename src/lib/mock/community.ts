@@ -104,8 +104,7 @@ export const PLANT_OF_WEEK: PlantOfWeek = {
   id: "pow-1",
   commonName: "Meyer Lemon",
   scientificName: "Citrus × meyeri",
-  imageUrl:
-    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=500&fit=crop&q=80",
+  imageUrl: "/artwork/species/lemon.webp",
   blurb:
     "Sweet, thin-skinned lemons perfect for patio trees in Southern California. Right now is peak bloom-to-fruit transition season.",
   whyNow:

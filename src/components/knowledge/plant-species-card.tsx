@@ -1,8 +1,8 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SafeImage } from "@/components/plants/plant-image";
 import type { PlantSpecies } from "@/lib/knowledge/types";
 import { PLANT_TYPE_LABELS } from "@/lib/knowledge/types";
 
@@ -18,11 +18,11 @@ export function PlantSpeciesCard({ species }: PlantSpeciesCardProps) {
         className="overflow-hidden hover:shadow-md transition-shadow group h-full"
       >
         <div className="relative h-36 bg-green-50">
-          <Image
+          <SafeImage
             src={species.image_url}
             alt={species.common_name}
-            fill
-            className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
+            plantText={`${species.common_name} ${species.scientific_name} ${species.type}`}
+            className="group-hover:scale-[1.02] transition-transform duration-300"
             sizes="(max-width: 640px) 100vw, 33vw"
           />
         </div>

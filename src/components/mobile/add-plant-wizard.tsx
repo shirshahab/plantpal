@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import {
   Camera,
   ChevronLeft,
@@ -48,7 +47,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LocalMatchCheck } from "@/components/climate/local-match-check";
 import { GoalPicker } from "@/components/journey/goal-picker";
-import { PlaceholderPickerCard } from "@/components/plants/plant-image";
+import { PlaceholderPickerCard, SafeImage } from "@/components/plants/plant-image";
 import {
   PlantSizeFieldsForm,
   parseSizeFormValues,
@@ -619,13 +618,12 @@ export function AddPlantWizard() {
             </p>
 
             {displayImage && (
-              <div className="relative h-36 rounded-xl overflow-hidden">
-                <Image
+              <div className="relative h-36 rounded-xl overflow-hidden bg-[#eef4e3]">
+                <SafeImage
                   src={displayImage}
                   alt="Plant preview"
-                  fill
-                  className="object-cover"
-                  unoptimized={!!preview || !!placeholderType}
+                  plantText={`${form.name} ${form.species}`}
+                  sizes="(max-width: 768px) 100vw, 512px"
                 />
               </div>
             )}
@@ -906,13 +904,11 @@ function SelectedSpeciesCard({
       <div className="flex items-start gap-3">
         {selection.imageUrl && (
           <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-green-100">
-            <Image
+            <SafeImage
               src={selection.imageUrl}
               alt={selection.commonName}
-              fill
-              className="object-cover"
+              plantText={`${selection.commonName} ${selection.scientificName ?? ""}`}
               sizes="64px"
-              unoptimized
             />
           </div>
         )}

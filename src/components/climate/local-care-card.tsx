@@ -64,7 +64,7 @@ export function LocalCareCard({ plants, plant, compact = false }: LocalCareCardP
               Local Care Intelligence
             </p>
             <Badge variant="outline" className="text-[10px]">
-              {weather.source === "live" ? "Live weather" : "Mock fallback"}
+              {weather.source === "live" ? "Live weather" : "Typical conditions"}
             </Badge>
           </div>
           <p className="text-sm font-semibold text-gray-900 mt-1">

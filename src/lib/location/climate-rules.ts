@@ -278,54 +278,25 @@ export function generateWeatherAwareTasks(
       })
     );
 
-    tasks.push(
-      makeWeatherTask({
-        id: `climate-heat-pots-${todayStr}`,
-        plantId: null,
-        plantName: "Garden",
-        title: "Check all potted plants",
-        description: "Containers heat up quickly — soil may dry in one day.",
-        taskType: "inspect",
-        priority: "high",
-        dueDate: todayStr,
-        source: "weather",
-        whyItMatters: "Pots lack ground insulation — they're first to stress in heat waves.",
-      })
-    );
-
-    for (const plant of plants) {
-      if (plant.locationType === "outdoor") {
-        tasks.push(
-          makeWeatherTask({
-            id: `climate-heat-water-${plant.id}-${todayStr}`,
-            plantId: plant.id,
-            plantName: plant.name,
-            title: `Priority water: ${plant.name}`,
-            description: "Heat alert — check soil and deep water if dry.",
-            taskType: "water",
-            priority: "urgent",
-            dueDate: todayStr,
-            source: "weather",
-            whyItMatters: "Heat increases evaporation — this plant may need water sooner than usual.",
-          })
-        );
-      }
+    // One garden-level pot check when relevant. Per-plant heat watering is NOT
+    // duplicated here — the core schedule already bumps water priority to
+    // urgent during heat alerts, and stacking extra tasks just creates noise.
+    if (plants.some((p) => p.plantingType === "pot")) {
+      tasks.push(
+        makeWeatherTask({
+          id: `climate-heat-pots-${todayStr}`,
+          plantId: null,
+          plantName: "Garden",
+          title: "Check all potted plants",
+          description: "Containers heat up quickly — soil may dry in one day.",
+          taskType: "inspect",
+          priority: "high",
+          dueDate: todayStr,
+          source: "weather",
+          whyItMatters: "Pots lack ground insulation — they're first to stress in heat waves.",
+        })
+      );
     }
-
-    tasks.push(
-      makeWeatherTask({
-        id: `climate-heat-no-feed-${todayStr}`,
-        plantId: null,
-        plantName: "Garden",
-        title: "Hold fertilizer during heat",
-        description: "Avoid feeding heat-stressed plants until temperatures moderate.",
-        taskType: "fertilize",
-        priority: "low",
-        dueDate: todayStr,
-        source: "weather",
-        whyItMatters: "Fertilizer pushes growth when plants should conserve energy in extreme heat.",
-      })
-    );
   }
 
   if (hasFrost) {
@@ -477,11 +448,17 @@ export function generateWeatherAwareTasks(
     });
   }
 
+  // One rotating seasonal tip per day — gentle local guidance, not a wall of
+  // chores. The full list lives on the seasonal page.
   const seasonal = getLocalSeasonalTasks(profile);
-  seasonal.slice(0, 3).forEach((title, i) => {
+  if (seasonal.length > 0) {
+    const dayOfYear = Math.floor(
+      (Date.parse(todayStr) - Date.parse(`${todayStr.slice(0, 4)}-01-01`)) / 86_400_000
+    );
+    const title = seasonal[dayOfYear % seasonal.length];
     tasks.push(
       makeWeatherTask({
-        id: `local-seasonal-${todayStr}-${i}`,
+        id: `local-seasonal-${todayStr}`,
         plantId: null,
         plantName: profile.city,
         title,
@@ -493,7 +470,7 @@ export function generateWeatherAwareTasks(
         whyItMatters: `Tailored to ${profile.city} (${profile.usdaZone}) this season.`,
       })
     );
-  });
+  }
 
   return tasks;
 }

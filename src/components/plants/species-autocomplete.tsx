@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { Search, Loader2 } from "lucide-react";
+import { SafeImage } from "@/components/plants/plant-image";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { searchPlantsApi } from "@/lib/integrations/client";
@@ -18,7 +18,7 @@ const SOURCE_BADGES: Record<string, { label: string; variant: "success" | "outli
   plantpal: { label: "PlantPal", variant: "success" },
   perenual: { label: "Perenual", variant: "outline" },
   ai: { label: "AI", variant: "warning" },
-  mock: { label: "Fallback", variant: "warning" },
+  mock: { label: "PlantPal", variant: "success" },
 };
 
 function typeLabel(type: string | undefined): string {
@@ -158,13 +158,11 @@ export function SpeciesAutocomplete({
               >
                 {hit.image_url ? (
                   <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-green-50">
-                    <Image
+                    <SafeImage
                       src={hit.image_url}
                       alt={hit.common_name}
-                      fill
-                      className="object-cover"
+                      plantText={`${hit.common_name} ${hit.scientific_name ?? ""}`}
                       sizes="40px"
-                      unoptimized
                     />
                   </div>
                 ) : (

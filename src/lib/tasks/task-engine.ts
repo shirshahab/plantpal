@@ -31,8 +31,19 @@ export interface GeneratePlantTasksInput {
   completedLessonIds: string[];
 }
 
+/** Local-timezone YYYY-MM-DD key. Using toISOString here would shift the
+ * date for evening users (UTC rollover) and mislabel tasks as overdue. */
 function dateKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Parse a YYYY-MM-DD key as local midnight (new Date(str) would be UTC). */
+export function parseDateKey(key: string): Date {
+  const [y, m, d] = key.slice(0, 10).split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
 
 function addDays(d: Date, n: number): Date {
@@ -73,10 +84,9 @@ function makeTask(
   };
 }
 
-function waterPriority(plant: Plant): TaskPriority {
-  const days = daysSince(plant.lastWateredAt);
-  if (days === null || days >= plant.waterFrequencyDays + 2) return "urgent";
-  if (days >= plant.waterFrequencyDays) return "high";
+function waterPriority(plant: Plant, waterDays: number): TaskPriority {
+  if (waterDays >= plant.waterFrequencyDays + 2) return "urgent";
+  if (waterDays >= plant.waterFrequencyDays) return "high";
   return "medium";
 }
 
@@ -169,26 +179,27 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
   const rainAlert = weather?.alerts.some((a) => a.type === "rain") ?? false;
 
   for (const plant of plants) {
-    const waterDays = daysSince(plant.lastWateredAt);
-    const fertDays = daysSince(plant.lastFertilizedAt);
+    // When no care has been logged yet, anchor schedules to the day the plant
+    // was added — a brand-new plant should never start with overdue tasks.
+    const ageDays = daysSince(plant.createdAt) ?? 0;
+    const waterDays = daysSince(plant.lastWateredAt) ?? ageDays;
+    const fertDays = daysSince(plant.lastFertilizedAt) ?? ageDays;
     const fertDueDays = plant.fertilizeFrequencyWeeks * 7;
     const healthScore = calculatePlantHealthScore(plant);
 
     if (reminders.watering) {
-      const due =
-        waterDays === null || waterDays >= plant.waterFrequencyDays;
-      const overdue = waterDays !== null && waterDays > plant.waterFrequencyDays;
-      const dueDate = overdue
-        ? dateKey(addDays(todayStart, -1))
-        : waterDays === null
-          ? todayStr
-          : dateKey(addDays(new Date(plant.lastWateredAt!), plant.waterFrequencyDays));
+      const waterAnchor = plant.lastWateredAt ?? plant.createdAt;
+      const due = waterDays >= plant.waterFrequencyDays;
+      const overdue = waterDays > plant.waterFrequencyDays;
+      const dueDate = dateKey(
+        addDays(startOfDay(new Date(waterAnchor)), plant.waterFrequencyDays)
+      );
 
       if (due || overdue) {
         if (rainAlert && !overdue && plant.locationType === "outdoor") {
           continue;
         }
-        let priority = waterPriority(plant);
+        let priority = waterPriority(plant, waterDays);
         if (heatAlert && plant.locationType === "outdoor") {
           priority = priority === "medium" ? "high" : "urgent";
         }
@@ -199,8 +210,8 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
             plantName: plant.name,
             title: `Water ${plant.name}`,
             description:
-              waterDays === null
-                ? "No watering logged yet — check soil moisture."
+              plant.lastWateredAt === null
+                ? "First watering since you added this plant — check soil moisture."
                 : heatAlert
                   ? `Heat alert — last watered ${waterDays} day(s) ago. Check soil today.`
                   : `Last watered ${waterDays} day(s) ago.`,
@@ -214,32 +225,38 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
       }
     }
 
-    if (reminders.fertilizer) {
-      const dueSoon =
-        fertDays === null || fertDays >= fertDueDays - 3;
-      const overdue = fertDays !== null && fertDays >= fertDueDays;
-      if (dueSoon && !heatAlert) {
-        const dueDate = overdue
-          ? dateKey(addDays(todayStart, -2))
-          : dateKey(addDays(todayStart, 3));
-        raw.push(
-          makeTask({
-            id: `fertilize-${plant.id}-${dueDate}`,
-            plantId: plant.id,
-            plantName: plant.name,
-            title: `Fertilize ${plant.name}`,
-            description: `Feed every ${plant.fertilizeFrequencyWeeks} weeks during active growth.`,
-            taskType: "fertilize",
-            priority: overdue ? "high" : "medium",
-            dueDate,
-            source: "care_schedule",
-            whyItMatters: "Nutrients support leaves, flowers, and fruit based on your goals.",
-          })
-        );
-      }
+    let hasFertilizeTask = false;
+    if (reminders.fertilizer && !heatAlert) {
+      const fertAnchor = plant.lastFertilizedAt ?? plant.createdAt;
+      const overdue = fertDays >= fertDueDays;
+      const dueSoon = fertDays >= fertDueDays - 3;
+      // Real schedule date anchored to last feeding (or when the plant was
+      // added) — so new plants see "Fertilize in 5 weeks", not an instant task.
+      const dueDate = dateKey(
+        addDays(startOfDay(new Date(fertAnchor)), fertDueDays)
+      );
+      raw.push(
+        makeTask({
+          id: `fertilize-${plant.id}-${dueDate}`,
+          plantId: plant.id,
+          plantName: plant.name,
+          title: `Fertilize ${plant.name}`,
+          description: `Feed every ${plant.fertilizeFrequencyWeeks} weeks during active growth.`,
+          taskType: "fertilize",
+          priority: overdue ? "high" : dueSoon ? "medium" : "low",
+          dueDate: overdue ? todayStr : dueDate,
+          source: "care_schedule",
+          whyItMatters: "Nutrients support leaves, flowers, and fruit based on your goals.",
+        })
+      );
+      hasFertilizeTask = true;
     }
 
-    if (reminders.healthCheck && (healthScore < 75 || plant.healthStatus !== "healthy")) {
+    // Health checks need a few days of history before the score means much —
+    // never greet a brand-new healthy plant with a health alert.
+    const healthSignal =
+      plant.healthStatus !== "healthy" || (healthScore < 75 && ageDays >= 3);
+    if (reminders.healthCheck && healthSignal) {
       raw.push(
         makeTask({
           id: `scan-${plant.id}-${todayStr}`,
@@ -256,10 +273,13 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
       );
     }
 
-    if (reminders.growthPhoto) {
-      const photoDays = daysSince(plant.lastGrowthPhotoAt ?? null);
+    // Growth photo cadence is anchored to the last photo or the day the plant
+    // was added. Skipped while the plant still needs its first photo — the
+    // "Add a photo" task below covers that without duplication.
+    if (reminders.growthPhoto && plant.photoStatus !== "needs_photo") {
+      const photoDays = daysSince(plant.lastGrowthPhotoAt ?? null) ?? ageDays;
       const interval = healthScore >= 80 ? 30 : 14;
-      if (photoDays === null || photoDays >= interval) {
+      if (photoDays >= interval) {
         raw.push(
           makeTask({
             id: `photo-${plant.id}-${todayStr}`,
@@ -296,7 +316,7 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
 
     const ai = aiPlans[plant.id];
     if (ai?.next_7_days?.length) {
-      ai.next_7_days.slice(0, 2).forEach((tip, i) => {
+      ai.next_7_days.slice(0, 1).forEach((tip, i) => {
         raw.push(
           makeTask({
             id: `ai-${plant.id}-${todayStr}-${i}`,
@@ -314,7 +334,15 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
       });
     }
 
-    raw.push(...seasonalTasks(month, plant));
+    // Seasonal nudges only kick in once a plant has settled in, and the
+    // spring-feed nudge is skipped when a fertilize schedule already exists.
+    if (ageDays >= 7) {
+      raw.push(
+        ...seasonalTasks(month, plant).filter(
+          (t) => !(hasFertilizeTask && t.taskType === "fertilize")
+        )
+      );
+    }
   }
 
   if (reminders.missions) {
@@ -390,7 +418,7 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
   const upcoming: PlantTask[] = [];
 
   for (const task of active) {
-    const due = startOfDay(new Date(task.dueDate));
+    const due = parseDateKey(task.dueDate);
     if (due.getTime() < todayStart.getTime()) {
       overdue.push(task);
     } else if (due.getTime() === todayStart.getTime()) {
@@ -428,5 +456,5 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
 export function getTasksForDate(groups: TaskGroups, day: Date): PlantTask[] {
   const key = dateKey(day);
   const all = [...groups.dueToday, ...groups.upcoming, ...groups.overdue, ...groups.completed];
-  return all.filter((t) => dateKey(new Date(t.dueDate)) === key);
+  return all.filter((t) => t.dueDate.slice(0, 10) === key);
 }

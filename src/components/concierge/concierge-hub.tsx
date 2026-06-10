@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/components/plants/plant-image";
 import Link from "next/link";
 import { ClipboardList, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
@@ -175,7 +175,7 @@ export function ConciergeHub() {
                 {plant && (
                   <div className="flex gap-3 items-center p-3 rounded-xl bg-gray-50">
                     <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0">
-                      <Image src={plant.image} alt={plant.name} fill className="object-cover" unoptimized />
+                      <SafeImage src={plant.image} alt={plant.name} plantText={`${plant.name} ${plant.species}`} />
                     </div>
                     <div className="text-sm">
                       <p className="font-medium text-gray-900">{plant.species}</p>
@@ -229,7 +229,7 @@ export function ConciergeHub() {
               {plant && (
                 <div className="flex items-center gap-3">
                   <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
-                    <Image src={plant.image} alt={plant.name} fill className="object-cover" unoptimized />
+                    <SafeImage src={plant.image} alt={plant.name} plantText={`${plant.name} ${plant.species}`} />
                   </div>
                   <p className="font-medium text-gray-900">{plant.name}</p>
                 </div>

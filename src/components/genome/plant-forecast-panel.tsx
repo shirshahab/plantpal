@@ -84,7 +84,7 @@ export function PlantForecastPanel({
       <CardHeader className="pb-2">
         <h3 className="text-base font-semibold text-gray-900">Plant Forecast</h3>
         <p className="text-xs text-gray-500 mt-1">
-          Mock predictions from species calendar + your plant telemetry. AI forecasting ready.
+          Estimated from the species calendar and your plant&apos;s history.
         </p>
         <div className="flex gap-1 mt-3 p-1 bg-gray-100 rounded-xl">
           {TABS.map((t) => (

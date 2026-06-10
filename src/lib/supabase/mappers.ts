@@ -16,8 +16,9 @@ import {
 import { getPlaceholderImageUrl } from "@/lib/plants/plant-placeholders";
 import { inferHardinessZone } from "@/lib/location/location-service";
 
-const DEFAULT_IMAGE =
-  "https://images.unsplash.com/photo-1466692476860-aef1dfb1e735?w=800&q=80";
+import { GENERIC_PLANT_ARTWORK } from "@/lib/plants/plant-artwork";
+
+const DEFAULT_IMAGE = GENERIC_PLANT_ARTWORK;
 
 function mapPhotoFields(row: DbPlant): {
   photoStatus: PhotoStatus;

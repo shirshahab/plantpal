@@ -68,71 +68,16 @@ export default function TodayPage() {
           {groups.overdue.length > 0 && (
             <Card padding="md" className="bg-amber-50 border-amber-100">
               <p className="text-sm font-medium text-amber-800">
-                {groups.overdue.length} overdue task{groups.overdue.length !== 1 ? "s" : ""} — tackle these first
+                {groups.overdue.length} task{groups.overdue.length !== 1 ? "s" : ""} waiting from earlier — a quick catch-up and you&apos;re set.
               </p>
             </Card>
           )}
 
+          {/* Each task appears exactly once — no duplicate sections. */}
           <TaskSection
-            title="Due today"
-            tasks={groups.dueToday}
-            emptyMessage="Nothing scheduled for today."
-            onComplete={completeTask}
-            onSkip={skipTask}
-            onSnooze={snoozeTask}
-          />
-
-          <TaskSection
-            title="Overdue"
-            tasks={groups.overdue}
-            onComplete={completeTask}
-            onSkip={skipTask}
-            onSnooze={snoozeTask}
-          />
-
-          <TaskSection
-            title="Water today"
-            tasks={groups.dueToday.filter((t) => t.taskType === "water")}
-            onComplete={completeTask}
-            onSkip={skipTask}
-            onSnooze={snoozeTask}
-          />
-
-          <TaskSection
-            title="Fertilizer soon"
-            tasks={[...groups.dueToday, ...groups.upcoming].filter(
-              (t) => t.taskType === "fertilize"
-            )}
-            onComplete={completeTask}
-            onSkip={skipTask}
-            onSnooze={snoozeTask}
-          />
-
-          <TaskSection
-            title="Health checks"
-            tasks={[...groups.dueToday, ...groups.overdue].filter(
-              (t) => t.taskType === "scan" || t.taskType === "inspect"
-            )}
-            onComplete={completeTask}
-            onSkip={skipTask}
-            onSnooze={snoozeTask}
-          />
-
-          <TaskSection
-            title="Active missions"
-            tasks={[...groups.dueToday, ...groups.overdue].filter(
-              (t) => t.source === "goal_mission" && t.metadata?.missionId
-            )}
-            onComplete={completeTask}
-            onSkip={skipTask}
-            onSnooze={snoozeTask}
-          />
-
-          <TaskSection
-            title="Seasonal tasks"
-            tasks={[...groups.dueToday, ...groups.upcoming].filter(
-              (t) => t.source === "seasonal"
-            )}
+            title="Needs you now"
+            tasks={[...groups.overdue, ...groups.dueToday]}
+            emptyMessage="Nothing needs you right now."
             onComplete={completeTask}
             onSkip={skipTask}
             onSnooze={snoozeTask}
@@ -140,7 +85,7 @@ export default function TodayPage() {
 
           <TaskSection
             title="Coming up"
-            tasks={groups.upcoming.slice(0, 8)}
+            tasks={groups.upcoming.slice(0, 5)}
             onComplete={completeTask}
             onSkip={skipTask}
             onSnooze={snoozeTask}

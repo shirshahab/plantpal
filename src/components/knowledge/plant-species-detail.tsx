@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Plus, AlertTriangle, ExternalLink } from "lucide-react";
+import { SafeImage } from "@/components/plants/plant-image";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,12 +36,10 @@ export function PlantSpeciesDetailView({ plant }: { plant: PlantSpeciesDetail })
               i === 0 ? "h-56 sm:h-72 sm:col-span-2" : "h-40"
             }`}
           >
-            <Image
+            <SafeImage
               src={src}
               alt={i === 0 ? plant.common_name : `${plant.common_name} ${i + 1}`}
-              fill
-              className="object-cover"
-              priority={i === 0}
+              plantText={`${plant.common_name} ${plant.scientific_name} ${plant.type}`}
               sizes="(max-width: 768px) 100vw, 896px"
             />
           </div>

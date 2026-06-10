@@ -39,7 +39,7 @@ const SOURCE_LABELS: Record<string, string> = {
   plantpal: "PlantPal database",
   perenual: "Perenual plant data",
   ai: "AI suggestion",
-  mock: "Mock fallback",
+  mock: "PlantPal library",
 };
 
 function SourceBadge({ source }: { source: PlantSearchHit["resultSource"] }) {
