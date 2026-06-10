@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { IdentifyPhotoRole } from "@/lib/ai/plant-identify";
 import { parseJsonBody } from "@/lib/ai/parse-request-body";
 import { probeScannerEnvironment, runScannerDebug } from "@/lib/scanner/scanner-debug";
+import { isDebugToolingEnabled } from "@/lib/dev/dev-only";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -35,6 +36,9 @@ function parseImages(body: Record<string, unknown>): {
 
 /** Environment-only probe — no image required. */
 export async function GET() {
+  if (!isDebugToolingEnabled()) {
+    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  }
   const environment = await probeScannerEnvironment();
   return NextResponse.json({
     ok: true,
@@ -45,6 +49,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!isDebugToolingEnabled()) {
+    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  }
   const parsed = await parseJsonBody(request, ROUTE);
   if (!parsed.ok) {
     return NextResponse.json(

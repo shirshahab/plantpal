@@ -108,7 +108,7 @@ export function LandscapeDesignerHub() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(friendlyAiError(res.error, "Landscape Designer"));
+      setError(friendlyAiError(res.error, "Garden Designer"));
       return;
     }
 
@@ -199,7 +199,7 @@ export function LandscapeDesignerHub() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <PageHeader
-        title="AI Landscape Designer"
+        title="Garden Designer"
         description="Upload a yard photo, pick a garden style, and get a before/after concept with plant list and cost estimate."
         action={
           tab === "projects" ? (

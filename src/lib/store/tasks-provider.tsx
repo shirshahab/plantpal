@@ -28,6 +28,7 @@ import { useWeather } from "@/lib/hooks/use-weather";
 import { getLocationProfile } from "@/lib/location/location-service";
 import { useToast } from "@/lib/store/toast-provider";
 import { emitAwardXp } from "@/lib/academy/xp-events";
+import { recordNotificationEvent } from "@/lib/notifications/notification-analytics";
 import {
   canUseSupabase,
   completeTask as dbCompleteTask,
@@ -226,6 +227,9 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         [task.id]: { status: "completed" as const, completedAt: now },
       };
       persistStatesLocal(nextStates);
+
+      // Retention analytics: reminder-driven task completed.
+      recordNotificationEvent("completed", task.id, task.taskType);
 
       if (canUseSupabase(user?.id) && !isMockMode) {
         markPending();

@@ -11,11 +11,7 @@ export function friendlySaveError(error: ErrorLike | string): string {
       : error;
 
   if (isMissingTableError(err)) {
-    return [
-      "PlantPal could not save because a required database table is missing.",
-      "Run supabase/FIX_RUN_THIS.sql in the Supabase SQL Editor, restart npm run dev, then try again.",
-      "Open /setup to verify tables.",
-    ].join(" ");
+    return "PlantPal couldn't save to the cloud right now. Your changes are kept on this device — please try again later.";
   }
 
   if (
@@ -27,14 +23,14 @@ export function friendlySaveError(error: ErrorLike | string): string {
   }
 
   if (err.message.includes("plant-photos") || err.message.includes("Bucket not found")) {
-    return "Photo upload failed — the plant-photos storage bucket may be missing. Run supabase/FIX_RUN_THIS.sql and check /setup.";
+    return "Photo upload failed — cloud photo storage is unavailable right now. Your photo is kept on this device; try again later.";
   }
 
   if (err.message.includes("logged in")) {
     return err.message;
   }
 
-  return err.message || "Something went wrong while saving. Check /setup for configuration issues.";
+  return err.message || "Something went wrong while saving. Please try again.";
 }
 
 /** User-facing message for AI API failures shown in UI. */
@@ -77,7 +73,7 @@ export function friendlyAiError(error: string | undefined, _feature = "AI"): str
   }
 
   if (lower.includes("care plan")) {
-    return `${trimmed} — showing smart mock result instead.`;
+    return `${trimmed} — showing a preview plan instead.`;
   }
 
   // Pass through detailed server errors (failureReason) for identification/debugging.
@@ -97,6 +93,6 @@ export function friendlyAiError(error: string | undefined, _feature = "AI"): str
 
 /** Short toast-friendly AI status when mock is used intentionally. */
 export function aiSourceLabel(source: "ai" | "mock" | undefined, feature: string): string {
-  if (source === "ai") return `${feature} ready (live AI).`;
-  return `${feature} ready (mock — add OPENAI_API_KEY for live AI).`;
+  if (source === "ai") return `${feature} ready.`;
+  return `${feature} ready (preview mode).`;
 }

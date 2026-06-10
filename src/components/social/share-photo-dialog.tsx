@@ -48,17 +48,29 @@ export function SharePhotoDialog({
     });
 
     if (visibility !== "private") {
-      await fetch("/api/social/journal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plantId,
-          entryType: "photo",
-          body: caption ?? `Growth photo — ${plantName}`,
-          photoUrl,
-          visibility,
-        }),
-      });
+      try {
+        const res = await fetch("/api/social/journal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plantId,
+            entryType: "photo",
+            body: caption ?? `Growth photo — ${plantName}`,
+            photoUrl,
+            visibility,
+          }),
+        });
+        const json = (await res.json()) as { ok: boolean };
+        if (!json.ok) {
+          setSharing(false);
+          toast("Couldn't share that photo — please try again.");
+          return;
+        }
+      } catch {
+        setSharing(false);
+        toast("Couldn't share that photo — check your connection and try again.");
+        return;
+      }
     }
 
     setSharing(false);

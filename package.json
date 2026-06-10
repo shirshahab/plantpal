@@ -10,7 +10,7 @@
     "db:migrate": "supabase db query --linked -f supabase/migrations/002_phase2_schema.sql",
     "db:apply": "tsx scripts/apply-supabase-migrations.ts",
     "db:seed": "tsx scripts/generate-knowledge-seed.ts",
-    "icons:generate": "node scripts/generate-app-icons.mjs"
+    "icons:generate": "node scripts/generate-app-icons.mjs && node scripts/generate-splash.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

@@ -37,8 +37,8 @@ const TYPE_ICONS: Partial<Record<PhotoType, React.ElementType>> = {
 };
 
 const SOURCE_LABELS: Record<string, string> = {
-  ai: "AI generated",
-  mock: "Mock fallback",
+  ai: "PlantPal identified",
+  mock: "Preview result",
 };
 
 export default function ScannerHistoryPage() {

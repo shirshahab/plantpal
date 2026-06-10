@@ -75,6 +75,7 @@ export function saveHealthReport(report: ProHealthReport, userId?: string | null
   writeJson(REPORTS_KEY, reports.slice(0, MAX_LOCAL_REPORTS));
   notifyChanged();
   void syncReportToSupabase(report, userId);
+  void syncHealthFollowups(report, userId);
 }
 
 export function updateHealthReportStatus(
@@ -121,6 +122,59 @@ async function syncReportToSupabase(
       },
       { onConflict: "id" }
     );
+    return { data: res.data, error: res.error };
+  });
+}
+
+/**
+ * Mirror the diagnosis follow-up schedule (rescan +2d, symptom check +1d,
+ * progress photo +7d) into the health_followups table. These drive the
+ * recovery reminders shown in the notification center.
+ */
+async function syncHealthFollowups(
+  report: ProHealthReport,
+  userId?: string | null
+): Promise<void> {
+  if (!canUseSupabase(userId)) return;
+  const db = getDb();
+
+  const addDays = (iso: string, n: number): string => {
+    const d = new Date(iso);
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const base = {
+    user_id: userId,
+    report_id: report.id,
+    plant_id: report.plantId,
+    plant_name: report.species,
+    issue_label: report.diagnosis.likelyIssue,
+  };
+
+  const rows = [
+    {
+      ...base,
+      id: `rescan-${report.id}`,
+      kind: "rescan",
+      due_date: addDays(report.createdAt, 2),
+    },
+    {
+      ...base,
+      id: `check-${report.id}`,
+      kind: "symptom_check",
+      due_date: addDays(report.createdAt, 1),
+    },
+    {
+      ...base,
+      id: `photo-${report.id}`,
+      kind: "recovery_step",
+      due_date: addDays(report.createdAt, 7),
+    },
+  ];
+
+  await safeDb(async () => {
+    const res = await db.from("health_followups").upsert(rows, { onConflict: "id" });
     return { data: res.data, error: res.error };
   });
 }

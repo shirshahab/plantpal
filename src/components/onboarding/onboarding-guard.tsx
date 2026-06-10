@@ -6,6 +6,7 @@ import { usePlants } from "@/lib/store/plants-provider";
 import {
   hasFirstPlant,
   isOnboardingComplete,
+  loadUserProfile,
 } from "@/lib/profile/user-profile";
 
 const BYPASS_PREFIXES = [
@@ -21,7 +22,9 @@ const BYPASS_PREFIXES = [
 ];
 
 function isBypassPath(pathname: string): boolean {
+  // Both ways of adding a first plant must stay reachable.
   if (pathname === "/plants/new") return true;
+  if (pathname === "/scanner" || pathname.startsWith("/scanner/")) return true;
   return BYPASS_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
@@ -42,7 +45,10 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
 
     if (loading) return;
 
-    const needsFirstPlant = !hasFirstPlant() && plants.length === 0;
+    const needsFirstPlant =
+      !hasFirstPlant() &&
+      plants.length === 0 &&
+      !loadUserProfile().firstPlantSkipped;
 
     if (needsFirstPlant && pathname !== "/plants/new") {
       router.replace("/plants/new?first=1");

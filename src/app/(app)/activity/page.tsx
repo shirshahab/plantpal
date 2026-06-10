@@ -13,7 +13,7 @@ import { buildActivityFeed } from "@/lib/dashboard/activity-feed";
 import { ACADEMY_BADGES } from "@/lib/academy/badges";
 
 export default function ActivityPage() {
-  const { plants } = usePlants();
+  const { plants, loading } = usePlants();
   const { careLogs } = useTasks();
   const { progress } = useAcademy();
   const { growthEntries } = useEngagement();
@@ -45,7 +45,13 @@ export default function ActivityPage() {
         title="Garden activity"
         description="Recent scans, care logs, and milestones"
       />
-      {activityItems.length === 0 ? (
+      {loading ? (
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-16 rounded-2xl bg-gray-100 animate-pulse" />
+          ))}
+        </div>
+      ) : activityItems.length === 0 ? (
         <EmptyState
           icon="📋"
           compact

@@ -1,3 +1,5 @@
+import { compressImageFile } from "@/lib/scanner/compress-image";
+
 export const LANDSCAPE_PHOTOS_BUCKET = "landscape-photos";
 
 export type YardPhotoSlot = "front_yard" | "back_yard" | "side_yard";
@@ -6,7 +8,14 @@ export async function uploadLandscapePhoto(
   file: File,
   slot: YardPhotoSlot
 ): Promise<{ storageUrl: string | null; dataUrl: string }> {
-  const dataUrl = await readFileAsDataUrl(file);
+  // Compress before anything else — raw mobile camera photos (3–8MB each)
+  // blow past serverless body limits and localStorage quota.
+  let dataUrl: string;
+  try {
+    dataUrl = await compressImageFile(file);
+  } catch {
+    dataUrl = await readFileAsDataUrl(file);
+  }
 
   try {
     const form = new FormData();

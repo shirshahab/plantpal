@@ -20,7 +20,7 @@ export function AiSourceBadge({
         className
       )}
     >
-      {source === "ai" ? "AI generated" : "Smart mock"}
+      {source === "ai" ? "Personalized for your garden" : "Preview plan"}
       {saved && <span className="opacity-70">· saved</span>}
     </span>
   );

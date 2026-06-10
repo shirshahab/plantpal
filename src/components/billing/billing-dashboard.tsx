@@ -95,7 +95,7 @@ export function BillingDashboard() {
     { key: "unlimited_scans", label: "Unlimited scans" },
     { key: "unlimited_plants", label: "Unlimited plants" },
     { key: "advanced_diagnosis", label: "Advanced diagnosis" },
-    { key: "landscape_ai", label: "Landscape AI" },
+    { key: "landscape_ai", label: "Garden Designer" },
     { key: "full_academy", label: "Full Academy" },
     { key: "seasonal_courses", label: "Seasonal courses" },
     { key: "export_reports", label: "Export reports" },

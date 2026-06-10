@@ -9,6 +9,7 @@ import { DashboardHealthScore } from "@/components/dashboard/health-score-sectio
 import { DashboardGardenTasks } from "@/components/dashboard/garden-tasks-section";
 import { DashboardSeasonalAlert } from "@/components/dashboard/seasonal-alert-section";
 import { DashboardHealthAlert } from "@/components/dashboard/health-alert-section";
+import { DashboardRecentNotifications } from "@/components/dashboard/recent-notifications-section";
 import { DashboardContinueLearning } from "@/components/dashboard/continue-learning-section";
 import { DashboardQuickActions } from "@/components/dashboard/quick-actions-section";
 import { DashboardNeedsAttention } from "@/components/dashboard/needs-attention-section";
@@ -96,6 +97,9 @@ export function DashboardHome() {
 
         {/* 0. Plant health alert — active diagnosis reports come first */}
         <DashboardHealthAlert />
+
+        {/* 0b. Latest reminders & alerts */}
+        <DashboardRecentNotifications />
 
         {/* 1. Weather / local alert */}
         <DashboardSeasonalAlert plants={plants} seasonalTasks={seasonalTasks} />

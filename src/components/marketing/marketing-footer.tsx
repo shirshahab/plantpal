@@ -10,6 +10,7 @@ const FOOTER_LINKS = [
   { href: "/dashboard", label: "Open App" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
+  { href: "/support", label: "Support" },
 ];
 
 export function MarketingFooter() {

@@ -65,7 +65,11 @@ export function PlantJournalTab({ plantId, plantName }: PlantJournalTabProps) {
         ]);
         setNote("");
         toast(entryType === "milestone" ? "Milestone shared!" : "Journal entry saved.");
+      } else {
+        toast("Couldn't save that entry — please try again.");
       }
+    } catch {
+      toast("Couldn't save that entry — check your connection and try again.");
     } finally {
       setLoading(false);
     }

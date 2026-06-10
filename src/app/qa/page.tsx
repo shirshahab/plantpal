@@ -11,7 +11,7 @@ const QA_ITEMS = [
   { id: "auth", label: "Auth", desc: "Sign up, sign in, sign out work in Supabase mode" },
   { id: "add-plant", label: "Add plant", desc: "Wizard completes and plant appears in garden" },
   { id: "supabase-save", label: "Supabase save", desc: "Plants and tasks sync to cloud when logged in" },
-  { id: "ai-care", label: "AI care plan", desc: "Generate care plan on plant detail page" },
+  { id: "ai-care", label: "Care plan", desc: "Generate care plan on plant detail page" },
   { id: "scanner", label: "Scanner", desc: "Identify, diagnose, tag, and progress tabs work" },
   { id: "scanner-photo", label: "Scanner accuracy", desc: "Identify a real plant photo — species + confidence look reasonable" },
   { id: "scanner-fail", label: "Scanner failure path", desc: "Blurry/non-plant photo shows a graceful retry message, not a crash" },

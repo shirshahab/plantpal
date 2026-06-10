@@ -46,7 +46,7 @@ function BeforeAfterPanel({
           </div>
         </div>
         <div>
-          <p className="text-[10px] font-bold text-green-700 uppercase mb-2">After · AI concept</p>
+          <p className="text-[10px] font-bold text-green-700 uppercase mb-2">After · Design concept</p>
           <div
             className={cn(
               "relative aspect-[4/3] rounded-xl overflow-hidden border border-green-100 bg-gradient-to-br p-4 flex flex-col justify-end",
@@ -156,7 +156,7 @@ export function DesignResults({
         <p className="text-xs font-medium text-gray-400 uppercase mb-1">Design summary</p>
         <p className="text-sm text-gray-700 leading-relaxed">{design.design_summary}</p>
         <p className="text-xs text-gray-400 mt-2">
-          {design.source === "ai" ? "AI analysis" : "Preview analysis"} · Zone {design.climate.usda_zone} ·{" "}
+          {design.source === "ai" ? "Personalized analysis" : "Preview analysis"} · Zone {design.climate.usda_zone} ·{" "}
           {design.climate.city}
         </p>
       </Card>
@@ -172,7 +172,7 @@ export function DesignResults({
         <div className="flex items-start gap-2 text-xs text-gray-500">
           <ImageIcon className="w-4 h-4 shrink-0 mt-0.5" />
           <p>
-            After preview is an AI concept description. Photorealistic renders will be added in a
+            After preview is a written design concept. Photorealistic renders will be added in a
             future update.
           </p>
         </div>

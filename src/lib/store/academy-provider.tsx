@@ -297,9 +297,11 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
   const completeLesson = useCallback(
     (lessonId: string): LessonCompleteResult | null => {
       let completion: LessonCompleteResult | null = null;
+      let isFirstLesson = false;
 
       setProgress((prev) => {
         if (prev.completedLessons.includes(lessonId)) return prev;
+        isFirstLesson = prev.completedLessons.length === 0;
 
         const { streak, milestone, next: streaked } = computeStreakUpdate(prev);
         const lessonXp = xpForEvent("lesson_completed");
@@ -355,7 +357,7 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
       if (completion) {
         const result: LessonCompleteResult = completion;
         setLastCompletion(result);
-        trackEvent("lesson_completed", { lessonId });
+        trackEvent("lesson_completed", { lessonId, isFirst: isFirstLesson });
         const lesson = getAcademyLessonById(lessonId);
         void publishActivityEvent({
           userId: "local-user",

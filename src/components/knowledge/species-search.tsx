@@ -38,7 +38,7 @@ const WATERING_OPTIONS = [
 const SOURCE_LABELS: Record<string, string> = {
   plantpal: "PlantPal database",
   perenual: "Perenual plant data",
-  ai: "AI suggestion",
+  ai: "PlantPal suggestion",
   mock: "PlantPal library",
 };
 

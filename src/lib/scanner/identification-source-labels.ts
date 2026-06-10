@@ -1,7 +1,7 @@
 import type { PlantIdentificationResponse } from "@/lib/types/ai";
 
 export const SOURCE_BADGE = {
-  liveAi: "Live AI",
+  liveAi: "PlantPal Vision",
   plantNet: "Pl@ntNet",
   unidentified: "Unidentified",
 } as const;

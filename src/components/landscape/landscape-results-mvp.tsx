@@ -244,8 +244,8 @@ export function LandscapeResultsMvp({
           <div className="flex gap-2 text-xs text-gray-500">
             <ImageIcon className="w-4 h-4 shrink-0" />
             <p>
-              AI concept render unavailable. Connect OpenAI for photorealistic Concept
-              Design images (~$0.04 per render).
+              Concept render unavailable right now — your design details, plant list,
+              and phased plan are below.
             </p>
           </div>
         </Card>

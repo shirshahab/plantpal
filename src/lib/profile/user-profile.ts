@@ -50,3 +50,17 @@ export function hasFirstPlant(): boolean {
 export function markFirstPlantAdded(): UserProfile {
   return saveUserProfile({ firstPlantAdded: true });
 }
+
+/**
+ * Clears the locally cached profile on sign-out so a different account on
+ * the same browser doesn't inherit onboarding flags, ZIP, or founder mode.
+ */
+export function clearLocalProfile(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(PROFILE_STORAGE_KEY);
+    localStorage.removeItem("plantpal-founder-mode");
+  } catch {
+    /* ignore */
+  }
+}

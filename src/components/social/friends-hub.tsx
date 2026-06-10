@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Search, UserPlus, UserCheck, UserX, Ban } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
@@ -79,7 +80,12 @@ export function FriendsHub() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && void handleSearch()}
         />
-        <Button loading={searching} onClick={() => void handleSearch()} className="shrink-0 touch-manipulation">
+        <Button
+          loading={searching}
+          onClick={() => void handleSearch()}
+          className="shrink-0 touch-manipulation"
+          aria-label="Search for friends"
+        >
           <Search className="w-4 h-4" />
         </Button>
       </div>
@@ -109,10 +115,22 @@ export function FriendsHub() {
         <Card padding="md" className="text-center text-sm text-gray-500">Loading…</Card>
       ) : tab === "friends" ? (
         friends.length === 0 ? (
-          <Card padding="md" className="text-center">
-            <UserPlus className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="font-medium text-gray-900">No friends yet</p>
-            <p className="text-sm text-gray-500 mt-1">Search for gardeners to connect with.</p>
+          <Card padding="md" className="text-center space-y-3">
+            <UserPlus className="w-8 h-8 text-gray-300 mx-auto" />
+            <div>
+              <p className="font-medium text-gray-900">No friends yet</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Gardening is better together — find friends or invite someone.
+              </p>
+            </div>
+            <div className="flex gap-2 justify-center">
+              <Button size="sm" variant="outline" onClick={() => setTab("search")} className="touch-manipulation">
+                Find gardeners
+              </Button>
+              <Link href="/invite">
+                <Button size="sm" className="touch-manipulation">Invite a friend</Button>
+              </Link>
+            </div>
           </Card>
         ) : (
           <div className="space-y-2">

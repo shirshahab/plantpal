@@ -21,6 +21,7 @@ import { usePlants } from "@/lib/store/plants-provider";
 import { useAuth } from "@/lib/store/auth-provider";
 import { useToast } from "@/lib/store/toast-provider";
 import { compressImageFile } from "@/lib/scanner/compress-image";
+import { friendlyAiError } from "@/lib/errors/user-messages";
 import {
   getHealthReport,
   listHealthReports,
@@ -267,12 +268,24 @@ export function ProDoctorClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      // Non-JSON responses (timeouts, body-size limits) would crash res.json().
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        setError(
+          res.status === 413
+            ? "Photos are too large. Try again with fewer or smaller photos."
+            : "The diagnosis service took too long. Try again with fewer photos."
+        );
+        return;
+      }
+
       const json = (await res.json()) as
         | { ok: true; data: ProDiagnosisResult }
         | { ok: false; error: string };
 
       if (!json.ok) {
-        setError(json.error || "Diagnosis failed — please try again.");
+        setError(friendlyAiError(json.error, "diagnosis"));
         return;
       }
 
@@ -629,7 +642,12 @@ export function ProDoctorClient() {
       </Card>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+        <div className="text-sm bg-red-50 rounded-lg px-3 py-2 space-y-1">
+          <p className="text-red-600">{error}</p>
+          <p className="text-red-500 text-xs">
+            Your answers are kept — tap the button below to try again.
+          </p>
+        </div>
       )}
 
       <Button

@@ -11,26 +11,33 @@ import {
   Droplets,
   Flame,
   HeartPulse,
+  Info,
   Leaf,
+  Scissors,
   Settings,
+  Trophy,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useNotifications } from "@/lib/store/notifications-provider";
+import { recordNotificationEvent } from "@/lib/notifications/notification-analytics";
 import type { AppNotification, AppNotificationType } from "@/lib/types/notifications";
 import { cn } from "@/lib/utils";
 
-const TYPE_META: Record<
+export const TYPE_META: Record<
   AppNotificationType,
   { icon: typeof Bell; bg: string; fg: string }
 > = {
   water: { icon: Droplets, bg: "bg-blue-50", fg: "text-blue-600" },
   fertilize: { icon: Leaf, bg: "bg-emerald-50", fg: "text-emerald-600" },
+  care: { icon: Scissors, bg: "bg-teal-50", fg: "text-teal-600" },
   recovery: { icon: HeartPulse, bg: "bg-rose-50", fg: "text-rose-600" },
   streak: { icon: Flame, bg: "bg-orange-50", fg: "text-orange-600" },
   friend: { icon: Users, bg: "bg-violet-50", fg: "text-violet-600" },
+  challenge: { icon: Trophy, bg: "bg-yellow-50", fg: "text-yellow-600" },
   weather: { icon: CloudSun, bg: "bg-sky-50", fg: "text-sky-600" },
   pest_risk: { icon: Bug, bg: "bg-amber-50", fg: "text-amber-600" },
+  system: { icon: Info, bg: "bg-gray-100", fg: "text-gray-600" },
 };
 
 function NotificationRow({
@@ -113,6 +120,7 @@ export function NotificationCenter() {
 
   const openNotification = (n: AppNotification) => {
     markRead(n.id);
+    recordNotificationEvent("opened", n.id, n.type);
     setOpen(false);
     router.push(n.href);
   };
@@ -155,7 +163,7 @@ export function NotificationCenter() {
                 </button>
               )}
               <Link
-                href="/settings/reminders"
+                href="/settings/notifications"
                 onClick={() => setOpen(false)}
                 className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
                 aria-label="Notification settings"
@@ -180,6 +188,14 @@ export function NotificationCenter() {
               ))
             )}
           </div>
+
+          <Link
+            href="/notifications"
+            onClick={() => setOpen(false)}
+            className="block text-center text-xs font-medium text-green-700 hover:text-green-800 hover:bg-green-50 px-4 py-2.5 border-t border-gray-100 transition-colors"
+          >
+            View all notifications
+          </Link>
         </div>
       )}
     </div>

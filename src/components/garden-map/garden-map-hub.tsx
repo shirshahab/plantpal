@@ -105,6 +105,23 @@ export function GardenMapHub() {
           </Card>
         )}
 
+        {spaces.length === 0 && !showCreate && (
+          <Card padding="md" className="text-center py-8">
+            <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-2xl mx-auto mb-3">
+              🗺️
+            </div>
+            <p className="font-semibold text-gray-900">Map your garden</p>
+            <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto">
+              Create a space — like a backyard, balcony, or raised bed — then place
+              your plants to see zone-by-zone health.
+            </p>
+            <Button size="sm" className="mt-4" onClick={() => setShowCreate(true)}>
+              <Plus className="w-4 h-4" />
+              Create your first space
+            </Button>
+          </Card>
+        )}
+
         <div className="space-y-3">
           {spaces.map((space) => (
             <Link key={space.id} href={`/garden-map/designer?space=${space.id}`}>

@@ -44,8 +44,8 @@ export function GenerateCarePlanButton({ plant }: { plant: Plant }) {
     setSaved(res.saved);
     toast(
       res.data.source === "ai"
-        ? "AI care plan ready."
-        : "Care plan ready (mock — add OPENAI_API_KEY for live AI)."
+        ? "Your care plan is ready."
+        : "Care plan ready — built from PlantPal's care library."
     );
   }
 

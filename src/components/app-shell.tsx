@@ -17,7 +17,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       {/* Mobile header */}
       <MobileHeader />
-      <main className="md:pl-72 pb-28 md:pb-8 safe-bottom">
+      {/* Mobile bottom padding = nav (56px) + floating buttons (48px) + 32px
+          breathing room; safe-bottom adds the device safe-area inset. */}
+      <main className="md:pl-72 pb-36 md:pb-8 safe-bottom">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8 page-enter">
           {children}
         </div>

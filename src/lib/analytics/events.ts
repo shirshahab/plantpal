@@ -7,7 +7,10 @@ export type AnalyticsEventName =
   | "onboarding_complete"
   | "referral_redeemed"
   | "page_view"
-  | "feedback_submitted";
+  | "feedback_submitted"
+  | "notification_sent"
+  | "notification_opened"
+  | "reminder_completed";
 
 export interface AnalyticsEventPayload {
   event: AnalyticsEventName;

@@ -138,7 +138,7 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
         photos={photos}
         onChange={handlePhotosChange}
         loading={loading}
-        loadingLabel="Analyzing plant with AI…"
+        loadingLabel="Analyzing your plant…"
         onLimitError={(message) => toast(message)}
       />
 

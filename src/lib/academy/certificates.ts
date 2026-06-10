@@ -66,7 +66,7 @@ export const ACADEMY_CERTIFICATES: AcademyCertificate[] = [
   },
   {
     id: "cert-landscaping",
-    title: "Landscape Designer",
+    title: "Garden Designer",
     description: "Understands outdoor design principles.",
     pathId: "landscaping",
     icon: "🏡",

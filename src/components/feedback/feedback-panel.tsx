@@ -39,7 +39,20 @@ export function FloatingFeedbackButton() {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<BetaFeedbackCategory | undefined>();
 
-  const hiddenOnPages = ["/login", "/onboarding", "/signup"];
+  // Hidden on auth/onboarding and on long forms/wizards where a floating
+  // button blocks inputs and action rows. Feedback stays reachable from
+  // the dashboard header and More → Support.
+  const hiddenOnPages = [
+    "/login",
+    "/onboarding",
+    "/signup",
+    "/plants/new",
+    "/landscape",
+    "/landscape-designer",
+    "/design-studio",
+    "/doctor/pro",
+    "/scanner",
+  ];
   if (hiddenOnPages.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return null;
   }

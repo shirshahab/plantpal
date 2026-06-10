@@ -330,7 +330,7 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
             priority: "medium",
             dueDate: todayStr,
             source: "ai_plan",
-            whyItMatters: "From your AI care plan — tailored to this plant.",
+            whyItMatters: "From your PlantPal care plan — tailored to this plant.",
           })
         );
       });

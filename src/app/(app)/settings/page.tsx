@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { User, RotateCcw, Globe } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { User, RotateCcw, Globe, LifeBuoy, Bug, Lightbulb, Mail, LogOut } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { BetaBadge } from "@/components/brand/beta-badge";
 import { InviteFriendsPanel } from "@/components/referrals/invite-friends-panel";
@@ -25,7 +26,9 @@ import {
 } from "@/lib/types/profile";
 
 export default function SettingsPage() {
-  const { user, isMockMode } = useAuth();
+  const router = useRouter();
+  const { user, isMockMode, signOut } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [saved, setSaved] = useState(false);
@@ -83,6 +86,13 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleSignOut() {
+    setSigningOut(true);
+    await signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
   function handleResetEducation() {
     localStorage.removeItem("plantpal-education");
     setResetEduOpen(false);
@@ -111,7 +121,9 @@ export default function SettingsPage() {
 
       <InviteFriendsPanel compact />
 
-      <FeedbackPanel />
+      <div id="feedback" className="scroll-mt-20">
+        <FeedbackPanel />
+      </div>
 
       <AccountTierCard />
 
@@ -233,21 +245,71 @@ export default function SettingsPage() {
           <Link href="/settings/integrations">
             <Button variant="outline">Integration health</Button>
           </Link>
-          <Link href="/setup" className="ml-2 inline-block mt-2 sm:mt-0">
-            <Button variant="outline">Setup checker</Button>
-          </Link>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
           <h2 className="font-semibold text-gray-900">Notifications</h2>
-          <p className="text-sm text-gray-500 mt-1">Daily care reminders and task alerts</p>
+          <p className="text-sm text-gray-500 mt-1">Reminders, alerts, and quiet hours</p>
         </CardHeader>
         <CardContent>
-          <Link href="/settings/reminders">
-            <Button variant="outline">Reminder settings</Button>
+          <Link href="/settings/notifications">
+            <Button variant="outline">Notification settings</Button>
           </Link>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+              <LifeBuoy className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-900">Help &amp; Support</h2>
+              <p className="text-sm text-gray-500">We read every report and request</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <a href="#feedback">
+              <Button variant="outline" size="sm">
+                <Bug className="w-4 h-4" />
+                Report a bug
+              </Button>
+            </a>
+            <a href="#feedback">
+              <Button variant="outline" size="sm">
+                <Lightbulb className="w-4 h-4" />
+                Request a feature
+              </Button>
+            </a>
+            <Link href="/support">
+              <Button variant="outline" size="sm">
+                <Mail className="w-4 h-4" />
+                Contact support
+              </Button>
+            </Link>
+          </div>
+          <p className="text-xs text-gray-400 pt-1">
+            <Link href="/privacy" className="hover:text-gray-600 underline-offset-2 hover:underline">
+              Privacy Policy
+            </Link>
+            {" · "}
+            <Link href="/terms" className="hover:text-gray-600 underline-offset-2 hover:underline">
+              Terms of Service
+            </Link>
+            {" · "}
+            <Link href="/support" className="hover:text-gray-600 underline-offset-2 hover:underline">
+              Delete my data
+            </Link>
+            {" · "}
+            <Link href="/about" className="hover:text-gray-600 underline-offset-2 hover:underline">
+              About PlantPal
+            </Link>
+          </p>
         </CardContent>
       </Card>
 
@@ -273,6 +335,22 @@ export default function SettingsPage() {
       )}
 
       <DeveloperToolsSection />
+
+      {!isMockMode && (
+        <Card>
+          <CardContent className="py-4">
+            <Button
+              variant="outline"
+              className="w-full text-red-600 border-red-200 hover:bg-red-50"
+              onClick={() => void handleSignOut()}
+              loading={signingOut}
+            >
+              <LogOut className="w-4 h-4" />
+              Sign out
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <ConfirmModal
         open={resetOpen}

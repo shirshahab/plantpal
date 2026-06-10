@@ -144,7 +144,7 @@ export function PlantIdentificationResults({
 
       <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">
         <Sparkles className="w-3 h-3" />
-        {PROVIDER_LABELS[result.identification_provider] ?? "AI"}
+        {PROVIDER_LABELS[result.identification_provider] ?? "PlantPal Vision"}
         {result.source === "mock" && " · live identification temporarily unavailable"}
       </p>
     </Card>

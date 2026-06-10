@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Bell, Leaf, MessageCircleQuestion } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CommunityPreviewBadge } from "@/components/community/community-preview-badge";
+import { SafeImage } from "@/components/plants/plant-image";
 import { CommunitySection } from "@/components/community/community-section";
 import { PlantOfWeekCard } from "@/components/community/plant-of-week-card";
 import {
@@ -42,11 +42,11 @@ export default function CommunityPage() {
               className="overflow-hidden hover:shadow-lg transition-shadow group"
             >
               <div className="relative h-44 sm:h-52 bg-green-50">
-                <Image
+                <SafeImage
                   src={garden.imageUrl}
                   alt={garden.title}
-                  fill
-                  className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                  plantText={garden.title}
+                  className="group-hover:scale-[1.02] transition-transform duration-500"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

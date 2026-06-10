@@ -10,6 +10,7 @@ import {
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { isMockMode } from "@/lib/supabase/config";
+import { clearLocalProfile } from "@/lib/profile/user-profile";
 
 interface AuthContextValue {
   user: User | null;
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (mock) return;
     const supabase = createClient();
     await supabase.auth.signOut();
+    clearLocalProfile();
     setUser(null);
   }, [mock]);
 

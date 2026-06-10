@@ -239,3 +239,91 @@ export function getAreaLabel(zipCode: string): string {
   const record = lookupZipRecord(zipCode);
   return record.city ? `${record.city}, ${record.state}` : "your area";
 }
+
+/* ----------------------------- Trend insights ---------------------------- */
+
+export interface TrendingInsight {
+  trendStat: string;
+  climateNote: string;
+  zoneNote: string;
+  plantingSeason: string;
+  commonIssues: string;
+  wateringNotes: string;
+  /** Care guide route when the plant exists in the database. */
+  careGuideHref: string | null;
+}
+
+const SEASON_LABELS: Record<Season, string> = {
+  spring: "Spring",
+  summer: "Summer",
+  fall: "Fall",
+  winter: "Winter",
+};
+
+/** Best planting window by plant type (general guidance). */
+function plantingSeasonFor(plantType: string): string {
+  switch (plantType) {
+    case "tree":
+    case "shrub":
+      return "Fall through early spring — cooler weather helps roots establish.";
+    case "flower":
+      return "Spring, after the last frost in your area.";
+    case "vegetable":
+    case "herb":
+      return "Spring and early summer for most varieties.";
+    case "indoor":
+      return "Any time of year — indoor plants aren't tied to seasons.";
+    default:
+      return "Spring or fall, when temperatures are mild.";
+  }
+}
+
+/** Typical issues by plant type (general guidance). */
+function commonIssuesFor(plantType: string): string {
+  switch (plantType) {
+    case "tree":
+      return "Overwatering young trees, scale insects, and nutrient deficiencies in poor soil.";
+    case "shrub":
+      return "Aphids, powdery mildew in humid spells, and pruning at the wrong time.";
+    case "flower":
+      return "Aphids, slugs, and fungal spots when leaves stay wet overnight.";
+    case "vegetable":
+      return "Inconsistent watering, blossom-end rot, and common garden pests.";
+    case "herb":
+      return "Root rot from soggy soil and legginess without enough sun.";
+    case "indoor":
+      return "Overwatering, low light stress, and spider mites in dry air.";
+    default:
+      return "Watch watering consistency and check leaves regularly for pests.";
+  }
+}
+
+/** Local intelligence details for a trending plant. */
+export function getTrendInsight(plant: TrendingPlant, zipCode: string): TrendingInsight {
+  const record = lookupZipRecord(zipCode);
+  const city = record.city || "your area";
+  const species = plant.speciesId
+    ? PLANT_SPECIES.find((s) => s.id === plant.speciesId)
+    : PLANT_SPECIES.find((s) => s.common_name === plant.name);
+
+  const zoneFit =
+    species &&
+    record.zoneNumber >= species.hardiness_zone_min &&
+    record.zoneNumber <= species.hardiness_zone_max;
+
+  const zoneNote = species
+    ? zoneFit
+      ? `Good fit for USDA Zone ${record.usdaZone} (thrives in zones ${species.hardiness_zone_min}–${species.hardiness_zone_max}).`
+      : `Best in zones ${species.hardiness_zone_min}–${species.hardiness_zone_max} — you're in zone ${record.usdaZone}, so it may need extra care.`
+    : `You're in USDA Zone ${record.usdaZone}.`;
+
+  return {
+    trendStat: `${mockScanIncrease(plant.name)}% increase in local scans this month.`,
+    climateNote: `Popular in ${city} thanks to the ${record.climateType.toLowerCase()} climate.`,
+    zoneNote,
+    plantingSeason: `${SEASON_LABELS[currentSeason()]} tip: ${plantingSeasonFor(plant.plantType)}`,
+    commonIssues: commonIssuesFor(plant.plantType),
+    wateringNotes: species?.watering ?? "Water when the top inch of soil feels dry.",
+    careGuideHref: species ? `/database/plants/${species.id}` : null,
+  };
+}

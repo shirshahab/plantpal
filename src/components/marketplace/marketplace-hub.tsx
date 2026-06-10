@@ -37,7 +37,7 @@ export function MarketplaceHub() {
     <div className="space-y-6 max-w-lg mx-auto page-enter">
       <PageHeader
         title="Marketplace"
-        description="Curated picks for your garden — affiliate-ready architecture"
+        description="Curated picks for your garden"
       />
 
       {recommendedProducts.length > 0 && (

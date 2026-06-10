@@ -80,17 +80,17 @@ export const UPGRADE_COPY: Record<
     lockLabel: "Pro Feature",
   },
   ai_doctor: {
-    title: "AI Plant Doctor",
+    title: "Plant Doctor",
     message: "Get diagnosis-style action plans with PlantPal Plus.",
     lockLabel: "Pro Feature",
   },
   ai_care_plan: {
-    title: "AI Care Plans",
+    title: "PlantPal Care Plans",
     message: "Generate personalized watering, feeding, and pruning schedules.",
     lockLabel: "Pro Feature",
   },
   ai_care_plans: {
-    title: "AI Care Plans",
+    title: "PlantPal Care Plans",
     message: "Generate personalized watering, feeding, and pruning schedules.",
     lockLabel: "Pro Feature",
   },
@@ -121,7 +121,7 @@ export const UPGRADE_COPY: Record<
   },
   plant_scanner: {
     title: "Plant Scanner",
-    message: "Identify plants and nursery tags with AI.",
+    message: "Identify plants and nursery tags instantly.",
     lockLabel: "Pro Feature",
   },
   advanced_learning: {
@@ -130,12 +130,12 @@ export const UPGRADE_COPY: Record<
     lockLabel: "Pro Feature",
   },
   priority_ai: {
-    title: "Priority AI Processing",
-    message: "Faster AI responses during peak times.",
+    title: "Priority Processing",
+    message: "Faster scan and care plan results during peak times.",
     lockLabel: "Pro Feature",
   },
   landscape_designer: {
-    title: "AI Landscape Designer",
+    title: "Garden Designer",
     message: "Upload yard photos and get climate-matched planting plans with PlantPal Pro.",
     lockLabel: "Pro Feature",
   },
@@ -176,11 +176,11 @@ export const UPGRADE_COPY: Record<
   },
   advanced_diagnosis: {
     title: "Advanced diagnosis",
-    message: "Get deeper AI health analysis with PlantPal Pro.",
+    message: "Get deeper plant health analysis with PlantPal Pro.",
     lockLabel: "Pro Feature",
   },
   landscape_ai: {
-    title: "Landscape AI",
+    title: "Garden Designer",
     message: "Generate yard designs with PlantPal Pro.",
     lockLabel: "Pro Feature",
   },

@@ -149,6 +149,56 @@ export function LandscapeMvpHub() {
     (p): p is LandscapeProjectPhoto => !!p
   );
 
+  /** Persist the last run so /debug/landscape can show what happened. */
+  function writeDebugRecord(record: Record<string, unknown>) {
+    try {
+      localStorage.setItem(
+        "plantpal-landscape-debug",
+        JSON.stringify({ ...record, at: new Date().toISOString() })
+      );
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function persistProject(
+    designResult: LandscapeDesignResponse,
+    goal: StyleGoal,
+    name: string
+  ): Promise<{ id: string; localOk: boolean; remoteOk: boolean }> {
+    const id = activeProjectId ?? crypto.randomUUID();
+    const now = new Date().toISOString();
+    const project: LandscapeProject = {
+      id,
+      name: name.trim() || `${STYLE_GOAL_LABELS[goal]} design`,
+      spaceType: activeSpace,
+      zipCode: profile.zipCode,
+      sunExposure: profile.sunExposure,
+      yardSize: profile.yardSize,
+      budgetRange: budgetMvpToRange(profile.budgetTier),
+      budgetTier: profile.budgetTier,
+      maintenancePreference: profile.maintenancePreference,
+      styleGoal: goal,
+      notes: "",
+      photos: photoList.length
+        ? photoList
+        : primaryPhoto
+          ? [{ dataUrl: primaryPhoto.dataUrl, label: "Primary" }]
+          : [],
+      photoDataUrl: primaryPhoto?.storageUrl ?? primaryPhoto?.dataUrl ?? "",
+      design: designResult,
+      visualConceptRequested: !!designResult.after_image_url,
+      createdAt: activeProjectId ? getLandscapeProject(id)?.createdAt ?? now : now,
+      updatedAt: now,
+    };
+
+    const localOk = saveLandscapeProject(project);
+    const remoteStorage = await syncLandscapeProjectToRemote(project);
+    setActiveProjectId(id);
+    await refreshProjects();
+    return { id, localOk, remoteOk: remoteStorage === "supabase" };
+  }
+
   async function handleGenerate() {
     if (!styleGoal || !primaryPhoto || profile.zipCode.length < 5) return;
     setLoading(true);
@@ -156,6 +206,12 @@ export function LandscapeMvpHub() {
     setStep(4);
 
     const additionalPhotos = photoList.filter((p) => p.dataUrl !== primaryPhoto.dataUrl);
+    const payloadKb = Math.round(
+      (primaryPhoto.dataUrl.length +
+        additionalPhotos.reduce((s, p) => s + p.dataUrl.length, 0)) /
+        1024
+    );
+    console.info("[garden-designer] generate", { payloadKb, styleGoal, space: activeSpace });
 
     const res = await requestLandscapeDesign({
       imageDataUrl: primaryPhoto.dataUrl,
@@ -173,57 +229,49 @@ export function LandscapeMvpHub() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(friendlyAiError(res.error, "Landscape Designer"));
+      console.error("[garden-designer] generate failed:", res.error);
+      writeDebugRecord({ ok: false, payloadKb, error: res.error });
+      setError(friendlyAiError(res.error, "Garden Designer"));
+      // Send the user back to the style step so the error and retry
+      // button are visible — never leave step 4 blank.
+      setStep(3);
       return;
     }
 
+    console.info("[garden-designer] generate ok", { source: res.data.source });
     setDesign(res.data);
-    setProjectName(`${STYLE_GOAL_LABELS[styleGoal]} — ${SPACE_TYPE_LABELS[activeSpace]}`);
+    const name = `${STYLE_GOAL_LABELS[styleGoal]} — ${SPACE_TYPE_LABELS[activeSpace]}`;
+    setProjectName(name);
+
+    // Auto-save so the design is never lost, even if the user navigates away.
+    const saveResult = await persistProject(res.data, styleGoal, name);
+    writeDebugRecord({
+      ok: true,
+      payloadKb,
+      source: res.data.source,
+      savedLocal: saveResult.localOk,
+      savedRemote: saveResult.remoteOk,
+    });
+    console.info("[garden-designer] saved", saveResult);
+
     toast(
-      res.data.source === "ai"
-        ? "Your landscape concept is ready."
-        : "Your landscape concept is ready (preview mode)."
+      saveResult.localOk || saveResult.remoteOk
+        ? "Design ready — saved to your projects."
+        : "Design ready. Tap Save to keep it."
     );
   }
 
   async function handleSaveProject() {
     if (!design || !styleGoal || !primaryPhoto) return;
     setSaving(true);
-
-    const id = activeProjectId ?? crypto.randomUUID();
-    const now = new Date().toISOString();
-    const project: LandscapeProject = {
-      id,
-      name: projectName.trim() || `${STYLE_GOAL_LABELS[styleGoal]} design`,
-      spaceType: activeSpace,
-      zipCode: profile.zipCode,
-      sunExposure: profile.sunExposure,
-      yardSize: profile.yardSize,
-      budgetRange: budgetMvpToRange(profile.budgetTier),
-      budgetTier: profile.budgetTier,
-      maintenancePreference: profile.maintenancePreference,
-      styleGoal,
-      notes: "",
-      photos: photoList.length ? photoList : [{ dataUrl: primaryPhoto.dataUrl, label: "Primary" }],
-      photoDataUrl: primaryPhoto.storageUrl ?? primaryPhoto.dataUrl,
-      design,
-      visualConceptRequested: !!design.after_image_url,
-      createdAt: activeProjectId ? getLandscapeProject(id)?.createdAt ?? now : now,
-      updatedAt: now,
-    };
-
-    const localOk = saveLandscapeProject(project);
-    await syncLandscapeProjectToRemote(project);
+    const { localOk, remoteOk } = await persistProject(design, styleGoal, projectName);
     setSaving(false);
 
-    if (!localOk) {
-      toast("Could not save locally — photos may be too large.");
+    if (!localOk && !remoteOk) {
+      toast("Could not save — photos may be too large.");
       return;
     }
-
-    setActiveProjectId(id);
-    await refreshProjects();
-    toast("Landscape project saved.");
+    toast("Garden design saved.");
   }
 
   function startNew() {
@@ -242,7 +290,7 @@ export function LandscapeMvpHub() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto pb-6">
       <PageHeader
-        title="AI Landscape Designer"
+        title="Garden Designer"
         description="Upload your yard, pick a style, and get a concept design with plant list and phased plan."
         action={
           design || tab === "projects" ? (
@@ -301,6 +349,10 @@ export function LandscapeMvpHub() {
               await deleteRemoteLandscapeProject(id);
               await refreshProjects();
               toast("Project deleted.");
+            }}
+            onStartDesign={() => {
+              startNew();
+              setTab("design");
             }}
           />
         </div>
@@ -538,10 +590,29 @@ export function LandscapeMvpHub() {
 
               {step === 4 && loading && (
                 <Card padding="md" className="text-center py-12">
-                  <p className="text-green-700 font-medium">Designing your landscape…</p>
+                  <p className="text-green-700 font-medium">Designing your garden…</p>
                   <p className="text-sm text-gray-500 mt-2">
                     Analyzing photos, building plant list, generating concept render…
                   </p>
+                </Card>
+              )}
+
+              {/* Safety net: never show a blank Design step. */}
+              {step === 4 && !loading && (
+                <Card padding="md" className="text-center py-10 space-y-4">
+                  <p className="font-medium text-gray-900">
+                    {error ? "We couldn't finish your design." : "Your design isn't ready yet."}
+                  </p>
+                  {error && (
+                    <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+                  )}
+                  <Button onClick={() => void handleGenerate()} disabled={!canGenerate}>
+                    <Wand2 className="w-4 h-4" />
+                    Try again
+                  </Button>
+                  <Button variant="outline" onClick={() => setStep(3)}>
+                    <ChevronLeft className="w-4 h-4" /> Back to style
+                  </Button>
                 </Card>
               )}
             </>

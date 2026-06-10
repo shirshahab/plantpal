@@ -12,7 +12,7 @@ export function AiCarePlanDisplay({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-gray-900">Your AI care plan</h3>
+        <h3 className="text-sm font-semibold text-gray-900">Your PlantPal Care Plan</h3>
         <AiSourceBadge source={plan.source} saved={saved} />
       </div>
 

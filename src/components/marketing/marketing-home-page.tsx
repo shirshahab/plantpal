@@ -38,7 +38,7 @@ const PROBLEMS = [
 
 const SOLUTION_CARDS = [
   { icon: CalendarCheck, title: "Daily tasks" },
-  { icon: ScanLine, title: "AI plant doctor" },
+  { icon: ScanLine, title: "Plant doctor" },
   { icon: Camera, title: "Photo diagnosis" },
   { icon: CloudSun, title: "Climate intelligence" },
   { icon: TrendingUp, title: "Growth tracking" },
@@ -49,7 +49,7 @@ const SOLUTION_CARDS = [
 
 const CONFIDENCE_PILLARS = [
   "Plant tracking",
-  "AI guidance",
+  "Expert guidance",
   "Local climate intelligence",
   "Personalized goals",
   "Education",
@@ -85,7 +85,7 @@ export function MarketingHomePage() {
             </p>
             <p className="text-sm text-brand-text-secondary mb-6">{BRAND.tagline}</p>
             <h1 className="font-heading text-4xl sm:text-5xl lg:text-[3.25rem] font-bold text-brand-text tracking-tight leading-[1.08]">
-              Your AI Gardening Coach
+              Your Smart Gardening Coach
             </h1>
             <p className="text-lg sm:text-xl text-brand-text-secondary mt-6 leading-relaxed max-w-xl mx-auto lg:mx-0">
               Grow with confidence. Track every plant, diagnose problems with photos, get local

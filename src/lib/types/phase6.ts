@@ -24,7 +24,7 @@ export interface Achievement {
 }
 
 export interface WeatherAlert {
-  type: "heat" | "frost" | "wind" | "rain" | "humidity";
+  type: "heat" | "frost" | "wind" | "rain" | "humidity" | "drought";
   severity: "info" | "warning" | "critical";
   title: string;
   message: string;

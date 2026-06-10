@@ -6,6 +6,8 @@ import { getCategoryLabel } from "@/lib/feedback/types";
 
 interface FeedbackBody {
   category?: BetaFeedbackCategory;
+  /** Overrides the stored feedback_type (e.g. "support", "data_deletion"). */
+  type?: string;
   tried?: string;
   confused?: string;
   improvement?: string;
@@ -39,7 +41,9 @@ export async function POST(request: Request) {
       user_id: null as string | null,
       email: body.email?.trim() || null,
       route: body.route?.trim() || null,
-      feedback_type: body.category ? `beta:${body.category}` : "beta",
+      feedback_type:
+        body.type?.trim().slice(0, 40) ||
+        (body.category ? `beta:${body.category}` : "beta"),
       message,
     };
 

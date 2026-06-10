@@ -55,7 +55,7 @@ export function ProductCard({ product, compact }: ProductCardProps) {
       </div>
 
       <p className="text-[10px] text-gray-400 pt-1 border-t border-gray-50">
-        Affiliate links coming soon · mock recommendation
+        Curated by the PlantPal team
       </p>
     </Card>
   );

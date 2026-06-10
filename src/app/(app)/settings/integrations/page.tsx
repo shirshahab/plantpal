@@ -59,16 +59,6 @@ export default function IntegrationsSettingsPage() {
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           {loading ? "Probing APIs…" : "Refresh status"}
         </Button>
-        <Link href="/setup">
-          <Button size="sm" variant="outline">
-            Setup checker
-          </Button>
-        </Link>
-        <Link href="/debug/data-sources">
-          <Button size="sm" variant="outline">
-            Data sources debug
-          </Button>
-        </Link>
       </div>
 
       {error && (
@@ -97,23 +87,11 @@ export default function IntegrationsSettingsPage() {
       </div>
 
       <Card>
-        <CardContent className="py-4 text-sm text-gray-600 space-y-3">
-          <p className="font-medium text-gray-900">Environment variables</p>
+        <CardContent className="py-4 text-sm text-gray-600">
           <p>
-            Add keys to{" "}
-            <code className="text-xs bg-gray-100 px-1 rounded">.env.local</code>, then restart{" "}
-            <code className="text-xs bg-gray-100 px-1 rounded">npm run dev</code>. See{" "}
-            <code className="text-xs bg-gray-100 px-1 rounded">API_SETUP.md</code>.
+            When a service is temporarily unavailable, PlantPal automatically falls back to
+            its built-in plant library so the app keeps working.
           </p>
-          <ul className="text-xs font-mono text-gray-500 space-y-1">
-            <li>OPENAI_API_KEY</li>
-            <li>OPENWEATHER_API_KEY + WEATHER_PROVIDER=openweather</li>
-            <li>PERENUAL_API_KEY</li>
-            <li>PLANTNET_API_KEY</li>
-            <li>SERPAPI_KEY</li>
-            <li>NEXT_PUBLIC_SUPABASE_URL</li>
-            <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
-          </ul>
         </CardContent>
       </Card>
     </div>

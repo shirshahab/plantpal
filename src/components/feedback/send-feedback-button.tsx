@@ -29,7 +29,7 @@ export function BetaFeedbackForm({
   );
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState<"supabase" | "local" | null>(null);
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
@@ -49,17 +49,19 @@ export function BetaFeedbackForm({
       return;
     }
 
-    setSent(true);
+    setSent(result.storage);
     setNote("");
     setCategory(null);
     onSuccess?.();
-    setTimeout(() => setSent(false), 3000);
+    setTimeout(() => setSent(null), 4000);
   }
 
   if (sent) {
     return (
       <p className={cn("text-sm text-green-600 bg-green-50 rounded-xl px-4 py-3", className)}>
-        Thanks — your feedback was saved.
+        {sent === "supabase"
+          ? "Thanks — your feedback was sent to the team."
+          : "Thanks — saved on this device. It will be sent when you're back online."}
       </p>
     );
   }

@@ -18,7 +18,7 @@ export function UpgradeModal({
   open,
   onClose,
   headline = "Unlock PlantPal Plus",
-  copy = "Get unlimited plants, AI care plans, photo diagnosis, climate intelligence, and more.",
+  copy = "Get unlimited plants, personalized care plans, photo diagnosis, climate intelligence, and more.",
   className,
 }: UpgradeModalProps) {
   return (

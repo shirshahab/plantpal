@@ -20,7 +20,7 @@ export const BRAND = {
   oneLiner:
     "PlantPal helps you track every plant, diagnose problems with photos, and get personalized care advice based on where you live.",
   positioning:
-    "PlantPal is the smart plant care coach that helps homeowners, gardeners, and plant enthusiasts track, diagnose, and care for every plant they own using local climate intelligence, AI guidance, and personalized growing goals.",
+    "PlantPal is the smart plant care coach that helps homeowners, gardeners, and plant enthusiasts track, diagnose, and care for every plant they own using local climate intelligence, expert guidance, and personalized growing goals.",
   mission:
     "Help every homeowner, gardener, and plant parent grow healthier plants through simple, local, personalized guidance.",
   vision:

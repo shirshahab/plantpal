@@ -172,7 +172,7 @@ export function DesignStudioHub() {
               </div>
             </Card>
             <Card padding="none" className="overflow-hidden">
-              <p className="text-[10px] font-bold text-green-600 uppercase px-3 pt-3">After (AI)</p>
+              <p className="text-[10px] font-bold text-green-600 uppercase px-3 pt-3">After (Concept)</p>
               <div className="aspect-square bg-gradient-to-br from-emerald-100 to-green-200 m-3 rounded-xl flex flex-col items-center justify-center p-4 text-center">
                 <Sparkles className="w-8 h-8 text-green-600 mb-2" />
                 <p className="text-xs font-medium text-green-800">

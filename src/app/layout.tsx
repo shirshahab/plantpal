@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { APP_ICON_PATHS } from "@/lib/brand/tokens";
+import { SentryLoader } from "@/components/monitoring/sentry-loader";
 import "./globals.css";
 
 const inter = Inter({
@@ -24,7 +25,28 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "PlantPal",
-    startupImage: APP_ICON_PATHS.appleTouch,
+    startupImage: [
+      {
+        url: "/splash-750x1334.png",
+        media:
+          "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)",
+      },
+      {
+        url: "/splash-1170x2532.png",
+        media:
+          "(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)",
+      },
+      {
+        url: "/splash-1290x2796.png",
+        media:
+          "(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)",
+      },
+      {
+        url: "/splash-1536x2048.png",
+        media:
+          "(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)",
+      },
+    ],
   },
   formatDetection: {
     telephone: false,
@@ -47,6 +69,9 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  // Android: resize the viewport when the keyboard opens so sticky
+  // footers and focused inputs stay visible above the keyboard.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
@@ -56,7 +81,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${plusJakarta.variable} h-full antialiased`}>
-      <body className="min-h-full overscroll-none">{children}</body>
+      <body className="min-h-full overscroll-none">
+        <SentryLoader />
+        {children}
+      </body>
     </html>
   );
 }

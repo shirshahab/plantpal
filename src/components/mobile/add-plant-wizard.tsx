@@ -36,7 +36,7 @@ import { friendlySaveError } from "@/lib/errors/user-messages";
 import { DEFAULT_PLANT_IMAGE } from "@/lib/plants";
 import { getPlantSpeciesById, PLANT_TYPE_LABELS } from "@/lib/knowledge";
 import type { PlantSpeciesType } from "@/lib/knowledge";
-import { loadUserProfile, markFirstPlantAdded } from "@/lib/profile/user-profile";
+import { loadUserProfile, markFirstPlantAdded, saveUserProfile } from "@/lib/profile/user-profile";
 import { trackEvent } from "@/lib/analytics/track";
 import type { LocationType, PlantingType, SunExposure } from "@/lib/types";
 import {
@@ -451,13 +451,27 @@ export function AddPlantWizard() {
     (placeholderType ? getPlaceholderImageUrl(placeholderType) : null);
 
   return (
-    <div className="max-w-lg mx-auto pb-28 md:pb-8">
+    <div className="max-w-lg mx-auto">
       {isFirstPlantFlow && (
         <Card padding="md" className="mb-4 bg-green-50 border-green-100">
-          <p className="text-sm font-medium text-green-900">Your first plant</p>
-          <p className="text-sm text-green-800 mt-1">
-            Add one plant to unlock daily tasks, care schedules, and your garden dashboard.
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-green-900">Your first plant</p>
+              <p className="text-sm text-green-800 mt-1">
+                Add one plant to unlock daily tasks, care schedules, and your garden dashboard.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                saveUserProfile({ firstPlantSkipped: true });
+                router.push("/dashboard");
+              }}
+              className="text-xs font-medium text-green-700 underline underline-offset-2 shrink-0 py-1 touch-manipulation"
+            >
+              Skip for now
+            </button>
+          </div>
         </Card>
       )}
       {atPlantLimit && (

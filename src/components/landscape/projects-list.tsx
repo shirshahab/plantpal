@@ -12,17 +12,26 @@ interface ProjectsListProps {
   projects: LandscapeProject[];
   onOpen: (id: string) => void;
   onDelete: (id: string) => void;
+  /** Switch back to the design wizard (shown in the empty state). */
+  onStartDesign?: () => void;
 }
 
-export function ProjectsList({ projects, onOpen, onDelete }: ProjectsListProps) {
+export function ProjectsList({ projects, onOpen, onDelete, onStartDesign }: ProjectsListProps) {
   if (projects.length === 0) {
     return (
-      <Card padding="md" className="text-center">
-        <FolderOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-        <p className="font-medium text-gray-900">No saved projects yet</p>
-        <p className="text-sm text-gray-500 mt-1">
-          Analyze a space and save inspiration, photos, plant lists, and budget estimates.
-        </p>
+      <Card padding="md" className="text-center space-y-3">
+        <FolderOpen className="w-10 h-10 text-gray-300 mx-auto" />
+        <div>
+          <p className="font-medium text-gray-900">No saved designs yet</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Upload a yard photo, pick a style, and your finished design will be saved here.
+          </p>
+        </div>
+        {onStartDesign && (
+          <Button size="sm" onClick={onStartDesign} className="touch-manipulation">
+            Start a design
+          </Button>
+        )}
       </Card>
     );
   }

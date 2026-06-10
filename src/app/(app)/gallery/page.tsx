@@ -62,7 +62,13 @@ export default function GalleryPage() {
                 <p className="font-semibold text-gray-900">{item.plantName}</p>
                 <p className="text-xs text-green-600">{item.daysBetween} days apart</p>
               </div>
-              <Button variant="ghost" size="sm" disabled title="Coming soon">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled
+                title="Coming soon"
+                aria-label="Share (coming soon)"
+              >
                 <Share2 className="w-4 h-4" />
               </Button>
             </div>

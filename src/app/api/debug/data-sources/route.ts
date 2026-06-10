@@ -8,8 +8,12 @@ import { isPlantNetEnabled } from "@/lib/integrations/plantnet";
 import { isSerpApiEnabled } from "@/lib/integrations/plant-prices";
 import { getWeatherProvider } from "@/lib/integrations/weather";
 import { isOpenWeatherKeyConfigured } from "@/lib/integrations/env-config";
+import { isDebugToolingEnabled } from "@/lib/dev/dev-only";
 
 export async function GET() {
+  if (!isDebugToolingEnabled()) {
+    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  }
   const sources = getDataSourcesSnapshot();
   const cache = cacheStats();
 

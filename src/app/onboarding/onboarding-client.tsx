@@ -22,7 +22,6 @@ import {
 import {
   GROW_TYPE_OPTIONS,
   EXPERIENCE_OPTIONS,
-  MAIN_GOAL_OPTIONS,
   type GrowType,
   type ExperienceLevel,
   type MainGoal,
@@ -33,9 +32,16 @@ const STEPS = [
   "Experience",
   "Location",
   "Garden type",
-  "Your goals",
   "First plant",
 ];
+
+/** Goals are inferred from garden type — no separate onboarding step. */
+function deriveMainGoal(growTypes: GrowType[]): MainGoal {
+  if (growTypes.includes("fruit_trees")) return "more_fruit";
+  if (growTypes.includes("flowers")) return "more_flowers";
+  if (growTypes.includes("full_yard")) return "better_landscape";
+  return "keep_alive";
+}
 
 export default function OnboardingPageClient() {
   const router = useRouter();
@@ -44,7 +50,6 @@ export default function OnboardingPageClient() {
   const [growTypes, setGrowTypes] = useState<GrowType[]>([]);
   const [experience, setExperience] = useState<ExperienceLevel | null>(null);
   const [zipCode, setZipCode] = useState("");
-  const [mainGoal, setMainGoal] = useState<MainGoal | null>(null);
   const [referralMessage, setReferralMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,8 +71,6 @@ export default function OnboardingPageClient() {
         return /^\d{5}$/.test(zipCode.trim());
       case 3:
         return growTypes.length > 0;
-      case 4:
-        return mainGoal !== null;
       default:
         return true;
     }
@@ -85,7 +88,7 @@ export default function OnboardingPageClient() {
   }
 
   /** Best-effort mirror of onboarding answers to the cloud profile. */
-  function syncProfileToCloud() {
+  function syncProfileToCloud(mainGoal: MainGoal) {
     if (!isSupabaseConfigured()) return;
     const supabase = createClient();
     void supabase.auth.getUser().then(({ data: { user } }) => {
@@ -107,7 +110,10 @@ export default function OnboardingPageClient() {
     });
   }
 
-  function persistProfile(extra: { firstPlantAdded?: boolean } = {}) {
+  function persistProfile(
+    extra: { firstPlantAdded?: boolean; firstPlantSkipped?: boolean } = {}
+  ) {
+    const mainGoal = deriveMainGoal(growTypes);
     saveUserProfile({
       onboardingComplete: true,
       growTypes,
@@ -118,12 +124,12 @@ export default function OnboardingPageClient() {
       ...extra,
     });
 
-    syncProfileToCloud();
+    syncProfileToCloud(mainGoal);
 
     trackEvent("onboarding_complete", {
       experience: experience ?? "unknown",
       gardenTypes: growTypes.join(","),
-      goal: mainGoal ?? "unknown",
+      goal: mainGoal,
     });
 
     const pendingRef = getPendingReferral();
@@ -137,13 +143,19 @@ export default function OnboardingPageClient() {
   }
 
   function handleAddPlant() {
-    persistProfile();
+    // Clear any stale skip flag from a previous onboarding run.
+    persistProfile({ firstPlantSkipped: false });
     router.push("/plants/new?first=1");
   }
 
   function handleScanPlant() {
-    persistProfile();
+    persistProfile({ firstPlantSkipped: false });
     router.push("/scanner");
+  }
+
+  function handleSkipFirstPlant() {
+    persistProfile({ firstPlantSkipped: true });
+    router.push("/dashboard");
   }
 
   return (
@@ -253,6 +265,12 @@ export default function OnboardingPageClient() {
               maxLength={5}
               value={zipCode}
               onChange={(e) => setZipCode(e.target.value.replace(/\D/g, "").slice(0, 5))}
+              onFocus={(e) => {
+                // Keep the input + Continue button visible above the keyboard.
+                setTimeout(() => {
+                  e.target.scrollIntoView({ block: "center", behavior: "smooth" });
+                }, 250);
+              }}
               className="text-lg py-3"
             />
           </div>
@@ -286,33 +304,6 @@ export default function OnboardingPageClient() {
         )}
 
         {step === 4 && (
-          <div className="space-y-4 page-enter">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Your goals</h1>
-              <p className="text-gray-500 mt-1 text-sm">What matters most right now?</p>
-            </div>
-            <div className="space-y-2">
-              {MAIN_GOAL_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setMainGoal(opt.id)}
-                  className={cn(
-                    "w-full flex items-center gap-3 p-4 rounded-2xl border text-left transition-all touch-manipulation",
-                    mainGoal === opt.id
-                      ? "border-green-400 bg-green-50 ring-1 ring-green-200"
-                      : "border-gray-100 bg-white hover:border-green-200"
-                  )}
-                >
-                  <span className="text-xl">{opt.icon}</span>
-                  <span className="font-medium text-gray-900">{opt.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 5 && (
           <div className="space-y-5 page-enter">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
@@ -332,6 +323,14 @@ export default function OnboardingPageClient() {
               Add Plant Manually
             </Button>
 
+            <button
+              type="button"
+              onClick={handleSkipFirstPlant}
+              className="w-full text-center text-sm text-gray-500 hover:text-gray-700 py-2 touch-manipulation"
+            >
+              I&apos;ll add a plant later
+            </button>
+
             <Card padding="md" className="border-gray-100 bg-gray-50/50">
               <p className="text-sm text-gray-600 leading-relaxed">
                 Point your camera at any plant to identify it instantly, or add it manually —
@@ -342,22 +341,24 @@ export default function OnboardingPageClient() {
         )}
       </main>
 
-      {step < 5 && (
-        <footer className="px-4 pb-8 max-w-lg mx-auto w-full flex gap-3">
-          {step > 0 && (
-            <Button variant="outline" onClick={() => setStep((s) => s - 1)} className="flex-1">
-              <ChevronLeft className="w-4 h-4" />
-              Back
+      {step < 4 && (
+        <footer className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-gray-100 safe-bottom">
+          <div className="px-4 py-3 max-w-lg mx-auto w-full flex gap-3">
+            {step > 0 && (
+              <Button variant="outline" onClick={() => setStep((s) => s - 1)} className="flex-1">
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </Button>
+            )}
+            <Button
+              onClick={() => setStep((s) => s + 1)}
+              disabled={!canContinue()}
+              className="flex-1"
+            >
+              Continue
+              <ChevronRight className="w-4 h-4" />
             </Button>
-          )}
-          <Button
-            onClick={() => setStep((s) => s + 1)}
-            disabled={!canContinue()}
-            className="flex-1"
-          >
-            Continue
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+          </div>
         </footer>
       )}
 

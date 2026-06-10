@@ -31,6 +31,7 @@ import { FirstPlantSuccess } from "@/components/plants/first-plant-success";
 import { HealthScoreBadge, HealthScoreRing } from "@/components/score/health-score-badge";
 import { usePlants } from "@/lib/store/plants-provider";
 import { useToast } from "@/lib/store/toast-provider";
+import { friendlySaveError } from "@/lib/errors/user-messages";
 import { useEngagement } from "@/lib/store/engagement-provider";
 import { useJourney } from "@/lib/store/journey-provider";
 import {
@@ -75,6 +76,8 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
       await markWatered(plant.id);
       recordWatering();
       toast("Watering logged.");
+    } catch (e) {
+      toast(friendlySaveError(e instanceof Error ? e.message : "Could not log watering."));
     } finally {
       setWaterLoading(false);
     }
@@ -87,7 +90,7 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
       toast("Plant removed.");
       window.location.href = "/plants";
     } catch (e) {
-      toast(e instanceof Error ? e.message : "Could not remove plant.");
+      toast(friendlySaveError(e instanceof Error ? e.message : "Could not remove plant."));
       setRemoveLoading(false);
     }
   }
@@ -271,7 +274,7 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
           <LocalCareCard plants={[plant]} plant={plant} />
           <Card>
             <CardHeader>
-              <h2 className="text-lg font-semibold text-gray-900">AI care plan</h2>
+              <h2 className="text-lg font-semibold text-gray-900">PlantPal Care Plan</h2>
               <p className="text-sm text-gray-500 mt-0.5">
                 Personalized tips based on your plant, location, and goals.
               </p>

@@ -59,7 +59,7 @@ export function buildSecondOpinion({
 
   sources.push({
     source: primaryIsAi ? "openai" : "rules",
-    label: primaryIsAi ? "AI photo analysis" : "Pattern matching",
+    label: primaryIsAi ? "Photo analysis" : "Pattern matching",
     finding: primary.likelyIssue,
     agreesWithPrimary: null,
   });
@@ -97,11 +97,11 @@ export function buildSecondOpinion({
   if (!primaryIsAi) {
     agreementLevel = "single_source";
     note =
-      "This diagnosis is from PlantPal's symptom pattern engine. Adding clear photos enables AI photo analysis as a second source.";
+      "This diagnosis is from PlantPal's symptom pattern engine. Adding clear photos enables photo analysis as a second source.";
   } else if (rulesAgree) {
     agreementLevel = "strong";
     note =
-      "AI photo analysis and PlantPal's independent symptom pattern check reached the same conclusion.";
+      "Photo analysis and PlantPal's independent symptom pattern check reached the same conclusion.";
   } else {
     const rulesUseful = rules.issueId !== null;
     agreementLevel = rulesUseful ? "partial" : "low";

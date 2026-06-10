@@ -103,6 +103,16 @@ function buildAlerts(input: {
     });
   }
 
+  if (input.rainChance <= 10 && input.humidity <= 30 && input.tempHighF >= 85) {
+    alerts.push({
+      type: "drought",
+      severity: "info",
+      title: "Dry spell — drought stress risk",
+      message: "Hot, dry conditions with no rain in sight can stress shallow-rooted plants.",
+      wateringAdjustment: "Water deeply in the early morning and add mulch to hold moisture.",
+    });
+  }
+
   return alerts;
 }
 

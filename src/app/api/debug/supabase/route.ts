@@ -8,8 +8,12 @@ import {
   maskAnonKey,
 } from "@/lib/supabase/config";
 import { runSupabaseDiagnostics } from "@/lib/supabase/diagnostics";
+import { isDebugToolingEnabled } from "@/lib/dev/dev-only";
 
 export async function GET() {
+  if (!isDebugToolingEnabled()) {
+    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  }
   const { url, key } = getSupabasePublicConfig();
   const projectRef = getProjectRefFromUrl(url);
   const mockMode = isMockMode();

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, AlertTriangle, Leaf } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -16,7 +17,8 @@ interface DashboardSeasonalAlertProps {
 }
 
 export function DashboardSeasonalAlert({ plants, seasonalTasks }: DashboardSeasonalAlertProps) {
-  const profile = loadUserProfile();
+  // Read once per mount — localStorage parse is not free on re-renders.
+  const [profile] = useState(() => loadUserProfile());
   const zip = plants[0]?.zipCode ?? profile.zipCode ?? "91107";
   const { weather } = useWeather(zip);
   const insights = buildLocalInsights(zip, weather, plants);

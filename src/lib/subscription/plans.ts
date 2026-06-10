@@ -34,7 +34,7 @@ export function buildSubscriptionPlans(cycle: BillingCycle = "monthly"): Subscri
       period: cycle === "monthly" ? "/month" : "/year",
       annualPrice: formatMonthlyEquivalent(pro.annual),
       annualPeriod: "/mo billed annually",
-      description: "Unlimited scans, plants, and pro-grade AI tools.",
+      description: "Unlimited scans, plants, and pro-grade garden tools.",
       featured: true,
       badge: PLAN_BADGES[Tier.PLUS],
       features: PLAN_INCLUDES[Tier.PLUS],

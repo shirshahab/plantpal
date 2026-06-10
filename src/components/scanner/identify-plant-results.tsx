@@ -316,7 +316,7 @@ export function IdentifyPlantResults({
 
         <p className="text-[11px] text-gray-400 text-center">
           {liveAiUnavailable
-            ? "Configure OPENAI_API_KEY for live identification"
+            ? "Live identification is temporarily unavailable — showing best match from PlantPal's library"
             : `${primaryLabel}${plantNetLabel ? ` · ${plantNetLabel}` : ""}`}
         </p>
       </Card>

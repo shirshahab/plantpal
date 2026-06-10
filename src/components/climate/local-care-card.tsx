@@ -17,6 +17,7 @@ const alertIcons: Record<WeatherAlert["type"], React.ElementType> = {
   wind: Wind,
   rain: CloudRain,
   humidity: Droplets,
+  drought: Droplets,
 };
 
 interface LocalCareCardProps {

@@ -6,7 +6,7 @@ import {
   Database,
   Trophy,
   Images,
-  Wheat,
+  MessageSquare,
   ShoppingBag,
   Home,
   Gem,
@@ -69,7 +69,6 @@ function buildSections(hideUpgrade: boolean) {
       items: [
         { href: "/achievements", label: "Achievements", icon: Trophy, desc: "Badges & milestones" },
         { href: "/gallery", label: "Before & After", icon: Images, desc: "Plant transformations" },
-        { href: "/harvest", label: "Harvest Log", icon: Wheat, desc: "Track edible yields" },
         { href: "/collection", label: "Rare Collection", icon: Gem, desc: "Collector mode" },
         { href: "/activity", label: "Garden Activity", icon: Activity, desc: "Recent scans, care & badges" },
       ],
@@ -78,10 +77,9 @@ function buildSections(hideUpgrade: boolean) {
       title: "Plan & Discover",
       items: [
         { href: "/shop-assistant", label: "Shop Assistant", icon: ShoppingBag, desc: "Find plants to buy" },
-        { href: "/landscape", label: "AI Landscape Designer", icon: Palette, desc: "Yard photo · 9 styles · phased plan" },
+        { href: "/landscape", label: "Garden Designer", icon: Palette, desc: "Yard photo · 9 styles · phased plan" },
         { href: "/property", label: "Property Mode", icon: Home, desc: "Landscape management" },
         { href: "/community", label: "Community", icon: Users, desc: "Tips, stories & gardens" },
-        { href: "/ar", label: "AR Garden", icon: Sparkles, desc: "Concept preview" },
       ],
     },
     {
@@ -96,9 +94,9 @@ function buildSections(hideUpgrade: boolean) {
               { href: "/upgrade", label: "Upgrade to Pro", icon: Sparkles, desc: "PlantPal Pro — $7.99/mo" },
             ]),
         { href: "/invite", label: "Invite Friends", icon: Gift, desc: "Share PlantPal — both get Plus trial" },
+        { href: "/settings#feedback", label: "Send Feedback", icon: MessageSquare, desc: "Report a bug or share an idea" },
+        { href: "/support", label: "Help & Support", icon: Heart, desc: "Contact us · privacy · data deletion" },
         { href: "/settings", label: "Settings", icon: Settings, desc: "Profile & preferences" },
-        { href: "/setup", label: "Setup checker", icon: Database, desc: "Supabase & API health" },
-        { href: "/qa", label: "QA Checklist", icon: Trophy, desc: "Manual test checklist" },
       ],
     },
   ];

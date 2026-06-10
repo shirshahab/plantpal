@@ -38,7 +38,7 @@ export default function BetaPage() {
           </h2>
           <p>
             PlantPal is your smart plant care coach. Track every plant, get daily tasks, generate
-            AI care plans tuned to your ZIP code, and scan photos when something looks off.
+            care plans tuned to your ZIP code, and scan photos when something looks off.
           </p>
         </section>
 

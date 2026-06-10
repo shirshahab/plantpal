@@ -17,14 +17,15 @@ interface WelcomeCardProps {
 export function DashboardWelcomeCard({ streak }: WelcomeCardProps) {
   const { user, isMockMode } = useAuth();
   const [displayName, setDisplayName] = useState<string | null>(null);
-  const profile = loadUserProfile();
+  const [profile] = useState(() => loadUserProfile());
   const zip = profile.zipCode;
   const location = zip ? getLocationProfile(zip) : null;
   const { weather } = useWeather(zip);
 
   useEffect(() => {
     if (isMockMode) {
-      setDisplayName("Jane");
+      // No fake names — fall back to a generic greeting in local mode.
+      setDisplayName(null);
       return;
     }
     const meta = user?.user_metadata?.full_name as string | undefined;

@@ -36,12 +36,17 @@ import type {
   PhotoQualityAssessment,
 } from "@/lib/types/ai";
 import { assessPhotoQualityClient } from "@/lib/scanner/photo-quality";
-import { saveScanToHistory, SCAN_HISTORY_QUOTA_MESSAGE } from "@/lib/scanner/scan-history";
+import {
+  saveScanToHistory,
+  getScanHistory,
+  SCAN_HISTORY_QUOTA_MESSAGE,
+} from "@/lib/scanner/scan-history";
 import { usePlants } from "@/lib/store/plants-provider";
 import { usePhotos } from "@/lib/store/photos-provider";
 import { useEngagement } from "@/lib/store/engagement-provider";
 import { useToast } from "@/lib/store/toast-provider";
-import { friendlyAiError } from "@/lib/errors/user-messages";
+import { friendlyAiError, friendlySaveError } from "@/lib/errors/user-messages";
+import { reportFeatureFailure } from "@/lib/errors/report-error";
 import { trackEvent } from "@/lib/analytics/track";
 import { recordScanUsage } from "@/lib/billing/usage-tracking";
 import { useSubscription } from "@/lib/store/subscription-provider";
@@ -76,6 +81,8 @@ export function CameraHub() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanFailureStep, setScanFailureStep] = useState<string | null>(null);
   const [scanDebug, setScanDebug] = useState<IdentifyDebugLog | null>(null);
+  /** User-facing failure message shown inline with a retry button. */
+  const [actionError, setActionError] = useState<string | null>(null);
   const debugUI = isScannerDebugUI();
 
   const [identifyResult, setIdentifyResult] = useState<PlantIdentificationResponse | null>(null);
@@ -110,6 +117,7 @@ export function CameraHub() {
     setScanError(null);
     setScanFailureStep(null);
     setScanDebug(null);
+    setActionError(null);
   }
 
   async function handleIdentifyPhotosChange(photos: CapturedPhoto[]) {
@@ -155,6 +163,7 @@ export function CameraHub() {
     setScanError(null);
     setScanFailureStep(null);
     setScanDebug(null);
+    setActionError(null);
     try {
       const { imageDataUrls, photoRoles } = photosToRequest(identifyPhotos);
       const res = await requestIdentifyPlant({
@@ -176,6 +185,7 @@ export function CameraHub() {
       trackEvent("scan", {
         source: res.data.source ?? "unknown",
         confident: !(res.data.not_fully_confident ?? false),
+        isFirst: getScanHistory().length === 0,
       });
 
       try {
@@ -206,10 +216,9 @@ export function CameraHub() {
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : undefined;
-      toast(
-        debugUI
-          ? msg ?? "Identification failed"
-          : friendlyAiError(msg, "identification")
+      reportFeatureFailure("scanner", msg ?? "Identification failed", "scanner_failure");
+      setActionError(
+        debugUI ? msg ?? "Identification failed" : friendlyAiError(msg, "identification")
       );
       console.error("[scanner] identify failed:", e);
     } finally {
@@ -221,6 +230,7 @@ export function CameraHub() {
     if (!preview) return;
     setLoading(true);
     setDiagnoseResult(null);
+    setActionError(null);
     try {
       const res = await requestAnalyzePhoto({
         imageDataUrl: preview,
@@ -236,7 +246,12 @@ export function CameraHub() {
       recordScan();
       toast("Diagnosis complete");
     } catch (e) {
-      toast(friendlyAiError(e instanceof Error ? e.message : undefined, "diagnosis"));
+      reportFeatureFailure(
+        "scanner",
+        e instanceof Error ? e.message : "Diagnosis failed",
+        "scanner_failure"
+      );
+      setActionError(friendlyAiError(e instanceof Error ? e.message : undefined, "diagnosis"));
     } finally {
       setLoading(false);
     }
@@ -246,13 +261,14 @@ export function CameraHub() {
     if (!preview) return;
     setLoading(true);
     setTagResult(null);
+    setActionError(null);
     try {
       const res = await requestScanTag({ imageDataUrl: preview });
       if (!res.ok) throw new Error(res.error);
       setTagResult(res.data);
       toast("Tag scanned");
     } catch (e) {
-      toast(friendlyAiError(e instanceof Error ? e.message : undefined, "tag scan"));
+      setActionError(friendlyAiError(e instanceof Error ? e.message : undefined, "tag scan"));
     } finally {
       setLoading(false);
     }
@@ -286,8 +302,8 @@ export function CameraHub() {
       await markCareAction(selectedPlantId, "lastGrowthPhotoAt");
       setProgressSaved(true);
       toast("Progress photo saved.");
-    } catch {
-      toast("Could not save photo");
+    } catch (e) {
+      toast(friendlySaveError(e instanceof Error ? e.message : "Could not save photo"));
     } finally {
       setLoading(false);
     }
@@ -378,6 +394,23 @@ export function CameraHub() {
         />
       )}
 
+      {actionError && !loading && (
+        <Card padding="md" className="border-red-100 bg-red-50/60 space-y-3">
+          <p className="text-sm font-medium text-gray-900">
+            That didn&apos;t work this time.
+          </p>
+          <p className="text-sm text-red-700">{actionError}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrimaryAction}
+            className="touch-manipulation"
+          >
+            Try again
+          </Button>
+        </Card>
+      )}
+
       {loading && isIdentify && (
         <div className="flex items-center justify-center gap-2 text-sm text-green-700 py-1">
           <div className="flex gap-1">
@@ -436,10 +469,27 @@ export function CameraHub() {
 
       {!isIdentify && (
         <p className="text-sm text-gray-500 text-center px-2">
-          {tab === "diagnose" && "Snap a problem area for AI health diagnosis"}
+          {tab === "diagnose" && "Snap a problem area for a plant health check"}
           {tab === "tag" && "Read nursery tags to prefill a new plant"}
           {tab === "progress" && "Track growth with dated progress photos"}
         </p>
+      )}
+
+      {tab === "progress" && plants.length === 0 && (
+        <Card padding="md" className="text-center space-y-3 border-gray-100 bg-gray-50/60">
+          <p className="text-sm font-medium text-gray-900">
+            Progress photos are linked to a plant
+          </p>
+          <p className="text-sm text-gray-500">
+            Add your first plant, then come back here to start tracking its growth.
+          </p>
+          <Link href="/plants/new">
+            <Button size="sm" variant="outline" className="touch-manipulation">
+              <Plus className="w-4 h-4" />
+              Add a plant
+            </Button>
+          </Link>
+        </Card>
       )}
 
       {(tab === "diagnose" || tab === "progress") && plants.length > 0 && (

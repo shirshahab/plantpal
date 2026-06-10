@@ -12,7 +12,7 @@ export function AiGoalPlanDisplay({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-gray-900">AI goal plan</h3>
+        <h3 className="text-sm font-semibold text-gray-900">Goal plan</h3>
         <AiSourceBadge source={plan.source} saved={saved} />
       </div>
 

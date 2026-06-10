@@ -14,13 +14,24 @@ import {
   resetGenome,
 } from "@/lib/dev/dev-tools";
 import { FounderModeSection } from "@/components/settings/founder-mode-section";
+import { isFounderModeEnabled } from "@/lib/billing/beta-unlock";
+import { useEffect, useState } from "react";
 
 export function DeveloperToolsSection() {
   const isDev = isDevEnvironment();
+  const [founderActive, setFounderActive] = useState(false);
+
+  useEffect(() => {
+    setFounderActive(isFounderModeEnabled());
+  }, []);
 
   function reload() {
     window.location.reload();
   }
+
+  // Production users never see developer tools (and can't self-enable
+  // founder mode). Visible in dev, or when founder mode is already on.
+  if (!isDev && !founderActive) return null;
 
   return (
     <Card className="border-dashed border-amber-200 bg-amber-50/30">
@@ -35,6 +46,12 @@ export function DeveloperToolsSection() {
       </CardHeader>
       <CardContent className="space-y-4">
         <FounderModeSection />
+
+        <Link href="/admin/analytics">
+          <Button variant="outline" size="sm" className="w-full">
+            Growth Analytics Dashboard
+          </Button>
+        </Link>
 
         {isDev && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -57,7 +74,7 @@ export function DeveloperToolsSection() {
             </Button>
             <Button variant="outline" size="sm" onClick={() => { resetAiCache(); reload(); }}>
               <Database className="w-4 h-4" />
-              Reset AI Cache
+              Reset Plan Cache
             </Button>
             <Button variant="outline" size="sm" onClick={() => { resetTasks(); reload(); }}>
               <RotateCcw className="w-4 h-4" />

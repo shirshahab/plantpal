@@ -56,7 +56,7 @@ export default function DoctorPage() {
     toast(
       res.data.source === "ai"
         ? "Diagnosis ready."
-        : "Diagnosis ready (mock mode)."
+        : "Diagnosis ready (preview mode)."
     );
   }
 
@@ -148,9 +148,16 @@ export default function DoctorPage() {
       )}
 
       {!plants.length && (
-        <p className="text-sm text-gray-500 text-center py-8">
-          Add a plant first to use Plant Doctor.
-        </p>
+        <div className="text-center py-8 space-y-3">
+          <p className="text-sm text-gray-500">
+            Plant Doctor checks the health of plants in your garden — add your first plant to get started.
+          </p>
+          <Link href="/plants/new">
+            <Button size="sm" variant="outline" className="touch-manipulation">
+              Add a plant
+            </Button>
+          </Link>
+        </div>
       )}
     </div>
   );

@@ -55,7 +55,7 @@ export function ConciergePlanDisplay({
           </span>
         </div>
         <p className="text-xs text-gray-500 mt-3">
-          {plan.source === "ai" ? "AI concierge plan" : "Preview concierge plan"} ·{" "}
+          {plan.source === "ai" ? "Concierge plan" : "Preview concierge plan"} ·{" "}
           {plan.confidence} confidence
           {saved && " · Saved to account"}
         </p>

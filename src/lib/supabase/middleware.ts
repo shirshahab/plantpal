@@ -38,6 +38,12 @@ const PROTECTED_PREFIXES = [
   "/seasonal",
   "/missions",
   "/marketplace",
+  "/landscape",
+  "/landscape-designer",
+  "/friends",
+  "/invite",
+  "/concierge",
+  "/notifications",
 ];
 
 export async function updateSession(request: NextRequest) {

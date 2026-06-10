@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 const SOURCE_BADGES: Record<string, { label: string; variant: "success" | "outline" | "warning" }> = {
   plantpal: { label: "PlantPal", variant: "success" },
   perenual: { label: "Perenual", variant: "outline" },
-  ai: { label: "AI", variant: "warning" },
+  ai: { label: "PlantPal", variant: "warning" },
   mock: { label: "PlantPal", variant: "success" },
 };
 

@@ -482,6 +482,7 @@ function alertTypeToTask(type: WeatherAlert["type"]): TaskType {
     wind: "inspect",
     rain: "water",
     humidity: "scan",
+    drought: "water",
   };
   return map[type];
 }

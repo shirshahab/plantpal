@@ -52,6 +52,8 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
+              aria-label={tab.label}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 min-h-[56px] touch-manipulation transition-colors",
                 active && !isAdd && "text-green-600",

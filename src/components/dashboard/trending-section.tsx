@@ -1,21 +1,16 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import Image from "next/image";
-import { MapPin, Plus } from "lucide-react";
+import { MapPin, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { TrendingInsightModal } from "@/components/dashboard/trending-insight-modal";
 import {
   getTrendingPlantsForZip,
   getAreaLabel,
   type TrendingPlant,
 } from "@/lib/dashboard/trending-plants";
 import type { Plant } from "@/lib/types";
-
-function trendingHref(plant: TrendingPlant): string {
-  if (plant.speciesId) return `/plants/new?speciesId=${encodeURIComponent(plant.speciesId)}`;
-  const params = new URLSearchParams({ name: plant.name, species: plant.scientificName || plant.name });
-  return `/plants/new?${params.toString()}`;
-}
 
 export function DashboardTrending({
   zipCode,
@@ -24,6 +19,8 @@ export function DashboardTrending({
   zipCode: string;
   plants: Plant[];
 }) {
+  const [selected, setSelected] = useState<TrendingPlant | null>(null);
+
   if (!zipCode?.trim()) return null;
   const trending = getTrendingPlantsForZip(zipCode, plants);
   if (trending.length === 0) return null;
@@ -40,14 +37,15 @@ export function DashboardTrending({
         </h2>
       </div>
       <p className="text-xs text-gray-500 mb-3">
-        Popular plants and gardening trends nearby.
+        Tap a plant to see why it&apos;s trending near you.
       </p>
       <div className="space-y-2">
         {trending.map((plant) => (
-          <Link
+          <button
             key={plant.name}
-            href={trendingHref(plant)}
-            className="flex items-center gap-3 p-2 -mx-1 rounded-xl hover:bg-green-50/70 transition-colors touch-manipulation group"
+            type="button"
+            onClick={() => setSelected(plant)}
+            className="w-full flex items-center gap-3 p-2 -mx-1 rounded-xl hover:bg-green-50/70 transition-colors touch-manipulation group text-left"
           >
             <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-[#eef4e3] shrink-0">
               {plant.imageUrl && (
@@ -70,13 +68,21 @@ export function DashboardTrending({
             </div>
             <span
               className="shrink-0 w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors"
-              aria-label={`Add ${plant.name}`}
+              aria-label={`Why ${plant.name} is trending`}
             >
-              <Plus className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" />
             </span>
-          </Link>
+          </button>
         ))}
       </div>
+
+      {selected && (
+        <TrendingInsightModal
+          plant={selected}
+          zipCode={zipCode}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </Card>
   );
 }

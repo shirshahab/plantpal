@@ -17,7 +17,7 @@ const COMPARISON_ROWS: {
   { label: "Academy basics", free: true, pro: true },
   { label: "Full Academy paths", free: false, pro: true },
   { label: "Advanced diagnosis", free: false, pro: true },
-  { label: "Landscape AI", free: false, pro: true },
+  { label: "Garden Designer", free: false, pro: true },
   { label: "Seasonal courses", free: false, pro: true },
   { label: "Export reports", free: false, pro: true },
   { label: "Climate intelligence", free: false, pro: true },

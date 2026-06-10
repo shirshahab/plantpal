@@ -27,7 +27,7 @@ const FEATURES = [
   },
   {
     icon: ScanLine,
-    title: "AI plant doctor",
+    title: "Plant doctor",
     copy: "Snap a photo of yellow leaves, pests, or damage. PlantPal suggests what to do today and what to avoid.",
     gradient: "from-lime-100 to-green-50",
   },

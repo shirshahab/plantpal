@@ -25,10 +25,9 @@ const WHAT_TO_TEST = [
 ];
 
 const KNOWN_ISSUES = [
-  "Scanner needs OPENAI_API_KEY configured for live identification",
-  "Some features use local storage — data stays on this device until cloud sync is fully wired",
-  "Subscription limits are bypassed in Founder Mode (Settings → Developer Tools)",
-  "AI results are guidance only — always verify with your own judgment",
+  "Some features keep data on this device until cloud sync is fully wired",
+  "All Pro features are unlocked for free during the beta",
+  "Scan and diagnosis results are guidance only — always verify with your own judgment",
 ];
 
 export default function BetaStartPage() {
@@ -111,7 +110,7 @@ export default function BetaStartPage() {
           Scan Your First Plant
         </Button>
         <p className="text-xs text-gray-500 text-center px-4">
-          Point your camera at any plant for an instant AI identification.
+          Point your camera at any plant for an instant identification.
         </p>
         <Button
           variant="secondary"

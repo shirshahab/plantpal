@@ -17,6 +17,10 @@ import type {
   YardSize,
 } from "@/lib/landscape/types";
 
+// Vision analysis + concept image generation can take well over the
+// default serverless limit — without this the route times out mid-design.
+export const maxDuration = 60;
+
 const VALID_SPACES: SpaceType[] = [
   "front_yard",
   "back_yard",

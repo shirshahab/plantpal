@@ -15,13 +15,13 @@ import { getEffectivePlanLabel, isBetaUnlockAll } from "@/lib/billing/beta-unloc
 import type { BillingFeature } from "@/lib/billing/feature-gates";
 
 const FEATURE_STATUS_ROWS: { feature: BillingFeature; label: string }[] = [
-  { feature: "ai_doctor", label: "AI Doctor" },
-  { feature: "ai_care_plan", label: "AI Care Plans" },
+  { feature: "ai_doctor", label: "Plant Doctor" },
+  { feature: "ai_care_plan", label: "PlantPal Care Plans" },
   { feature: "plant_scanner", label: "Plant Scanner" },
   { feature: "price_checker", label: "Price Checker" },
   { feature: "climate_intelligence", label: "Climate Intelligence" },
   { feature: "plant_genome", label: "Plant Genome" },
-  { feature: "landscape_designer", label: "Landscape Designer" },
+  { feature: "landscape_designer", label: "Garden Designer" },
   { feature: "concierge", label: "Concierge Plans" },
   { feature: "family_sharing", label: "Family Sharing" },
 ];

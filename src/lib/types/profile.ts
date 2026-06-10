@@ -19,6 +19,8 @@ export interface UserProfile {
   onboardingComplete: boolean;
   /** Set when user adds their first plant. */
   firstPlantAdded?: boolean;
+  /** User chose "I'll add a plant later" during onboarding. */
+  firstPlantSkipped?: boolean;
   growTypes: GrowType[];
   experienceLevel: ExperienceLevel | null;
   zipCode: string;

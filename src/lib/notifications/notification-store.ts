@@ -6,13 +6,20 @@
 
 import {
   DEFAULT_NOTIFICATION_PREFS,
+  type AppNotification,
+  type NotificationHistoryEntry,
   type NotificationPrefs,
 } from "@/lib/types/notifications";
 
 const READS_KEY = "plantpal-notification-reads";
+const DISMISSED_KEY = "plantpal-notification-dismissed";
+const HISTORY_KEY = "plantpal-notification-history";
 const PREFS_KEY = "plantpal-notification-prefs";
 const PUSH_DIGEST_KEY = "plantpal-push-digest-day";
 const EMAIL_DIGEST_KEY = "plantpal-email-digest-day";
+
+const HISTORY_MAX_ENTRIES = 100;
+const HISTORY_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 export const NOTIFICATIONS_CHANGED_EVENT = "plantpal:notifications-changed";
 
@@ -43,6 +50,67 @@ export function markNotificationsRead(ids: string[]): void {
 
   localStorage.setItem(READS_KEY, JSON.stringify(map));
   window.dispatchEvent(new Event(NOTIFICATIONS_CHANGED_EVENT));
+}
+
+/** Map of dismissed (deleted) notification id -> ISO timestamp. */
+export function getDismissedMap(): Record<string, string> {
+  if (!isBrowser()) return {};
+  try {
+    const raw = localStorage.getItem(DISMISSED_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function dismissNotifications(ids: string[]): void {
+  if (!isBrowser() || ids.length === 0) return;
+  const map = getDismissedMap();
+  const now = new Date().toISOString();
+  for (const id of ids) map[id] = now;
+
+  // Daily IDs never come back — prune old entries.
+  const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  for (const [id, at] of Object.entries(map)) {
+    if (new Date(at).getTime() < cutoff) delete map[id];
+  }
+
+  localStorage.setItem(DISMISSED_KEY, JSON.stringify(map));
+  window.dispatchEvent(new Event(NOTIFICATIONS_CHANGED_EVENT));
+}
+
+/** Rolling 30-day local history of every notification the user has seen. */
+export function getNotificationHistory(): NotificationHistoryEntry[] {
+  if (!isBrowser()) return [];
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? (JSON.parse(raw) as NotificationHistoryEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function appendNotificationHistory(notifications: AppNotification[]): void {
+  if (!isBrowser() || notifications.length === 0) return;
+  const existing = getNotificationHistory();
+  const known = new Set(existing.map((e) => e.id));
+  const additions = notifications
+    .filter((n) => !known.has(n.id))
+    .map<NotificationHistoryEntry>((n) => ({
+      id: n.id,
+      type: n.type,
+      title: n.title,
+      body: n.body,
+      href: n.href,
+      createdAt: n.createdAt,
+    }));
+  if (additions.length === 0) return;
+
+  const cutoff = Date.now() - HISTORY_MAX_AGE_MS;
+  const next = [...additions, ...existing]
+    .filter((e) => new Date(e.createdAt).getTime() >= cutoff)
+    .slice(0, HISTORY_MAX_ENTRIES);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
 }
 
 export function getNotificationPrefs(): NotificationPrefs {

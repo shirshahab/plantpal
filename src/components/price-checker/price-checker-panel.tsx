@@ -137,7 +137,7 @@ export function PriceCheckerPanel() {
       emitAwardXp("price_check_completed");
       toast(
         res.data.source === "ai"
-          ? "AI price check ready."
+          ? "Price check ready."
           : "Price check ready — based on typical nursery pricing."
       );
     } else {
@@ -188,7 +188,7 @@ export function PriceCheckerPanel() {
   }
 
   function handleReportSubmit() {
-    toast("Thanks! Price reports coming soon — your input helps build local data.");
+    toast("Thanks! Your report helps us build better local pricing data.");
     setReportOpen(false);
     setReportStore("");
     setReportCity("");
@@ -305,7 +305,7 @@ export function PriceCheckerPanel() {
             onClick={handleCheck}
           >
             <Sparkles className="w-5 h-5" />
-            Check Price (AI)
+            Check Price
           </Button>
           <Button
             variant="outline"
@@ -337,8 +337,17 @@ export function PriceCheckerPanel() {
           </Button>
         </Card>
       ) : result ? (
-        <PriceCheckerResults
-          result={result!}
+        <>
+          {error && (
+            <Card padding="sm" className="border-amber-200 bg-amber-50">
+              <p className="text-sm text-amber-800">
+                Live price analysis didn&apos;t go through — showing an estimate based on
+                typical nursery pricing instead. You can check this plant again in a moment.
+              </p>
+            </Card>
+          )}
+          <PriceCheckerResults
+            result={result!}
           plantName={plantName}
           shoppingResults={shoppingResults}
           onReset={() => {
@@ -355,8 +364,9 @@ export function PriceCheckerPanel() {
           setReportPrice={setReportPrice}
           reportNotes={reportNotes}
           setReportNotes={setReportNotes}
-          onReportSubmit={handleReportSubmit}
-        />
+            onReportSubmit={handleReportSubmit}
+          />
+        </>
       ) : null}
     </div>
   );
@@ -540,7 +550,7 @@ function PriceCheckerResults({
       {result.photoInspection && (
         <Section title="Photo Inspection">
           <Card padding="md" className="bg-gray-50 border-dashed">
-            <Badge variant="info" className="mb-2">Photo inspection coming soon</Badge>
+            <Badge variant="info" className="mb-2">Early preview</Badge>
             <div className="text-sm space-y-1 text-gray-600">
               <p>Visible leaves: <strong>{result.photoInspection.visibleLeaves}</strong></p>
               <p>Structure: <strong>{result.photoInspection.structure}</strong></p>
@@ -607,7 +617,7 @@ function PriceCheckerResults({
               <Button variant="outline" className="flex-1" onClick={() => setReportOpen(false)}>Cancel</Button>
               <Button className="flex-1 touch-manipulation" onClick={onReportSubmit}>Submit</Button>
             </div>
-            <p className="text-xs text-gray-400 text-center">Database storage coming soon</p>
+            <p className="text-xs text-gray-400 text-center">Reports help calibrate local price ranges</p>
           </Card>
         )}
       </Section>

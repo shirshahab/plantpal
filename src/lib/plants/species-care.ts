@@ -8,7 +8,7 @@ import { defaultCareForSpecies } from "./care-defaults";
 export const CARE_SOURCE_LABELS: Record<SpeciesCareSource, string> = {
   plantpal: "PlantPal database",
   perenual: "Perenual",
-  ai: "AI generated",
+  ai: "PlantPal care library",
   fallback: "Basic fallback",
 };
 
