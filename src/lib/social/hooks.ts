@@ -143,21 +143,40 @@ export function useSocialNotifications() {
   return { notifications, unread, refresh };
 }
 
-export async function searchUsers(q: string): Promise<SocialProfile[]> {
-  if (q.length < 2) return [];
-  const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
-  const json = (await res.json()) as { ok: boolean; users?: SocialProfile[] };
-  return json.users ?? [];
+export interface UserSearchResult {
+  users: SocialProfile[];
+  error: string | null;
 }
 
-export async function sendFriendRequest(userId: string): Promise<boolean> {
+export async function searchUsers(q: string): Promise<UserSearchResult> {
+  if (q.length < 2) return { users: [], error: null };
+  try {
+    const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
+    const json = (await res.json()) as {
+      ok: boolean;
+      users?: SocialProfile[];
+      error?: string;
+    };
+    if (!json.ok) return { users: [], error: json.error ?? "Search failed. Try again." };
+    return { users: json.users ?? [], error: null };
+  } catch {
+    return { users: [], error: "Search failed. Check your connection and try again." };
+  }
+}
+
+export interface FriendActionResult {
+  ok: boolean;
+  error?: string;
+}
+
+export async function sendFriendRequest(userId: string): Promise<FriendActionResult> {
   const res = await fetch("/api/friends", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "send_request", userId }),
   });
-  const json = (await res.json()) as { ok: boolean };
-  return json.ok;
+  const json = (await res.json()) as { ok: boolean; error?: string };
+  return { ok: json.ok, error: json.error };
 }
 
 export async function acceptFriendRequest(requestId: string): Promise<boolean> {

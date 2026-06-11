@@ -33,6 +33,7 @@ interface CloudProfileRow {
   experience_level: string | null;
   main_goal: string | null;
   grow_types: string[] | null;
+  email: string | null;
 }
 
 /** "No rows" from .single() is expected when the signup trigger missed. */
@@ -58,12 +59,31 @@ export async function hydrateProfileFromCloud(): Promise<CloudProfileSnapshot> {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("onboarding_complete, zip_code, experience_level, main_goal, grow_types")
+      .select("onboarding_complete, zip_code, experience_level, main_goal, grow_types, email")
       .eq("id", user.id)
       .single<CloudProfileRow>();
 
     if (error && error.code !== NO_ROWS_CODE) {
       return { status: "error", userId: user.id, error: error.message };
+    }
+
+    // Self-heal: if the signup trigger missed (no row) or left email empty,
+    // write the minimal identity row now. Without it this user is invisible
+    // to friend search by email.
+    if (!data || !data.email) {
+      const { error: healError } = await supabase.from("profiles").upsert(
+        {
+          id: user.id,
+          email: user.email ?? null,
+          ...(user.user_metadata?.full_name
+            ? { full_name: user.user_metadata.full_name as string }
+            : {}),
+        },
+        { onConflict: "id" }
+      );
+      if (healError) {
+        console.warn("[profile] identity self-heal failed:", healError.message);
+      }
     }
 
     const local = loadUserProfile();

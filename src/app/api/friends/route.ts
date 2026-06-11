@@ -115,9 +115,18 @@ export async function POST(request: Request) {
 
   const action = body.action as string;
   const targetUserId = body.userId as string | undefined;
+  const requestId = body.requestId as string | undefined;
 
-  if (!action || !targetUserId) {
-    return NextResponse.json({ ok: false, error: "action and userId required" }, { status: 400 });
+  if (!action) {
+    return NextResponse.json({ ok: false, error: "action required" }, { status: 400 });
+  }
+  // accept/decline operate on a requestId; the rest need a target user.
+  const needsUserId = ["send_request", "remove", "block"].includes(action);
+  if (needsUserId && !targetUserId) {
+    return NextResponse.json({ ok: false, error: "userId required" }, { status: 400 });
+  }
+  if (["accept", "decline"].includes(action) && !requestId) {
+    return NextResponse.json({ ok: false, error: "requestId required" }, { status: 400 });
   }
 
   if (!isSupabaseConfigured()) {
@@ -134,10 +143,67 @@ export async function POST(request: Request) {
   }
 
   if (action === "send_request") {
-    const { error } = await supabase.from("friend_requests").insert({
-      from_user_id: user.id,
-      to_user_id: targetUserId,
-    });
+    if (targetUserId === user.id) {
+      return NextResponse.json(
+        { ok: false, error: "You can't friend yourself. Bold move though." },
+        { status: 400 }
+      );
+    }
+
+    // Already friends?
+    const { data: existingFriend } = await supabase
+      .from("friends")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("friend_id", targetUserId)
+      .maybeSingle();
+    if (existingFriend) {
+      return NextResponse.json(
+        { ok: false, error: "You're already friends." },
+        { status: 409 }
+      );
+    }
+
+    // Pending request in either direction?
+    const { data: pending } = await supabase
+      .from("friend_requests")
+      .select("id, from_user_id")
+      .eq("status", "pending")
+      .or(
+        `and(from_user_id.eq.${user.id},to_user_id.eq.${targetUserId}),and(from_user_id.eq.${targetUserId},to_user_id.eq.${user.id})`
+      )
+      .limit(1);
+    if (pending && pending.length > 0) {
+      const theirs = pending[0].from_user_id === targetUserId;
+      return NextResponse.json(
+        {
+          ok: false,
+          error: theirs
+            ? "They already sent you a request. Check your Requests tab."
+            : "Request already sent. Give them a minute.",
+        },
+        { status: 409 }
+      );
+    }
+
+    // A previously declined request blocks re-insert via the unique
+    // constraint. Reset it back to pending instead.
+    const { data: previous } = await supabase
+      .from("friend_requests")
+      .select("id")
+      .eq("from_user_id", user.id)
+      .eq("to_user_id", targetUserId)
+      .maybeSingle();
+
+    const { error } = previous
+      ? await supabase
+          .from("friend_requests")
+          .update({ status: "pending", responded_at: null })
+          .eq("id", previous.id)
+      : await supabase.from("friend_requests").insert({
+          from_user_id: user.id,
+          to_user_id: targetUserId,
+        });
     if (error) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
     }
@@ -155,7 +221,7 @@ export async function POST(request: Request) {
     const { data: req } = await supabase
       .from("friend_requests")
       .select("*")
-      .eq("id", body.requestId as string)
+      .eq("id", requestId as string)
       .eq("to_user_id", user.id)
       .single();
 
@@ -188,7 +254,7 @@ export async function POST(request: Request) {
     await supabase
       .from("friend_requests")
       .update({ status: "declined", responded_at: new Date().toISOString() })
-      .eq("id", body.requestId as string)
+      .eq("id", requestId as string)
       .eq("to_user_id", user.id);
     return NextResponse.json({ ok: true });
   }

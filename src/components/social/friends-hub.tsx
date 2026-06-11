@@ -27,19 +27,23 @@ export function FriendsHub() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SocialProfile[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   async function handleSearch() {
     if (query.trim().length < 2) return;
     setSearching(true);
-    const users = await searchUsers(query.trim());
+    const { users, error } = await searchUsers(query.trim());
     setResults(users);
+    setSearchError(error);
+    setSearched(true);
     setSearching(false);
     setTab("search");
   }
 
   async function handleSend(userId: string) {
-    const ok = await sendFriendRequest(userId);
-    toast(ok ? "Friend request sent!" : "Could not send request.");
+    const { ok, error } = await sendFriendRequest(userId);
+    toast(ok ? "Friend request sent!" : (error ?? "Could not send request."));
     if (ok) void refresh();
   }
 
@@ -190,9 +194,30 @@ export function FriendsHub() {
         </div>
       ) : (
         <div className="space-y-2">
-          {results.length === 0 ? (
-            <Card padding="md" className="text-center text-sm text-gray-500">
-              Search for friends by name or email
+          {searchError ? (
+            <Card padding="md" className="text-center space-y-2 border-red-100 bg-red-50/50">
+              <p className="text-sm font-medium text-red-700">{searchError}</p>
+              <Button size="sm" variant="outline" onClick={() => void handleSearch()} className="touch-manipulation">
+                Try again
+              </Button>
+            </Card>
+          ) : results.length === 0 ? (
+            <Card padding="md" className="text-center space-y-2">
+              {searched ? (
+                <>
+                  <p className="text-sm font-medium text-gray-900">No user found.</p>
+                  <p className="text-sm text-gray-500">
+                    Make sure they signed up with that email.
+                  </p>
+                  <Link href="/invite" className="inline-block pt-1">
+                    <Button size="sm" variant="secondary" className="touch-manipulation">
+                      Invite them instead
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <p className="text-sm text-gray-500">Search for friends by name or email</p>
+              )}
             </Card>
           ) : (
             results.map((user) => (

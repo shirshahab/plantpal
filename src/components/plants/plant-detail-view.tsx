@@ -42,6 +42,7 @@ import {
   type Plant,
 } from "@/lib/types";
 import { formatPlantSize } from "@/lib/plants/plant-size";
+import { getPlantyFact } from "@/lib/care/planty-facts";
 import { calculatePlantHealthScore } from "@/lib/scoring";
 import { cn } from "@/lib/utils";
 
@@ -62,7 +63,7 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
   const { markWatered, removePlant } = usePlants();
   const { toast } = useToast();
   const { recordWatering } = useEngagement();
-  const { getPrimaryGoal } = useJourney();
+  const { getPrimaryGoal, getPlantGoals } = useJourney();
   const [tab, setTab] = useState<DetailTab>("care");
   const [removeOpen, setRemoveOpen] = useState(false);
   const [removeLoading, setRemoveLoading] = useState(false);
@@ -71,6 +72,13 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
   const healthScore = calculatePlantHealthScore(plant);
   const primaryGoal = getPrimaryGoal(plant.id);
   const sizeLabel = formatPlantSize(plant);
+  const plantyFact = getPlantyFact({
+    species: plant.species,
+    commonName: plant.name,
+    goals: getPlantGoals(plant.id).map((g) => g.id),
+    location: plant.zipCode,
+    plantId: plant.id,
+  });
 
   async function handleMarkWatered() {
     setWaterLoading(true);
@@ -277,12 +285,7 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
           <Card>
             <CardHeader>
               <h2 className="text-lg font-semibold text-gray-900">PlantPal Care Plan</h2>
-              <Planty
-                variant="thinking"
-                subtle
-                message="Here's what your plant needs next."
-                className="mt-2"
-              />
+              <Planty variant="thinking" subtle message={plantyFact} className="mt-2" />
             </CardHeader>
             <CardContent>
               <GenerateCarePlanButton plant={plant} />

@@ -24,6 +24,7 @@ import { DashboardEmptyState } from "@/components/dashboard/empty-state";
 import { FounderModeBadge } from "@/components/settings/founder-mode-badge";
 import { SendFeedbackButton } from "@/components/feedback/send-feedback-button";
 import { NotificationCenter } from "@/components/notifications/notification-center";
+import { TasksDebug } from "@/components/dev/tasks-debug";
 import { BetaWelcomeBanner } from "@/components/dashboard/beta-welcome-banner";
 import { usePlants } from "@/lib/store/plants-provider";
 import { useTasks } from "@/lib/store/tasks-provider";
@@ -140,6 +141,8 @@ export function DashboardHome() {
 
         <DashboardQuickActions />
       </div>
+
+      <TasksDebug />
     </div>
   );
 }
