@@ -165,9 +165,9 @@ export function PlanCards({
       {showNote && (
         <p className="text-center text-sm text-gray-400 mt-10">
           {hideCta
-            ? "Beta access — all features unlocked for testing."
+            ? "Beta access. All features enabled for testing."
             : ctaMode === "upgrade"
-              ? "Preview mode — no charges until billing launches."
+              ? "Preview mode. No charges until billing launches."
               : "Pricing may change during early access."}
         </p>
       )}

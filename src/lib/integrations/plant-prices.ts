@@ -48,7 +48,7 @@ function mockPriceItems(input: PlantPriceSearchInput): PriceSearchItem[] {
   return [
     {
       retailer: "Local nursery (est.)",
-      title: `${mock.correctedName} — ${input.size}`,
+      title: `${mock.correctedName}, ${input.size}`,
       price: mid,
       size: String(input.size),
       url: "#",

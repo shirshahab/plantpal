@@ -120,7 +120,7 @@ export const LOCAL_GROWER_TIPS: CommunityTip[] = [
     author: "Maria G.",
     avatar: "MG",
     location: "Pasadena, CA",
-    tip: "Water citrus deeply but less often — if the top 2 inches are dry, it's time. Shallow daily sprinkles cause fruit drop.",
+    tip: "Water citrus deeply but less often. If the top 2 inches are dry, it's time. Shallow daily sprinkles cause fruit drop.",
     tag: "Citrus",
     cheers: 89,
     timeAgo: "3h ago",
@@ -140,7 +140,7 @@ export const LOCAL_GROWER_TIPS: CommunityTip[] = [
     author: "Priya S.",
     avatar: "PS",
     location: "Sierra Madre, CA",
-    tip: "Start tomatoes after the last frost window — here that's usually mid-March. Mulch immediately to keep soil cool.",
+    tip: "Start tomatoes after the last frost window. Here that's usually mid-March. Mulch immediately to keep soil cool.",
     tag: "Vegetables",
     cheers: 112,
     timeAgo: "2 days ago",
@@ -176,7 +176,7 @@ export const COMMUNITY_QUESTIONS: CommunityQuestion[] = [
     author: "Nina K.",
     avatar: "NK",
     location: "Pasadena, CA",
-    title: "Avocado leaves curling inward — heat or pests?",
+    title: "Avocado leaves curling inward: heat or pests?",
     body: "New growth looks fine but older leaves are cupping. Watered Sunday, no visible bugs. Zone 10b, full afternoon sun.",
     tags: ["Avocado", "Troubleshooting"],
     answers: 4,
@@ -233,7 +233,7 @@ export const SUCCESS_STORIES: SuccessStory[] = [
     avatar: "EM",
     location: "Pasadena, CA",
     excerpt:
-      "My Meyer lemon looked hopeless after a heat wave. I adjusted watering, added mulch, and waited. Six months later — 14 lemons.",
+      "My Meyer lemon looked hopeless after a heat wave. I adjusted watering, added mulch, and waited. Six months later: 14 lemons.",
     imageUrl:
       "https://images.unsplash.com/photo-1560807707-8cc77767d783?w=600&h=400&fit=crop&q=80",
     stat: "14 lemons · first harvest",
@@ -313,7 +313,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Backyard Orchard",
     subtitle: "Citrus, stone fruit & pollinators",
     description:
-      "A zone 10 backyard with Meyer lemon, avocado, and peach trees — designed for staggered harvests and bee-friendly understory.",
+      "A zone 10 backyard with Meyer lemon, avocado, and peach trees, designed for staggered harvests and bee-friendly understory.",
     imageUrl:
       "https://images.unsplash.com/photo-1466692476860-a088c219fe7a?w=800&h=500&fit=crop&q=80",
     owner: "Elena Martinez",
@@ -329,7 +329,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Bonsai Collection",
     subtitle: "12 trees · wired & refined",
     description:
-      "A patio collection spanning maple, juniper, and ficus — each on its own care rhythm with seasonal repotting notes.",
+      "A patio collection spanning maple, juniper, and ficus, each on its own care rhythm with seasonal repotting notes.",
     imageUrl:
       "https://images.unsplash.com/photo-1509228468518-180dd4863644?w=800&h=500&fit=crop&q=80",
     owner: "David Chen",
@@ -345,7 +345,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Houseplant Jungle",
     subtitle: "67 plants · one living room",
     description:
-      "A bright corner turned into a layered indoor ecosystem — pothos trails, monsteras, and a humidifier on a timer.",
+      "A bright corner turned into a layered indoor jungle: pothos trails, monsteras, and a humidifier on a timer.",
     imageUrl:
       "https://images.unsplash.com/photo-1614594975524-2aba8ac3cb18?w=800&h=500&fit=crop&q=80",
     owner: "Marcus Webb",
@@ -377,7 +377,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Mediterranean Yard",
     subtitle: "Olive, lavender & gravel paths",
     description:
-      "A front yard that trades lawn for drought-tolerant structure — Italian cypress anchors, lavender borders, and smart drip zones.",
+      "A front yard that trades lawn for drought-tolerant structure: Italian cypress anchors, lavender borders, and smart drip zones.",
     imageUrl:
       "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&h=500&fit=crop&q=80",
     owner: "Sofia Navarro",
@@ -393,7 +393,7 @@ export const FEATURED_GARDENS: FeaturedGarden[] = [
     title: "Pollinator Garden",
     subtitle: "Native blooms · year-round visitors",
     description:
-      "A narrow side strip converted into a hummingbird highway — salvia, penstemon, milkweed, and a shallow water dish.",
+      "A narrow side strip converted into a hummingbird highway: salvia, penstemon, milkweed, and a shallow water dish.",
     imageUrl:
       "https://images.unsplash.com/photo-1499006089348-7297094601c2?w=800&h=500&fit=crop&q=80",
     owner: "Chris Park",

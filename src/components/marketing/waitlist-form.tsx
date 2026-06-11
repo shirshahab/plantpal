@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SocialLinks } from "@/components/marketing/social-links";
+import { PlantyAvatar } from "@/components/brand/planty";
 import {
   GROW_TYPE_OPTIONS,
   PROBLEM_OPTIONS,
@@ -72,11 +72,9 @@ export function WaitlistForm({ variant = "full", source = "website", className }
   if (success) {
     return (
       <div className={cn("text-center py-8 px-4", className)}>
-        <div className="w-14 h-14 rounded-2xl bg-brand-sage/20 flex items-center justify-center mx-auto mb-4">
-          <CheckCircle2 className="w-7 h-7 text-brand-primary" />
-        </div>
+        <PlantyAvatar variant="niceWork" size={56} className="mx-auto mb-4" />
         <h3 className="font-heading text-xl font-bold text-gray-900">
-          You&apos;re in. Your plants just got a fighting chance.
+          You&apos;re in. Your plants have a fighting chance.
         </h3>
         <p className="text-sm text-gray-500 mt-2 leading-relaxed">
           We&apos;ll email you when early access opens. Or start your garden right now.

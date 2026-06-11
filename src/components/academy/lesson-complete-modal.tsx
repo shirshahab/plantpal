@@ -60,7 +60,7 @@ export function LessonCompleteModal({ result, onClose }: LessonCompleteModalProp
             <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Trophy className="w-5 h-5 text-amber-600" />
-                <p className="font-semibold text-amber-900">Badge Unlocked!</p>
+                <p className="font-semibold text-amber-900">Badge Earned!</p>
               </div>
               {newBadgeDetails.map((badge) => (
                 <div key={badge!.id} className="flex items-center gap-3 justify-center">

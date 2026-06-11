@@ -16,7 +16,7 @@ function enrichLegacyLesson(lesson: Lesson): AcademyLesson {
       `In this lesson you'll learn the essentials of ${lesson.title.toLowerCase()}.`,
     funFacts: [
       `Most gardeners revisit ${lesson.title.toLowerCase()} every season.`,
-      "PlantPal Academy lessons take just a few minutes — small steps add up!",
+      "PlantPal Academy lessons take just a few minutes. Small steps add up!",
     ],
     summary: lesson.keyTakeaways.slice(0, 2).join(" "),
   };

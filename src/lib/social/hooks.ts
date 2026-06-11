@@ -83,16 +83,36 @@ export function useActiveChallenges() {
   const [challenges, setChallenges] = useState<SocialChallenge[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    void fetch("/api/social/challenges")
-      .then((r) => r.json())
-      .then((json: { ok: boolean; challenges?: SocialChallenge[] }) => {
-        if (json.ok) setChallenges(json.challenges ?? []);
-      })
-      .finally(() => setLoading(false));
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/social/challenges");
+      const json = (await res.json()) as { ok: boolean; challenges?: SocialChallenge[] };
+      if (json.ok) setChallenges(json.challenges ?? []);
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { challenges, loading };
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { challenges, loading, refresh };
+}
+
+export async function joinChallenge(
+  templateIndex: number,
+  scope: "personal" | "family" = "personal"
+): Promise<boolean> {
+  const res = await fetch("/api/social/challenges", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "join", templateIndex, scope }),
+  });
+  const json = (await res.json()) as { ok: boolean };
+  return json.ok;
 }
 
 export function useSocialNotifications() {

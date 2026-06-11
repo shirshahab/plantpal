@@ -50,14 +50,14 @@ function mapSunlight(sunlight?: string[]): string {
 function mapWatering(watering?: string): string {
   if (!watering) return "Moist, well-drained";
   const w = watering.toLowerCase();
-  if (w.includes("minimum") || w.includes("none")) return "Dry — allow soil to dry between waterings";
-  if (w.includes("average") || w.includes("frequent")) return "Moist — water when top inch is dry";
+  if (w.includes("minimum") || w.includes("none")) return "Dry: allow soil to dry between waterings";
+  if (w.includes("average") || w.includes("frequent")) return "Moist: water when top inch is dry";
   return watering;
 }
 
 function mapToxicity(poisonous?: number): string {
   if (poisonous === 1) return "Toxic to pets and/or humans if ingested";
-  return "Generally non-toxic — verify for your specific variety";
+  return "Generally non-toxic, verify for your specific variety";
 }
 
 export function perenualExternalId(id: number): string {

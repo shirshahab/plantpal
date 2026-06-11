@@ -37,19 +37,19 @@ export function getGrowingSeasonLabel(profile: LocationProfile): string {
 export function getLocalWarnings(profile: LocationProfile): string[] {
   const warnings: string[] = [];
   if (profile.heatRisk === "high") {
-    warnings.push("Hot dry stretches — deep water trees and check potted plants daily.");
+    warnings.push("Hot dry stretches. Deep water trees and check potted plants daily.");
   }
   if (profile.droughtRisk === "high") {
-    warnings.push("Drought-prone area — mulch and avoid shallow watering.");
+    warnings.push("Drought-prone area. Mulch and avoid shallow watering.");
   }
   if (profile.frostRisk === "moderate" || profile.frostRisk === "high") {
-    warnings.push("Frost possible — protect citrus, avocado, and tropicals on cold nights.");
+    warnings.push("Frost possible. Protect citrus, avocado, and tropicals on cold nights.");
   }
   if (profile.climateType === "Mediterranean") {
     warnings.push("Santa Ana winds and summer heat can dry soil faster than expected.");
   }
   if (profile.climateType === "Marine") {
-    warnings.push("Cool wet springs — watch for root rot in heavy soil.");
+    warnings.push("Cool wet springs. Watch for root rot in heavy soil.");
   }
   return warnings.slice(0, 4);
 }
@@ -115,21 +115,21 @@ export function getCareAdjustments(
   const adjustments: string[] = [];
   for (const alert of weather.alerts) {
     if (alert.type === "heat") {
-      adjustments.push("Increase watering depth — shallow drinks won't reach roots in heat.");
+      adjustments.push("Increase watering depth. Shallow drinks won't reach roots in heat.");
       adjustments.push("Avoid fertilizing heat-stressed plants this week.");
     }
     if (alert.type === "frost") {
       adjustments.push("Cover or move frost-sensitive plants before overnight lows.");
     }
     if (alert.type === "wind") {
-      adjustments.push("Delay pruning until winds calm — fresh cuts desiccate fast.");
+      adjustments.push("Delay pruning until winds calm. Fresh cuts desiccate fast.");
     }
     if (alert.type === "rain") {
-      adjustments.push("Skip scheduled watering — let rain do the work, then check drainage.");
+      adjustments.push("Skip scheduled watering. Let rain do the work, then check drainage.");
     }
   }
   if (profile.droughtRisk === "high" && !adjustments.length) {
-    adjustments.push("Dry climate — favor deep, less frequent watering over daily sprinkles.");
+    adjustments.push("Dry climate. Favor deep, less frequent watering over daily sprinkles.");
   }
   return [...new Set(adjustments)].slice(0, 4);
 }
@@ -161,7 +161,7 @@ export function buildHeadline(
     return `Cold nights ahead in ${city}. Protect ${names} and any potted tropicals.`;
   }
   if (profile.climateType === "Mediterranean") {
-    return `${city} (${profile.usdaZone}) — Mediterranean climate. Match watering to heat, not the calendar.`;
+    return `${city} (${profile.usdaZone}): Mediterranean climate. Match watering to heat, not the calendar.`;
   }
   return `Because you garden in ${city}, adjust care to ${profile.climateType.toLowerCase()} conditions this season.`;
 }
@@ -175,7 +175,7 @@ export function getPlantRecommendations(
     return [
       {
         plantName: "Your garden",
-        message: `Zone ${profile.usdaZone} — add plants to get tailored local care tips.`,
+        message: `Zone ${profile.usdaZone}. Add plants to get tailored local care tips.`,
         confidence: "medium",
       },
     ];
@@ -191,27 +191,27 @@ export function getPlantRecommendations(
     if (heat && (isCitrus || isAvocado)) {
       return {
         plantName: plant.name,
-        message: "Likely needs deep watering 2–3× this week — soak until water runs from drainage holes.",
+        message: "Likely needs deep watering 2–3× this week. Soak until water runs from drainage holes.",
         confidence: "high" as const,
       };
     }
     if (frost && (isCitrus || isAvocado || isTropical)) {
       return {
         plantName: plant.name,
-        message: "Frost-sensitive — cover or move pots in before overnight lows.",
+        message: "Frost-sensitive. Cover or move pots in before overnight lows.",
         confidence: "high" as const,
       };
     }
     if (profile.droughtRisk === "high" && plant.locationType === "outdoor") {
       return {
         plantName: plant.name,
-        message: "Dry climate — mulch base and water deeply, not daily sprinkles.",
+        message: "Dry climate. Mulch base and water deeply, not daily sprinkles.",
         confidence: "medium" as const,
       };
     }
     return {
       plantName: plant.name,
-      message: "On track — check soil moisture before watering today.",
+      message: "On track. Check soil moisture before watering today.",
       confidence: "low" as const,
     };
   });
@@ -269,12 +269,12 @@ export function generateWeatherAwareTasks(
         plantId: null,
         plantName: "Garden",
         title: "Deep water young trees",
-        description: "Heat alert — soak root zones early morning before the hottest day.",
+        description: "Heat alert: soak root zones early morning before the hottest day.",
         taskType: "water",
         priority: "urgent",
         dueDate: todayStr,
         source: "weather",
-        whyItMatters: "Heat dries soil faster than usual — deep water prevents stress and leaf drop.",
+        whyItMatters: "Heat dries soil faster than usual. Deep water prevents stress and leaf drop.",
       })
     );
 
@@ -288,12 +288,12 @@ export function generateWeatherAwareTasks(
           plantId: null,
           plantName: "Garden",
           title: "Check all potted plants",
-          description: "Containers heat up quickly — soil may dry in one day.",
+          description: "Containers heat up quickly. Soil may dry in one day.",
           taskType: "inspect",
           priority: "high",
           dueDate: todayStr,
           source: "weather",
-          whyItMatters: "Pots lack ground insulation — they're first to stress in heat waves.",
+          whyItMatters: "Pots lack ground insulation. They're first to stress in heat waves.",
         })
       );
     }
@@ -322,7 +322,7 @@ export function generateWeatherAwareTasks(
           plantId: plant.id,
           plantName: plant.name,
           title: `Bring ${plant.name} inside or cover`,
-          description: "Frost alert — potted plants have exposed roots.",
+          description: "Frost alert: potted plants have exposed roots.",
           taskType: "inspect",
           priority: "high",
           dueDate: todayStr,
@@ -340,7 +340,7 @@ export function generateWeatherAwareTasks(
         plantId: null,
         plantName: "Garden",
         title: "Check stakes and ties",
-        description: "Wind advisory — secure young trees and tall plants.",
+        description: "Wind advisory: secure young trees and tall plants.",
         taskType: "inspect",
         priority: "high",
         dueDate: todayStr,
@@ -372,7 +372,7 @@ export function generateWeatherAwareTasks(
         plantId: null,
         plantName: "Garden",
         title: "Skip watering today",
-        description: "Rain expected — let nature water and check back tomorrow.",
+        description: "Rain expected. Let nature water and check back tomorrow.",
         taskType: "water",
         priority: "medium",
         dueDate: todayStr,
@@ -402,7 +402,7 @@ export function generateWeatherAwareTasks(
         plantId: null,
         plantName: "Garden",
         title: "Watch for fungus after wet weather",
-        description: "Humid periods favor leaf spot and mildew — scout leaves.",
+        description: "Humid periods favor leaf spot and mildew. Scout leaves.",
         taskType: "scan",
         priority: "low",
         dueDate: todayStr,
@@ -419,7 +419,7 @@ export function generateWeatherAwareTasks(
         plantId: null,
         plantName: "Garden",
         title: "Scout for fungus in humid weather",
-        description: "High humidity favors mildew and leaf spot — check dense foliage and improve airflow.",
+        description: "High humidity favors mildew and leaf spot. Check dense foliage and improve airflow.",
         taskType: "scan",
         priority: "medium",
         dueDate: todayStr,

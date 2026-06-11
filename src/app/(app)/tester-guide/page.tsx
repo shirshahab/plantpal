@@ -45,7 +45,7 @@ const STEPS = [
     step: 4,
     icon: GraduationCap,
     title: "Try one lesson",
-    body: "Open Academy, pick any lesson, and finish it. Lessons are short — about 2–3 minutes.",
+    body: "Open Academy, pick any lesson, and finish it. Lessons are short, about 2–3 minutes.",
     href: "/academy",
     cta: "Open Academy",
   },
@@ -64,7 +64,7 @@ export default function TesterGuidePage() {
     <div className="max-w-lg mx-auto space-y-6 pb-8">
       <PageHeader
         title="Tester guide"
-        description="Complete these 5 steps — takes about 15 minutes."
+        description="Complete these 5 steps. Takes about 15 minutes."
       />
 
       <AiSafetyDisclaimer />
@@ -112,7 +112,7 @@ export default function TesterGuidePage() {
           <div>
             <p className="font-medium text-gray-900">When you&apos;re done</p>
             <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-              You&apos;ve helped us more than you know. Come back anytime — new features ship weekly
+              You&apos;ve helped us more than you know. Come back anytime. New features ship weekly
               during beta.
             </p>
             <Link href="/beta-start" className="inline-block mt-3">

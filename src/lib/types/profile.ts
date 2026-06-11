@@ -15,6 +15,9 @@ export type MainGoal =
   | "better_landscape"
   | "learn_care";
 
+/** Who sees your garden activity by default. Privacy first: default is private. */
+export type SocialSharingLevel = "private" | "friends" | "local" | "public";
+
 export interface UserProfile {
   onboardingComplete: boolean;
   /** Set when user adds their first plant. */
@@ -32,6 +35,8 @@ export interface UserProfile {
   referredBy?: string;
   /** Founder Mode — unrestricted access for testing (local only). */
   founderMode?: boolean;
+  /** Default visibility for garden activity. Defaults to private. */
+  socialSharing?: SocialSharingLevel;
 }
 
 export const DEFAULT_PROFILE: UserProfile = {
@@ -53,9 +58,9 @@ export const GROW_TYPE_OPTIONS: { id: GrowType; label: string; icon: string }[] 
 ];
 
 export const EXPERIENCE_OPTIONS: { id: ExperienceLevel; label: string; desc: string }[] = [
-  { id: "beginner", label: "Beginner", desc: "New to plant care — I want guidance." },
+  { id: "beginner", label: "Beginner", desc: "New to plant care. I want guidance." },
   { id: "intermediate", label: "Intermediate", desc: "I know the basics but want better results." },
-  { id: "advanced", label: "Advanced", desc: "Experienced — I want precision tools." },
+  { id: "advanced", label: "Advanced", desc: "Experienced. I want precision tools." },
 ];
 
 export const MAIN_GOAL_OPTIONS: { id: MainGoal; label: string; icon: string }[] = [
@@ -64,4 +69,15 @@ export const MAIN_GOAL_OPTIONS: { id: MainGoal; label: string; icon: string }[] 
   { id: "more_flowers", label: "More flowers", icon: "🌺" },
   { id: "better_landscape", label: "Better landscape", icon: "🏡" },
   { id: "learn_care", label: "Learn plant care", icon: "📚" },
+];
+
+export const SOCIAL_SHARING_OPTIONS: {
+  id: SocialSharingLevel;
+  label: string;
+  description: string;
+}[] = [
+  { id: "private", label: "Private", description: "Your garden, your business. Only you see your activity." },
+  { id: "friends", label: "Friends", description: "Friends see your garden wins and milestones." },
+  { id: "local", label: "Local community", description: "Friends plus your local grower circle." },
+  { id: "public", label: "Public", description: "Any PlantPal user can see your activity." },
 ];

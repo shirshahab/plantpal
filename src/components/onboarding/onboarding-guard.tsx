@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { usePlants } from "@/lib/store/plants-provider";
+import { useAuth } from "@/lib/store/auth-provider";
 import {
   hasFirstPlant,
   isOnboardingComplete,
@@ -34,9 +35,15 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { plants, loading } = usePlants();
+  const { loading: authLoading, profileReady } = useAuth();
 
   useEffect(() => {
     if (isBypassPath(pathname)) return;
+
+    // Don't decide anything until the cloud profile has been hydrated for
+    // this session. Redirecting earlier bounces signed-in users (with a
+    // fresh localStorage) into onboarding they already finished.
+    if (authLoading || !profileReady) return;
 
     if (!isOnboardingComplete()) {
       router.replace("/onboarding");
@@ -53,7 +60,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     if (needsFirstPlant && pathname !== "/plants/new") {
       router.replace("/plants/new?first=1");
     }
-  }, [pathname, router, plants.length, loading]);
+  }, [pathname, router, plants.length, loading, authLoading, profileReady]);
 
   return <>{children}</>;
 }

@@ -10,7 +10,7 @@ export default function DatabasePage() {
     <div className="space-y-6">
       <PageHeader
         title="Plant Knowledge Engine"
-        description={`Reference library — ${getSpeciesCount()}+ species with care guides, soils, fertilizers, and pest profiles.`}
+        description={`Reference library: ${getSpeciesCount()}+ species with care guides, soils, fertilizers, and pest profiles.`}
       />
       <DatabaseNav />
       <SpeciesSearchPanel />

@@ -41,7 +41,7 @@ export function calculateGardenScore(plants: Plant[]): GardenScoreResult {
   const needsCare = bottomPlants.filter((p) => p.score < 75);
   let recommendation = `Your garden score is ${score}. `;
   if (needsCare.length === 0) {
-    recommendation += "Everything looks great — keep up the consistent care.";
+    recommendation += "Everything looks great. Keep up the consistent care.";
   } else {
     const names = needsCare.map((p) => p.plant.name).join(" and ");
     const actions = needsCare.some((p) => p.score < 60)

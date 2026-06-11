@@ -64,12 +64,12 @@ export function FriendsHub() {
     <div className="space-y-6 max-w-lg mx-auto pb-4">
       <PageHeader
         title="PlantPal Circles"
-        description="Connect with family, friends, and neighbors — celebrate garden wins together."
+        description="Connect with family, friends, and neighbors. Celebrate garden wins together."
       />
 
       <Card padding="md" className="bg-green-50/50 border-green-100">
         <p className="text-sm text-gray-700">
-          Positive gardening community only — no downvotes, no drama. Encourage each other. 🌱
+          Positive gardening community only: no downvotes, no drama. Encourage each other. 🌱
         </p>
       </Card>
 
@@ -120,7 +120,7 @@ export function FriendsHub() {
             <div>
               <p className="font-medium text-gray-900">No friends yet</p>
               <p className="text-sm text-gray-500 mt-1">
-                Gardening is better together — find friends or invite someone.
+                Gardening is better together. Find friends or invite someone.
               </p>
             </div>
             <div className="flex gap-2 justify-center">

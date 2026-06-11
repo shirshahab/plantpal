@@ -205,7 +205,7 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
           placeholderImageType,
           hardinessZone: inferHardinessZone(input.zipCode),
           healthStatus: "healthy",
-          healthNotes: input.notes ?? "Newly added — monitor for the first two weeks.",
+          healthNotes: input.notes ?? "Newly added. Monitor for the first two weeks.",
           lastWateredAt: null,
           lastFertilizedAt: null,
           createdAt: new Date().toISOString(),
@@ -216,7 +216,6 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
           userId: user?.id ?? "local-user",
           eventType: "plant_added",
           title: `added ${plant.name}`,
-          visibility: "friends",
           payload: { plantId: plant.id },
           actorName: user?.user_metadata?.full_name as string | undefined,
         });
@@ -290,7 +289,6 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
         userId: user.id,
         eventType: "plant_added",
         title: `added ${fullPlant.name}`,
-        visibility: "friends",
         payload: { plantId: fullPlant.id },
         actorName: user.user_metadata?.full_name as string | undefined,
       });

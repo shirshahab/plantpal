@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, Leaf, MessageCircleQuestion } from "lucide-react";
+import { Bell, Leaf, MessageCircleQuestion, Rss } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +11,9 @@ import { CommunityPreviewBadge } from "@/components/community/community-preview-
 import { SafeImage } from "@/components/plants/plant-image";
 import { CommunitySection } from "@/components/community/community-section";
 import { PlantOfWeekCard } from "@/components/community/plant-of-week-card";
+import { GrowersNearYou } from "@/components/dashboard/growers-near-you";
+import { ChallengesPanel } from "@/components/social/challenges-panel";
+import { loadUserProfile } from "@/lib/profile/user-profile";
 import {
   PLANT_OF_WEEK,
   LOCAL_GROWER_TIPS,
@@ -18,13 +22,44 @@ import {
 } from "@/lib/mock/community";
 
 export default function CommunityPage() {
+  const [zipCode, setZipCode] = useState("");
+
+  useEffect(() => {
+    setZipCode(loadUserProfile().zipCode);
+  }, []);
+
   return (
     <div className="space-y-10 max-w-5xl mx-auto page-enter">
       <PageHeader
         title="Community"
-        description="Garden inspiration and seasonal tips while community features are in beta."
+        description="Other people trying not to kill their plants. You belong here."
         action={<CommunityPreviewBadge />}
       />
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Link href="/feed" className="flex-1">
+          <Button variant="secondary" className="w-full touch-manipulation">
+            <Rss className="w-4 h-4" />
+            See the live feed
+          </Button>
+        </Link>
+        <Link href="/friends" className="flex-1">
+          <Button variant="outline" className="w-full touch-manipulation">
+            <Bell className="w-4 h-4" />
+            Manage friends
+          </Button>
+        </Link>
+      </div>
+
+      <GrowersNearYou zipCode={zipCode} />
+
+      <CommunitySection
+        title="Community Challenges"
+        subtitle="Solo, with friends, or against your whole neighborhood"
+      >
+        <div id="challenges" className="scroll-mt-24" />
+        <ChallengesPanel />
+      </CommunitySection>
 
       <CommunitySection title="Plant of the Week" subtitle="Curated for your climate and season">
         <PlantOfWeekCard plant={PLANT_OF_WEEK} />

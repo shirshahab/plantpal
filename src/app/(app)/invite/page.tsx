@@ -8,7 +8,7 @@ export default function InvitePage() {
     <div className="max-w-lg mx-auto space-y-6 pb-4">
       <PageHeader
         title="Invite friends"
-        description="Share PlantPal and unlock Plus trials together."
+        description="Share PlantPal and get Plus trials together."
       />
       <InviteFriendsPanel />
     </div>

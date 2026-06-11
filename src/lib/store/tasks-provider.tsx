@@ -237,7 +237,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         const err = await dbCompleteTask(db, user.id, task);
         if (err) {
           markFailed(err);
-          toast("Saved locally — cloud sync will retry");
+          toast("Saved locally. Cloud sync will retry");
         } else {
           markSynced();
         }

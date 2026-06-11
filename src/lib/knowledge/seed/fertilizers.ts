@@ -31,7 +31,7 @@ export const FERTILIZERS: Fertilizer[] = [
     application_frequency: "Monthly during growth",
     usage: "Broadcast granular at recommended rate; incorporate lightly into soil; irrigate after",
     season: "Spring and summer",
-    warning_notes: "Do not over-apply — causes salt burn",
+    warning_notes: "Do not over-apply. Causes salt burn",
     description: "Standard balanced synthetic fertilizer for general use.",
   }),
   fert({
@@ -175,7 +175,7 @@ export const FERTILIZERS: Fertilizer[] = [
     application_frequency: "Seasonal per grass type",
     usage: "Broadcast with spreader; water in within 24 hours; keep off hardscapes",
     season: "Spring and fall",
-    warning_notes: "Keep off hardscapes — stains",
+    warning_notes: "Keep off hardscapes: stains",
     description: "High nitrogen for green growth.",
   }),
   fert({
@@ -223,7 +223,7 @@ export const FERTILIZERS: Fertilizer[] = [
     application_frequency: "Monthly foliar or soil drench",
     usage: "1 tbsp per gallon water; spray foliage or drench root zone",
     season: "Growing season",
-    warning_notes: "Supplement only — not complete fertilizer",
+    warning_notes: "Supplement only, not complete fertilizer",
     description: "Magnesium sulfate for chlorosis.",
   }),
   fert({
@@ -247,7 +247,7 @@ export const FERTILIZERS: Fertilizer[] = [
     application_frequency: "Every 2 weeks pre-bloom",
     usage: "Dilute and apply when buds form; switch from high-nitrogen feed",
     season: "Late spring through summer",
-    warning_notes: "High phosphorus — not for seedlings",
+    warning_notes: "High phosphorus, not for seedlings",
     description: "Encourages bud formation and color.",
   }),
   fert({

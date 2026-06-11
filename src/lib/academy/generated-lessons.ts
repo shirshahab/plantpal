@@ -8,12 +8,12 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     pathId: "beginner-gardening",
     title: "What Plants Need",
     icon: "☀️",
-    description: "Light, water, air, nutrients, and space — the five essentials.",
+    description: "Light, water, air, nutrients, and space: the five essentials.",
     introduction: "Every plant runs on the same basic recipe. Master these five and everything else gets easier.",
     content:
-      "Plants need light for energy, water for transport, air in the root zone, nutrients for growth, and enough space for roots and leaves to expand.\n\nWhen one need is missing, plants show stress — yellow leaves, stunted growth, or wilting. Your job is to notice which need is off.",
+      "Plants need light for energy, water for transport, air in the root zone, nutrients for growth, and enough space for roots and leaves to expand.\n\nWhen one need is missing, plants show stress: yellow leaves, stunted growth, or wilting. Your job is to notice which need is off.",
     funFacts: [
-      "Roots breathe oxygen — that's why drainage matters as much as watering.",
+      "Roots breathe oxygen. That's why drainage matters as much as watering.",
       "A plant in the wrong light will survive but rarely thrive.",
     ],
     keyTakeaways: [
@@ -28,7 +28,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
       question: "Which is NOT one of the five core plant needs?",
       options: ["Light", "Wi-Fi signal", "Water", "Nutrients"],
       correctIndex: 1,
-      explanation: "Plants need light, water, air in soil, nutrients, and space — not internet!",
+      explanation: "Plants need light, water, air in soil, nutrients, and space, not internet!",
     },
   }),
   quickLesson(
@@ -106,7 +106,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "soil-mastery",
     "Raised Beds",
     "📦",
-    "Raised beds improve drainage, reduce compaction, and warm faster in spring. Fill with quality mix — not plain topsoil alone.",
+    "Raised beds improve drainage, reduce compaction, and warm faster in spring. Fill with quality mix, not plain topsoil alone.",
     "Why use raised beds?",
     "Better drainage and less compaction",
     ["To eliminate watering", "Plants grow without sun"]
@@ -166,7 +166,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "fertilizer-mastery",
     "Synthetic Fertilizers",
     "⚡",
-    "Synthetic fertilizers offer precise NPK ratios and fast uptake. Use sparingly — over-application can burn roots and harm soil life.",
+    "Synthetic fertilizers offer precise NPK ratios and fast uptake. Use sparingly. Over-application can burn roots and harm soil life.",
     "Synthetic fertilizers are best used…",
     "Precisely and sparingly when needed",
     ["Daily in triple doses", "Instead of all watering"]
@@ -176,7 +176,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "fertilizer-mastery",
     "When To Fertilize",
     "📅",
-    "Feed during active growth — usually spring and early summer. Reduce in fall and skip dormant winter for most plants. Never fertilize dry, stressed roots.",
+    "Feed during active growth, usually spring and early summer. Reduce in fall and skip dormant winter for most plants. Never fertilize dry, stressed roots.",
     "When should you fertilize most outdoor plants?",
     "During active growing season",
     ["In deep winter dormancy", "Every day year-round"]
@@ -186,10 +186,10 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "fertilizer-mastery",
     "Micronutrients",
     "🧬",
-    "Iron, magnesium, calcium, and zinc are needed in tiny amounts. Deficiencies show as specific leaf patterns — yellow veins, brown spots, or tip burn.",
+    "Iron, magnesium, calcium, and zinc are needed in tiny amounts. Deficiencies show as specific leaf patterns: yellow veins, brown spots, or tip burn.",
     "Micronutrients are needed…",
     "In small amounts but are still essential",
-    ["Never — NPK is enough always", "Only for fake plants"]
+    ["Never, NPK is enough always", "Only for fake plants"]
   ),
   quickLesson(
     "brown-leaves",
@@ -236,7 +236,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "garden-bugs",
     "Beneficial Insects",
     "🐝",
-    "Not all bugs are bad! Predators and pollinators keep ecosystems balanced. Avoid broad pesticides that kill allies along with pests.",
+    "Not all bugs are bad! Predators and pollinators keep your garden balanced. Avoid broad pesticides that kill allies along with pests.",
     "Beneficial insects help by…",
     "Pollinating and eating pest bugs",
     ["Destroying all plants", "Only looking cute"]
@@ -276,7 +276,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "garden-bugs",
     "Aphids",
     "🟢",
-    "Tiny soft-bodied clusters on new growth. Blast with water, introduce ladybugs, or use insecticidal soap. Ants often farm aphids — control both.",
+    "Tiny soft-bodied clusters on new growth. Blast with water, introduce ladybugs, or use insecticidal soap. Ants often farm aphids. Control both.",
     "Aphids are best managed first by…",
     "Spraying with water or introducing predators",
     ["Ignoring until plant dies", "Bleach spray"]
@@ -336,7 +336,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "fruit-trees",
     "Avocado Trees",
     "🥑",
-    "Avocados need excellent drainage and protection from wind and frost. Young trees are sensitive — mulch well but keep trunk clear.",
+    "Avocados need excellent drainage and protection from wind and frost. Young trees are sensitive. Mulch well but keep trunk clear.",
     "Avocado roots require…",
     "Excellent drainage",
     ["Standing water always", "No soil at all"]
@@ -376,7 +376,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "fruit-trees",
     "Olive Trees",
     "🫒",
-    "Olives love sun and lean soil. Overwatering causes root issues — let soil dry between deep soaks.",
+    "Olives love sun and lean soil. Overwatering causes root issues. Let soil dry between deep soaks.",
     "Olive trees prefer…",
     "Full sun and well-drained soil",
     ["Constant soggy soil", "Full shade"]
@@ -386,7 +386,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "fruit-trees",
     "Pomegranate Trees",
     "🍎",
-    "Pomegranates handle heat and drought. Fruit splits if watered irregularly during ripening — keep moisture steady.",
+    "Pomegranates handle heat and drought. Fruit splits if watered irregularly during ripening. Keep moisture steady.",
     "Pomegranate fruit splits when…",
     "Watering is irregular during ripening",
     ["You look at them", "They get too much shade"]
@@ -399,7 +399,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "Aluminum wire shapes branches slowly. Wrap at 45°, bend gently, and remove before wire cuts in.",
     "Bonsai wire should be removed…",
     "Before it cuts into the bark",
-    ["Never — leave forever", "After 10 years only"]
+    ["Never, leave forever", "After 10 years only"]
   ),
   quickLesson(
     "bonsai-root-pruning",
@@ -456,7 +456,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "vegetable-gardening",
     "Herb Garden",
     "🌿",
-    "Basil, rosemary, and mint have different water needs. Harvest regularly to encourage bushy growth — mint needs its own pot!",
+    "Basil, rosemary, and mint have different water needs. Harvest regularly to encourage bushy growth. Mint needs its own pot!",
     "Why plant mint in its own container?",
     "It spreads aggressively in garden beds",
     ["It cannot grow alone", "It needs no water"]
@@ -486,7 +486,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "vegetable-gardening",
     "Companion Planting",
     "🤝",
-    "Some plants help neighbors — marigolds deter pests, beans fix nitrogen. Not every pairing is proven, but diversity helps.",
+    "Some plants help neighbors: marigolds deter pests, beans fix nitrogen. Not every pairing is proven, but diversity helps.",
     "Companion planting means…",
     "Growing plants that benefit each other nearby",
     ["Planting one crop only forever", "Mixing bleach with soil"]
@@ -496,7 +496,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "landscaping",
     "Design Principles",
     "✏️",
-    "Use repetition, contrast, and focal points. Layer heights — ground cover, shrubs, trees — for depth.",
+    "Use repetition, contrast, and focal points. Layer heights for depth: ground cover, shrubs, trees.",
     "Landscape depth comes from…",
     "Layering plants of different heights",
     ["One flat row of identical plants", "Random chaos only"]
@@ -536,7 +536,7 @@ export const GENERATED_ACADEMY_LESSONS: AcademyLesson[] = [
     "landscaping",
     "Landscape Lighting",
     "💡",
-    "Low-voltage LED uplighting highlights trees and paths. Avoid light pollution — warm tones feel natural.",
+    "Low-voltage LED uplighting highlights trees and paths. Avoid light pollution. Warm tones feel natural.",
     "Landscape lighting should…",
     "Highlight features without glare",
     ["Blind neighbors", "Use only strobe lights"]

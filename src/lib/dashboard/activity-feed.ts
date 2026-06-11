@@ -58,7 +58,7 @@ export function buildActivityFeed(input: {
       items.push({
         id: `photo-${p.id}-${p.lastGrowthPhotoAt}`,
         kind: "photo_uploaded",
-        title: `Progress photo — ${p.name}`,
+        title: `Progress photo: ${p.name}`,
         emoji: KIND_EMOJI.photo_uploaded,
         at: p.lastGrowthPhotoAt,
         href: `/plants/${p.id}`,
@@ -82,7 +82,7 @@ export function buildActivityFeed(input: {
     items.push({
       id: `log-${log.id}`,
       kind: "task_completed",
-      title: `${log.actionType} — ${input.plantNameById[log.plantId] ?? "Plant"}`,
+      title: `${log.actionType}: ${input.plantNameById[log.plantId] ?? "Plant"}`,
       emoji: KIND_EMOJI.task_completed,
       at: log.createdAt,
       href: input.plantNameById[log.plantId]
@@ -95,7 +95,7 @@ export function buildActivityFeed(input: {
     items.push({
       id: `growth-${g.id}`,
       kind: "photo_uploaded",
-      title: g.caption ? `Photo — ${g.caption}` : "Growth photo added",
+      title: g.caption ? `Photo: ${g.caption}` : "Growth photo added",
       subtitle: input.plantNameById[g.plantId],
       emoji: KIND_EMOJI.photo_uploaded,
       at: g.createdAt,
@@ -107,7 +107,7 @@ export function buildActivityFeed(input: {
     items.push({
       id: `badge-${b.id}`,
       kind: "badge_unlocked",
-      title: `Badge unlocked — ${b.title}`,
+      title: `Badge earned: ${b.title}`,
       emoji: KIND_EMOJI.badge_unlocked,
       at: b.at,
       href: "/achievements",

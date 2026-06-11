@@ -3,25 +3,25 @@ import { quizTypeForLesson, normalizeQuiz, type AcademyQuiz } from "./quiz-types
 
 const PLANTY_LINES = [
   "Plants are dramatic. This is their way of waving a tiny flag.",
-  "Planty says: slow down, observe first, panic later — preferably never.",
+  "Planty says: slow down, observe first, panic later, preferably never.",
   "Fun fact: I don't have roots, but I still forget to drink water sometimes. You can do better!",
   "Every master gardener killed a plant on the way. The difference? They learned the lesson.",
   "Your plant can't text you. Yellow leaves are basically a group chat message.",
-  "Think of this like plant first aid — check vitals before prescribing fertilizer.",
+  "Think of this like plant first aid. Check vitals before prescribing fertilizer.",
 ];
 
 const WHY_TEMPLATES = [
   "This skill saves plants (and saves you from guessing).",
   "Getting this wrong is the #1 reason beginner gardens struggle.",
-  "You'll use this every season — not just once.",
+  "You'll use this every season, not just once.",
   "This is the difference between thriving plants and mystery casualties.",
 ];
 
 const EXAMPLE_TEMPLATES = [
-  "Your neighbor's lemon tree droops every afternoon but perks up by morning — that's a watering rhythm clue, not a crisis.",
-  "A patio tomato in a black pot wilts by 2pm in July even though you watered at 8am — heat + small soil volume.",
-  "New growth on a fiddle leaf fig is pale green while old leaves stay dark — often a light or nitrogen signal.",
-  "Mint in a bed invades everything within one season — great lesson in container boundaries.",
+  "Your neighbor's lemon tree droops every afternoon but perks up by morning. That's a watering rhythm clue, not a crisis.",
+  "A patio tomato in a black pot wilts by 2pm in July even though you watered at 8am: heat + small soil volume.",
+  "New growth on a fiddle leaf fig is pale green while old leaves stay dark: often a light or nitrogen signal.",
+  "Mint in a bed invades everything within one season. Great lesson in container boundaries.",
 ];
 
 function hashId(id: string): number {
@@ -48,7 +48,7 @@ export function enrichLessonPersonality(lesson: AcademyLesson): AcademyLesson {
 
   let introduction = lesson.introduction;
   if (isGenericIntro(introduction)) {
-    introduction = `${plantyMoment} Today: ${lesson.title.toLowerCase()} — ${whyItMatters.toLowerCase()}`;
+    introduction = `${plantyMoment} Today: ${lesson.title.toLowerCase()}, ${whyItMatters.toLowerCase()}`;
   }
 
   let content = lesson.content;

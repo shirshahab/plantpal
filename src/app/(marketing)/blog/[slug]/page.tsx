@@ -5,8 +5,10 @@ import { Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JsonLd } from "@/components/marketing/structured-data";
 import { WaitlistCta } from "@/components/marketing/waitlist-cta";
+import { PlantyTip } from "@/components/brand/planty";
 import {
   getAllPosts,
+  getPlantyTipForPost,
   getPostBySlug,
   getReadingTime,
   getRelatedPosts,
@@ -124,6 +126,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         {/* Intro */}
         <p className="text-lg text-brand-text-secondary leading-relaxed mt-8">{post.intro}</p>
+
+        {/* Planty tip */}
+        <PlantyTip tip={getPlantyTipForPost(post)} className="mt-8" />
 
         {/* Table of contents */}
         {showToc && (

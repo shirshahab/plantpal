@@ -141,7 +141,7 @@ export function ConciergeHub() {
 
       <Card padding="md" className="bg-violet-50/50 border-violet-100">
         <p className="text-sm text-gray-600">
-          Concierge goes beyond diagnosis — it builds step-by-step recovery using your plant data,
+          Concierge goes beyond diagnosis. It builds step-by-step recovery using your plant data,
           ZIP climate, goals, care history, and optional photos.
         </p>
       </Card>

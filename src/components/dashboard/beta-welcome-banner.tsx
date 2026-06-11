@@ -39,7 +39,7 @@ export function BetaWelcomeBanner() {
           <p className="font-semibold text-gray-900">Welcome to the PlantPal beta</p>
           <p className="text-sm text-gray-500 mt-1">
             You&apos;re one of the first 20 growers. The 15-minute tester guide shows what to
-            try — and your feedback shapes what we build next.
+            try, and your feedback shapes what we build next.
           </p>
           <div className="flex flex-wrap gap-3 mt-3">
             <Link

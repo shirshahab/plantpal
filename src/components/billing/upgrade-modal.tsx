@@ -17,7 +17,7 @@ interface UpgradeModalProps {
 export function UpgradeModal({
   open,
   onClose,
-  headline = "Unlock PlantPal Plus",
+  headline = "Get PlantPal Plus",
   copy = "Get unlimited plants, personalized care plans, photo diagnosis, climate intelligence, and more.",
   className,
 }: UpgradeModalProps) {
@@ -43,7 +43,7 @@ export function UpgradeModal({
           <Lock className="w-5 h-5 text-amber-700" />
         </div>
         <p className="text-sm text-gray-600 leading-relaxed">
-          Billing is not active yet — choosing a plan in preview mode unlocks features for testing.
+          Billing is not active yet. Choosing a plan in preview mode turns on features for testing.
         </p>
       </div>
     </Modal>

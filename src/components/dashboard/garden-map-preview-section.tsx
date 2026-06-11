@@ -24,7 +24,7 @@ export function DashboardGardenMapPreview() {
           </div>
           <p className="font-semibold text-gray-900">Build your digital garden</p>
           <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto">
-            Map zones, place plants, and unlock personalized seasonal care.
+            Map zones, place plants, and get personalized seasonal care.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 mt-4 justify-center">
             <Link href="/garden-map">

@@ -1,8 +1,17 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { PlantyFaceSvg, type PlantyVariant } from "@/components/brand/planty";
 
 type PlantyMood = "happy" | "celebrate" | "tip" | "welcome";
+
+/** Map academy moods to the official mascot variants. */
+const MOOD_VARIANT: Record<PlantyMood, PlantyVariant> = {
+  welcome: "main",
+  happy: "happy",
+  celebrate: "niceWork",
+  tip: "thinking",
+};
 
 const MESSAGES: Record<PlantyMood, string[]> = {
   welcome: [
@@ -10,16 +19,16 @@ const MESSAGES: Record<PlantyMood, string[]> = {
     "Ready to level up your gardening skills?",
   ],
   happy: [
-    "You're doing great — keep learning!",
+    "You're doing great. Keep learning!",
     "Every lesson makes you a stronger gardener.",
   ],
   celebrate: [
     "Amazing work! That lesson is in the books!",
-    "New badge unlocked? You're on fire!",
+    "New badge earned? You're on fire!",
   ],
   tip: [
     "Tip: Complete one lesson a day to build your streak.",
-    "Try a quiz — it's the fastest way to earn XP!",
+    "Try a quiz. It's the fastest way to earn XP!",
   ],
 };
 
@@ -38,11 +47,14 @@ export function Planty({ mood = "happy", message, size = "md", className }: Plan
   return (
     <div className={cn("flex items-start gap-3", className)}>
       <div
-        className="shrink-0 rounded-2xl bg-brand-primary flex items-center justify-center shadow-md shadow-brand-primary/20"
+        className="shrink-0 rounded-2xl bg-brand-primary flex items-center justify-center"
         style={{ width: px, height: px }}
         aria-hidden
       >
-        <PlantyMark className={size === "sm" ? "w-7 h-7" : size === "md" ? "w-10 h-10" : "w-14 h-14"} />
+        <PlantyFaceSvg
+          variant={MOOD_VARIANT[mood]}
+          className={size === "sm" ? "w-7 h-7" : size === "md" ? "w-10 h-10" : "w-14 h-14"}
+        />
       </div>
       <div className="relative flex-1 min-w-0">
         <div className="absolute -left-2 top-4 w-0 h-0 border-y-8 border-y-transparent border-r-8 border-r-white" />
@@ -54,25 +66,6 @@ export function Planty({ mood = "happy", message, size = "md", className }: Plan
         </div>
       </div>
     </div>
-  );
-}
-
-/** Friendly leaf / P mark — mascot face */
-function PlantyMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 40 40" className={className} fill="none" aria-hidden>
-      <path
-        d="M20 6C14 6 10 12 10 18c0 6 4 12 10 16 6-4 10-10 10-16 0-6-4-12-10-12z"
-        stroke="white"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M20 34V22" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-      <circle cx="16" cy="17" r="1.5" fill="white" />
-      <circle cx="24" cy="17" r="1.5" fill="white" />
-      <path d="M16 22q4 3 8 0" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
   );
 }
 

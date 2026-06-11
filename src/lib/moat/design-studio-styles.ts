@@ -125,7 +125,7 @@ export function buildMockDesignConcept(
 
   return {
     style,
-    title: `${opt.label} — ${spaceLabel}`,
+    title: `${opt.label}: ${spaceLabel}`,
     summary: `${opt.description} Tailored for your ${spaceLabel.toLowerCase()} with PlantPal's design engine.`,
     recommendedPlants: plantsByStyle[style],
     maintenanceLevel: opt.maintenance,

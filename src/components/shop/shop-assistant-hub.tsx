@@ -64,7 +64,7 @@ function getRecommendations(input: {
   if (input.type.includes("citrus") || input.sun.includes("full")) {
     base.unshift({
       name: "Meyer Lemon",
-      whyItFits: "Best citrus for home gardens — compact and productive.",
+      whyItFits: "Best citrus for home gardens: compact and productive.",
       watering: "Deep water weekly in summer",
       soil: "Citrus mix, slightly acidic",
       difficulty: "Moderate",
@@ -127,7 +127,7 @@ export function ShopAssistantHub() {
     <div className="space-y-6 max-w-3xl mx-auto">
       <PageHeader
         title="Shop Assistant"
-        description="Buy smarter — plants, soil, fertilizer, and tools matched to your yard."
+        description="Buy smarter: plants, soil, fertilizer, and tools matched to your yard."
         action={
           <Link href="/price-checker">
             <Button variant="secondary" size="sm" className="touch-manipulation">
@@ -141,7 +141,7 @@ export function ShopAssistantHub() {
       <Card padding="md" className="bg-gradient-to-br from-green-50/80 to-white border-green-100">
         <p className="text-sm text-gray-700 leading-relaxed">
           PlantPal helps you choose the right plants and supplies <strong>before</strong> you buy.
-          Recommendations are mock previews — affiliate links and live pricing come later.
+          Recommendations are mock previews. Affiliate links and live pricing come later.
         </p>
       </Card>
 

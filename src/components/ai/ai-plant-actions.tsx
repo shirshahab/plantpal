@@ -10,6 +10,7 @@ import { useToast } from "@/lib/store/toast-provider";
 import { requestCarePlan, requestGoalPlan } from "@/lib/ai/client";
 import { buildCarePlanRequest, buildGoalPlanRequest } from "@/lib/ai/build-request";
 import { friendlyAiError } from "@/lib/errors/user-messages";
+import { trackEvent } from "@/lib/analytics/track";
 import { AiCarePlanDisplay } from "@/components/ai/ai-care-plan-display";
 import { AiGoalPlanDisplay } from "@/components/ai/ai-goal-plan-display";
 import { CarePlanConfidence } from "@/components/ai/care-plan-confidence";
@@ -42,10 +43,14 @@ export function GenerateCarePlanButton({ plant }: { plant: Plant }) {
 
     saveCarePlan(plant.id, res.data);
     setSaved(res.saved);
+    trackEvent("care_plan_generated", {
+      plantId: plant.id,
+      source: res.data.source,
+    });
     toast(
       res.data.source === "ai"
         ? "Your care plan is ready."
-        : "Care plan ready — built from PlantPal's care library."
+        : "Care plan ready. Built from PlantPal's care library."
     );
   }
 

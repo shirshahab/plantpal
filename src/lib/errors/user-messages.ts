@@ -11,7 +11,7 @@ export function friendlySaveError(error: ErrorLike | string): string {
       : error;
 
   if (isMissingTableError(err)) {
-    return "PlantPal couldn't save to the cloud right now. Your changes are kept on this device — please try again later.";
+    return "PlantPal couldn't save to the cloud right now. Your changes are kept on this device. Please try again later.";
   }
 
   if (
@@ -19,11 +19,11 @@ export function friendlySaveError(error: ErrorLike | string): string {
     err.message.toLowerCase().includes("row-level security") ||
     err.message.toLowerCase().includes("permission denied")
   ) {
-    return "PlantPal could not save — you may not be signed in, or row-level security blocked the action. Sign out, sign back in, and try again.";
+    return "PlantPal could not save. You may not be signed in, or row-level security blocked the action. Sign out, sign back in, and try again.";
   }
 
   if (err.message.includes("plant-photos") || err.message.includes("Bucket not found")) {
-    return "Photo upload failed — cloud photo storage is unavailable right now. Your photo is kept on this device; try again later.";
+    return "Photo upload failed. Cloud photo storage is unavailable right now. Your photo is kept on this device; try again later.";
   }
 
   if (err.message.includes("logged in")) {
@@ -75,7 +75,7 @@ export function friendlyAiError(error: string | undefined, feature = "AI"): stri
   }
 
   if (lower.includes("care plan")) {
-    return `${trimmed} — showing a preview plan instead.`;
+    return `${trimmed} Showing a preview plan instead.`;
   }
 
   // Pass through detailed server errors (failureReason) for identification/debugging.

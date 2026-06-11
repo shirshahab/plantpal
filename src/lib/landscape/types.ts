@@ -69,7 +69,7 @@ export const YARD_SIZE_LABELS: Record<YardSize, string> = {
   small: "Small (under 500 sq ft)",
   medium: "Medium (500–2,000 sq ft)",
   large: "Large (2,000+ sq ft)",
-  unknown: "Not sure — estimate from photo",
+  unknown: "Not sure, estimate from photo",
 };
 
 export const BUDGET_RANGE_LABELS: Record<BudgetRange, string> = {
@@ -77,14 +77,14 @@ export const BUDGET_RANGE_LABELS: Record<BudgetRange, string> = {
   "500_2500": "$500 – $2,500",
   "2500_8000": "$2,500 – $8,000",
   "8000_plus": "$8,000+",
-  flexible: "Flexible — show all options",
+  flexible: "Flexible, show all options",
 };
 
 export const BUDGET_MVP_LABELS: Record<BudgetTierMvp, string> = {
-  tier_1: "$ — Under $1,000",
-  tier_2: "$$ — $1,000 – $5,000",
-  tier_3: "$$$ — $5,000 – $15,000",
-  tier_4: "$$$$ — $15,000+",
+  tier_1: "$ - Under $1,000",
+  tier_2: "$$ - $1,000 to $5,000",
+  tier_3: "$$$ - $5,000 to $15,000",
+  tier_4: "$$$$ - $15,000+",
 };
 
 export const BUDGET_MVP_SYMBOLS: Record<BudgetTierMvp, string> = {

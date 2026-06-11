@@ -112,8 +112,8 @@ function waterCopy(input: NotificationCopyInput): NotificationCopy {
       return {
         title: `Rain may cover ${who} today`,
         body: city
-          ? `Rain is likely in ${city}. Check the soil before watering — you may get to skip it.`
-          : "Rain is likely today. Check the soil before watering — you may get to skip it.",
+          ? `Rain is likely in ${city}. Check the soil before watering. You may get to skip it.`
+          : "Rain is likely today. Check the soil before watering. You may get to skip it.",
         tone: "helpful",
         actionLabel: "Check soil first",
         actionUrl: "/today",
@@ -124,8 +124,8 @@ function waterCopy(input: NotificationCopyInput): NotificationCopy {
       return {
         title: `${Who} may need water today`,
         body: city
-          ? `${city} is warming up. ${young ? "Young and potted plants dry out fastest — consider a deep soak." : "Warm days dry soil faster — a deep soak now helps."}`
-          : "Warm weather dries soil faster — consider a deep soak today.",
+          ? `${city} is warming up. ${young ? "Young and potted plants dry out fastest. Consider a deep soak." : "Warm days dry soil faster. A deep soak now helps."}`
+          : "Warm weather dries soil faster. Consider a deep soak today.",
         tone: "helpful",
         actionLabel: "Water now",
         actionUrl: "/today",
@@ -136,13 +136,13 @@ function waterCopy(input: NotificationCopyInput): NotificationCopy {
       days
         ? `It's been about ${days} days. Check if the top inch of soil is dry before watering.`
         : "Check if the top inch of soil is dry before watering.",
-      "Many plants like to dry out a little between waterings — a quick soil check tells you for sure.",
+      "Many plants like to dry out a little between waterings. A quick soil check tells you for sure.",
       "A quick soil check now keeps the watering rhythm on track.",
     ];
     return {
       title: `${Who} may need water today`,
       body: overdueCount > 0
-        ? "This one slipped past its usual day — a check-in now gets it back on schedule."
+        ? "This one slipped past its usual day. A check-in now gets it back on schedule."
         : pick(bodies, seed, "water-body"),
       tone: "helpful",
       actionLabel: "Check soil",
@@ -154,8 +154,8 @@ function waterCopy(input: NotificationCopyInput): NotificationCopy {
     title: `${plantNames.length} plants may need water today`,
     body:
       overdueCount > 0
-        ? `${namePreview(plantNames)} — ${overdueCount} slipped past their usual day. A quick round now catches them up.`
-        : `${namePreview(plantNames)} ${hot && city ? `— ${city} is warming up, so consider deeper soaks.` : "are due for a soil check."}`,
+        ? `${namePreview(plantNames)}: ${overdueCount} slipped past their usual day. A quick round now catches them up.`
+        : `${namePreview(plantNames)} ${hot && city ? `need a look. ${city} is warming up, so consider deeper soaks.` : "are due for a soil check."}`,
     tone: "helpful",
     actionLabel: "Open today's tasks",
     actionUrl: "/today",
@@ -171,7 +171,7 @@ function fertilizeCopy(input: NotificationCopyInput): NotificationCopy {
     const bodies = [
       "Steady nutrients now support the next round of growth.",
       "A light feeding today keeps leaves green and growth steady.",
-      "It looks like feeding day — follow the plan and skip if you fed recently.",
+      "It looks like feeding day. Follow the plan and skip if you fed recently.",
     ];
     return {
       title: `${Who} is likely ready for nutrients`,
@@ -215,8 +215,8 @@ function careCopy(input: NotificationCopyInput): NotificationCopy {
         : "A few care steps are waiting",
     body:
       plantNames.length > 0
-        ? `${namePreview(plantNames)} ${plantNames.length === 1 ? "has" : "have"} small care steps today — nothing heavy.`
-        : "A couple of quick garden tasks today — nothing heavy.",
+        ? `${namePreview(plantNames)} ${plantNames.length === 1 ? "has" : "have"} small care steps today. Nothing heavy.`
+        : "A couple of quick garden tasks today. Nothing heavy.",
     tone: "helpful",
     actionLabel: "Open today's tasks",
     actionUrl: "/today",
@@ -231,7 +231,7 @@ function recoveryCopy(input: NotificationCopyInput): NotificationCopy {
     const issue = issueLabel.toLowerCase();
     const bodies = [
       `Look for whether the ${issue} signs are fading, holding steady, or spreading.`,
-      `Day ${Math.max(daysSinceDiagnosis, 1)} of the recovery plan — a quick photo can show if things are improving.`,
+      `Day ${Math.max(daysSinceDiagnosis, 1)} of the recovery plan. A quick photo can show if things are improving.`,
       `Check the same leaves as last time. Improvement usually shows within a few days.`,
     ];
     return {
@@ -261,7 +261,7 @@ function streakCopy(input: NotificationCopyInput): NotificationCopy {
 
   if (streak >= 2) {
     const bodies = [
-      "Today's lesson takes about 3 minutes — a quick read keeps it going.",
+      "Today's lesson takes about 3 minutes. A quick read keeps it going.",
       "One short lesson today and the streak lives on.",
       "You've built real momentum. Three minutes protects it.",
     ];
@@ -293,7 +293,7 @@ function weatherCopy(input: NotificationCopyInput): NotificationCopy {
       const high = weather?.tempHighF ? ` near ${Math.round(weather.tempHighF)}°F` : "";
       return {
         title: `Heat alert${inCity}`,
-        body: `Highs${high} expected. Young citrus and potted plants may need extra attention — consider a deep morning soak.`,
+        body: `Highs${high} expected. Young citrus and potted plants may need extra attention. Consider a deep morning soak.`,
         tone: "calm",
         actionLabel: "See watering tips",
         actionUrl: "/dashboard",
@@ -325,7 +325,7 @@ function weatherCopy(input: NotificationCopyInput): NotificationCopy {
       const chance = weather?.rainChance ? `${Math.round(weather.rainChance)}% chance of rain` : "Rain is likely";
       return {
         title: `Rain expected${inCity}`,
-        body: `${chance} today. You can likely skip manual watering — check the soil tomorrow instead.`,
+        body: `${chance} today. You can likely skip manual watering. Check the soil tomorrow instead.`,
         tone: "helpful",
         actionLabel: "Adjust watering",
         actionUrl: "/dashboard",
@@ -353,7 +353,7 @@ function weatherCopy(input: NotificationCopyInput): NotificationCopy {
         body:
           weatherAlert
             ? `${weatherAlert.message}${weatherAlert.wateringAdjustment ? ` ${weatherAlert.wateringAdjustment}` : ""}`
-            : "Conditions are shifting — a quick look at local care tips may help.",
+            : "Conditions are shifting. A quick look at local care tips may help.",
         tone: "calm",
         actionLabel: "See local tips",
         actionUrl: "/dashboard",
@@ -385,7 +385,7 @@ function friendCopy(input: NotificationCopyInput): NotificationCopy {
   }
   return {
     title: "Your garden circle was active",
-    body: "Friends shared new updates — take a peek at what's growing.",
+    body: "Friends shared new updates. Take a peek at what's growing.",
     tone: "celebratory",
     actionLabel: "See friends",
     actionUrl: "/friends",
@@ -406,7 +406,7 @@ function challengeCopy(input: NotificationCopyInput): NotificationCopy {
   if (c.completed) {
     return {
       title: "Challenge complete!",
-      body: `You finished "${c.title}" — ${c.rewardXp} XP earned. Nice work.`,
+      body: `You finished "${c.title}". ${c.rewardXp} XP earned. Nice work.`,
       tone: "celebratory",
       actionLabel: "Claim your progress",
       actionUrl: "/friends",
@@ -417,7 +417,7 @@ function challengeCopy(input: NotificationCopyInput): NotificationCopy {
       c.daysLeft === 0
         ? `Last day for ${c.title}`
         : `${c.daysLeft} day${c.daysLeft === 1 ? "" : "s"} left in ${c.title}`,
-    body: `Finish before it ends to earn ${c.rewardXp} XP — you're closer than you think.`,
+    body: `Finish before it ends to earn ${c.rewardXp} XP. You're closer than you think.`,
     tone: "encouraging",
     actionLabel: "Continue challenge",
     actionUrl: "/friends",

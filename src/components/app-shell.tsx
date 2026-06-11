@@ -17,9 +17,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       {/* Mobile header */}
       <MobileHeader />
-      {/* Mobile bottom padding = nav (56px) + floating buttons (48px) + 32px
-          breathing room; safe-bottom adds the device safe-area inset. */}
-      <main className="md:pl-72 pb-36 md:pb-8 safe-bottom">
+      {/* app-page-bottom = nav + center button + floating actions + safe
+          area + breathing room (see globals.css). The old pb-36 + safe-bottom
+          combo collapsed to just the safe-area inset (0px on most Android
+          devices) because .safe-bottom overrode the Tailwind utility. */}
+      <main className="md:pl-72 app-page-bottom">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8 page-enter">
           {children}
         </div>

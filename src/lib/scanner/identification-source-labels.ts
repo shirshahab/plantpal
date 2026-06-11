@@ -19,6 +19,6 @@ export function getPlantNetSourceLabel(configured: boolean): string | null {
 }
 
 export function getConsensusLabel(providersDisagree: boolean): string | null {
-  if (providersDisagree) return "Sources disagree — review both results";
+  if (providersDisagree) return "Sources disagree. Review both results";
   return null;
 }

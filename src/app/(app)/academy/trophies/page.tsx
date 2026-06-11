@@ -42,7 +42,7 @@ export default function TrophyRoomPage() {
         mood={unlockedCount > 0 ? "celebrate" : "tip"}
         message={
           unlockedCount > 0
-            ? `You've earned ${unlockedCount} badges — each one marks real skill.`
+            ? `You've earned ${unlockedCount} badges. Each one marks real skill.`
             : "Complete lessons and care for plants to earn your first badge."
         }
       />

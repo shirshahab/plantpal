@@ -61,7 +61,7 @@ function computeGrowthTrend(
         delta > 0
           ? `+${delta.toFixed(1)}" across recent measurements`
           : entryCount >= 2
-            ? "Height stable — consider a new measurement"
+            ? "Height stable. Consider a new measurement"
             : "Tracking from photos",
       score: Math.min(100, 40 + Math.abs(delta) * 4 + entryCount * 5),
     };
@@ -132,10 +132,10 @@ function computeHealthTrend(
             : "Needs watch",
     detail:
       healthStatus === "healthy"
-        ? "Health signals look good — keep consistent care"
+        ? "Health signals look good. Keep consistent care"
         : healthStatus === "needs_attention"
-          ? "Recent stress detected — recovery window open"
-          : "Critical — prioritize watering and diagnosis",
+          ? "Recent stress detected. Recovery window open"
+          : "Critical: prioritize watering and diagnosis",
     score,
   };
 }

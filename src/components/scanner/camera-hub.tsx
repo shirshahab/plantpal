@@ -61,6 +61,9 @@ import { isScannerDebugUI } from "@/lib/dev/dev-tools";
 import { ScannerDebugErrorPanel } from "@/components/scanner/scanner-debug-error";
 import type { IdentifyDebugLog } from "@/lib/ai/identify-errors";
 import { SYMPTOM_CHIPS } from "@/lib/scanner/symptom-chips";
+import { publishActivityEvent } from "@/lib/social/events";
+import { Planty } from "@/components/brand/planty";
+import { RequestExpertReview } from "@/components/health/request-expert-review";
 import { validatePhotoPayload } from "@/lib/scanner/upload-limits";
 import { cn } from "@/lib/utils";
 
@@ -246,9 +249,9 @@ export function CameraHub() {
         clientPhotoQuality?.acceptable === false;
 
       if (badPhoto) {
-        toast("Photo quality is low — try a clearer shot");
+        toast("Photo quality is low. Try a clearer shot");
       } else if (res.data.not_fully_confident || res.data.providers_disagree) {
-        toast("Not fully confident — another photo may help");
+        toast("Not fully confident. Another photo may help");
       } else {
         toast("Plant identified");
       }
@@ -287,6 +290,13 @@ export function CameraHub() {
       if (!res.ok) throw new Error(res.error);
       setDiagnoseResult(res.data);
       recordScan();
+      void publishActivityEvent({
+        userId: "local-user",
+        eventType: "diagnosis_completed",
+        title: selectedPlant
+          ? `diagnosed a problem on ${selectedPlant.name}`
+          : "diagnosed a plant problem",
+      });
       toast("Diagnosis complete");
     } catch (e) {
       reportFeatureFailure(
@@ -438,6 +448,10 @@ export function CameraHub() {
       )}
 
       {tab === "diagnose" && !preview && (
+        <Planty variant="diagnosing" subtle message="Show me the damage." />
+      )}
+
+      {tab === "diagnose" && !preview && (
         <Card padding="md" className="bg-green-50/50 border-green-100">
           <p className="text-xs font-semibold text-green-800 uppercase tracking-wide flex items-center gap-1.5">
             <Lightbulb className="w-3.5 h-3.5" />
@@ -534,7 +548,7 @@ export function CameraHub() {
               className="touch-manipulation"
             >
               <ImagePlus className="w-4 h-4" />
-              Add a close-up
+              Add leaf close-up
             </Button>
             <Button
               variant="outline"
@@ -548,7 +562,16 @@ export function CameraHub() {
               <PencilLine className="w-4 h-4" />
               Describe the problem
             </Button>
-            <Button size="sm" onClick={runDiagnose} className="touch-manipulation">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => extraPhotoInputRef.current?.click()}
+              className="touch-manipulation"
+            >
+              <ImagePlus className="w-4 h-4" />
+              Upload from gallery
+            </Button>
+            <Button size="sm" onClick={runDiagnose} className="touch-manipulation col-span-2">
               Try again
             </Button>
           </div>
@@ -797,11 +820,18 @@ export function CameraHub() {
           </div>
 
           <p className="font-medium text-gray-900">{diagnoseResult.issue_detected}</p>
-          <ul className="text-sm text-gray-600 list-disc pl-4 space-y-1">
-            {diagnoseResult.likely_causes.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ul>
+          {diagnoseResult.likely_causes.length > 0 && (
+            <div>
+              <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">
+                Top possible issues
+              </p>
+              <ul className="text-sm text-gray-600 list-disc pl-4 space-y-1">
+                {diagnoseResult.likely_causes.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {diagnoseResult.confidence_reason && (
             <div className="rounded-xl bg-indigo-50/60 border border-indigo-100 px-3 py-2.5">
@@ -862,6 +892,11 @@ export function CameraHub() {
               </Button>
             </Link>
           )}
+          <RequestExpertReview
+            plantId={selectedPlantId || null}
+            cropType={selectedPlant?.species ?? diagnoseResult.plant_id_guess ?? undefined}
+            defaultDescription={problemDescription}
+          />
         </Card>
       )}
 

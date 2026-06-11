@@ -91,9 +91,9 @@ function buildSections(hideUpgrade: boolean) {
           ? []
           : [
               { href: "/billing", label: "Billing & usage", icon: Sparkles, desc: "Plan, limits & monthly usage" },
-              { href: "/upgrade", label: "Upgrade to Pro", icon: Sparkles, desc: "PlantPal Pro — $7.99/mo" },
+              { href: "/upgrade", label: "Upgrade to Pro", icon: Sparkles, desc: "PlantPal Pro: $7.99/mo" },
             ]),
-        { href: "/invite", label: "Invite Friends", icon: Gift, desc: "Share PlantPal — both get Plus trial" },
+        { href: "/invite", label: "Invite Friends", icon: Gift, desc: "Share PlantPal. Both get Plus trial" },
         { href: "/settings#feedback", label: "Send Feedback", icon: MessageSquare, desc: "Report a bug or share an idea" },
         { href: "/support", label: "Help & Support", icon: Heart, desc: "Contact us · privacy · data deletion" },
         { href: "/settings", label: "Settings", icon: Settings, desc: "Profile & preferences" },
@@ -108,7 +108,7 @@ export function MoreMenuPage() {
 
   return (
     <div className="space-y-6 max-w-lg mx-auto pb-4">
-      <PageHeader title="More" description="Tools, tracking, and ecosystem features" />
+      <PageHeader title="More" description="Tools, tracking, and extras" />
 
       {sections.map((section) => (
         <div key={section.title}>

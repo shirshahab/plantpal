@@ -12,12 +12,16 @@ import { DashboardTrending } from "@/components/dashboard/trending-section";
 import { DashboardSuggestions } from "@/components/dashboard/suggestions-section";
 import { DailyLessonCard } from "@/components/academy/daily-lesson-card";
 import { loadUserProfile } from "@/lib/profile/user-profile";
+import { PlantyAvatar } from "@/components/brand/planty";
+import { getPlantyMessage } from "@/lib/copy/planty-messages";
 
 export function DashboardEmptyState() {
   const [zipCode, setZipCode] = useState("");
+  const [plantyMessage, setPlantyMessage] = useState("");
 
   useEffect(() => {
     setZipCode(loadUserProfile().zipCode);
+    setPlantyMessage(getPlantyMessage());
   }, []);
 
   return (
@@ -29,15 +33,17 @@ export function DashboardEmptyState() {
       />
       <InstallPrompt />
 
-      {/* Welcome + primary actions */}
+      {/* Rotating Planty welcome + primary actions */}
       <Card padding="lg" className="text-center border-green-100 bg-gradient-to-b from-green-50/80 to-white">
-        <div className="w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto text-3xl">
-          🌱
-        </div>
-        <h2 className="text-xl font-bold text-gray-900 mt-4">Welcome to PlantPal</h2>
+        <PlantyAvatar variant="happy" size={80} className="mx-auto" />
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-green-700 mt-4">
+          Planty says
+        </p>
+        <h2 className="text-xl font-bold text-gray-900 mt-1">
+          {plantyMessage || "Add your first plant. I promise not to judge."}
+        </h2>
         <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto leading-relaxed">
-          Your garden command center will come alive as you add plants, complete
-          lessons, and scan your garden.
+          Add a plant, scan a problem, or knock out today&apos;s garden task.
         </p>
         <div className="flex flex-col gap-3 mt-6">
           <Link href="/plants/new">

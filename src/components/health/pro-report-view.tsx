@@ -148,7 +148,7 @@ export function ProReportView({
     );
     setExpertRequested(true);
     setExpertOpen(false);
-    toast("Expert review requested — you're on the list.");
+    toast("Expert review requested. You're on the list.");
   }
 
   function setStatus(status: HealthReportStatus) {
@@ -156,7 +156,7 @@ export function ProReportView({
     onStatusChange?.(status);
     toast(
       status === "resolved"
-        ? "Marked resolved — great work."
+        ? "Marked resolved. Great work."
         : "Report updated."
     );
   }
@@ -166,8 +166,8 @@ export function ProReportView({
     setFeedback({ ...entry });
     toast(
       verdict === "correct"
-        ? "Thanks — this helps PlantPal get more accurate."
-        : "Noted — future diagnoses for this issue will be more cautious."
+        ? "Thanks. This helps PlantPal get more accurate."
+        : "Noted. Future diagnoses for this issue will be more cautious."
     );
   }
 
@@ -177,11 +177,11 @@ export function ProReportView({
     if (outcome === "improved") {
       updateHealthReportStatus(report.id, "improved", user?.id);
       onStatusChange?.("improved");
-      toast("Great news — marked as improving.");
+      toast("Great news. Marked as improving.");
     } else {
       updateHealthReportStatus(report.id, "escalated", user?.id);
       onStatusChange?.("escalated");
-      toast("Sorry to hear it — consider requesting an expert review below.");
+      toast("Sorry to hear it. Consider requesting an expert review below.");
     }
   }
 
@@ -400,10 +400,10 @@ export function ProReportView({
         <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
           <ClipboardList className="w-4 h-4 text-green-600" /> Remedy Plan
         </h3>
-        <PlanList title="Immediate — today" items={report.remedyPlan.immediate} />
-        <PlanList title="Next 72 hours — monitor" items={report.remedyPlan.next72Hours} />
-        <PlanList title="7-day plan — recover" items={report.remedyPlan.day7Plan} />
-        <PlanList title="14-day plan — prevent relapse" items={report.remedyPlan.day14Plan} />
+        <PlanList title="Immediate: today" items={report.remedyPlan.immediate} />
+        <PlanList title="Next 72 hours: monitor" items={report.remedyPlan.next72Hours} />
+        <PlanList title="7-day plan: recover" items={report.remedyPlan.day7Plan} />
+        <PlanList title="14-day plan: prevent relapse" items={report.remedyPlan.day14Plan} />
         <div className="rounded-xl bg-red-50 border border-red-100 p-3">
           <h4 className="text-sm font-semibold text-red-800 mb-1.5 flex items-center gap-1.5">
             <AlertTriangle className="w-4 h-4" /> Avoid
@@ -456,15 +456,15 @@ export function ProReportView({
               )}
             </h3>
             <p className="text-sm text-gray-600 mt-1">
-              Connect with botanists, agronomists, arborists, and crop consultants.
-              Expert review is rolling out soon — request a spot and we&apos;ll
-              follow up.
+              Need a human set of eyes? Request expert review. Expert review is
+              coming soon, and these requests help us prioritize early access.
             </p>
           </div>
         </div>
         {expertRequested ? (
           <p className="text-sm font-medium text-violet-700 bg-violet-50 rounded-lg px-3 py-2">
-            Review requested — we&apos;ll reach out when an expert is available.
+            Expert review coming soon. We&apos;ll use these requests to prioritize
+            early access.
           </p>
         ) : (
           <Button
@@ -587,9 +587,9 @@ export function ProReportView({
             value={expertUrgency}
             onChange={(e) => setExpertUrgency(e.target.value as "low" | "medium" | "high")}
             options={[
-              { value: "low", label: "Low — general guidance" },
-              { value: "medium", label: "Medium — issue is progressing" },
-              { value: "high", label: "High — severe or high-value crop" },
+              { value: "low", label: "Low: general guidance" },
+              { value: "medium", label: "Medium: issue is progressing" },
+              { value: "high", label: "High: severe or high-value crop" },
             ]}
           />
           <div className="space-y-1.5">

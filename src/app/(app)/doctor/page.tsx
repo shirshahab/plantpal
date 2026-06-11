@@ -64,13 +64,13 @@ export default function DoctorPage() {
     <div className="space-y-6 max-w-2xl mx-auto">
       <PageHeader
         title="Plant Doctor"
-        description="Describe what's wrong — get a diagnosis-style action plan."
+        description="Describe what's wrong. Get a diagnosis-style action plan."
       />
 
       <Card padding="md" className="bg-green-50/50 border-green-100">
         <p className="text-sm text-gray-600">
           PlantPal answers based on your plant type, ZIP code, health status, and
-          selected goals. Uses likely/possible language — not medical certainty.
+          selected goals. Uses likely/possible language, not medical certainty.
         </p>
       </Card>
 
@@ -150,7 +150,7 @@ export default function DoctorPage() {
       {!plants.length && (
         <div className="text-center py-8 space-y-3">
           <p className="text-sm text-gray-500">
-            Plant Doctor checks the health of plants in your garden — add your first plant to get started.
+            Plant Doctor checks the health of plants in your garden. Add your first plant to get started.
           </p>
           <Link href="/plants/new">
             <Button size="sm" variant="outline" className="touch-manipulation">

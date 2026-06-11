@@ -20,6 +20,7 @@ import { FounderHydrator } from "@/components/billing/founder-hydrator";
 import { MoatProvider } from "@/lib/store/moat-provider";
 import { OnboardingGuard } from "@/components/onboarding/onboarding-guard";
 import { GlobalErrorHandler } from "@/components/errors/global-error-handler";
+import { AuthDebug } from "@/components/dev/auth-debug";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -45,6 +46,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                           <GenomeProvider>
                             <OnboardingGuard>
                               <AppShell>{children}</AppShell>
+                              <AuthDebug />
                             </OnboardingGuard>
                           </GenomeProvider>
                           </MoatProvider>

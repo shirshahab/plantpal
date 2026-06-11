@@ -25,7 +25,7 @@ export function MissionsHub() {
     <div className="space-y-6 max-w-lg mx-auto page-enter">
       <PageHeader
         title="Community Missions"
-        description="Daily & weekly goals — earn XP, badges, and trophies"
+        description="Daily & weekly goals. Earn XP, badges, and trophies"
       />
 
       <div className="flex flex-col items-center gap-4">

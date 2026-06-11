@@ -12,14 +12,14 @@ export default function UpgradePageClient() {
     <div className="max-w-2xl mx-auto space-y-8 pb-8">
       <PageHeader
         title="PlantPal Pro coming soon."
-        description="During public beta, every feature is unlocked for everyone — free."
+        description="During public beta, everyone gets every feature. Free."
       />
 
       <Card padding="lg" className="text-center border-green-100 bg-gradient-to-b from-green-50/80 to-white">
         <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center mx-auto">
           <Sparkles className="w-7 h-7 text-green-600" />
         </div>
-        <h2 className="text-lg font-bold text-gray-900 mt-4">Everything is unlocked</h2>
+        <h2 className="text-lg font-bold text-gray-900 mt-4">Everything is included</h2>
         <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto leading-relaxed">
           There are no paywalls or limits right now. When PlantPal Pro launches, beta users
           will be the first to know.

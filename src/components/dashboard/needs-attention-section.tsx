@@ -20,7 +20,7 @@ function getAttentionItems(plants: Plant[]): AttentionItem[] {
   const items: AttentionItem[] = [];
   for (const plant of plants) {
     if (plant.healthStatus === "critical") {
-      items.push({ plant, reason: "Critical health — needs help now" });
+      items.push({ plant, reason: "Critical health. Needs help now" });
       continue;
     }
     if (plant.healthStatus === "needs_attention") {

@@ -52,7 +52,7 @@ export function TodaysMissionsWidget({ plants }: TodaysMissionsWidgetProps) {
           </div>
           <span className="text-xs text-gray-400">{missions.length} active</span>
         </div>
-        <p className="text-sm text-gray-500 mt-1">Do this next — quick wins for your garden.</p>
+        <p className="text-sm text-gray-500 mt-1">Do this next: quick wins for your garden.</p>
       </CardHeader>
       <CardContent className="space-y-2">
         {missions.map((mission) => (

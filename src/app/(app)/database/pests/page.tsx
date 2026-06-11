@@ -10,7 +10,7 @@ export default function PestsDatabasePage() {
     <div className="space-y-6">
       <PageHeader
         title="Pest Database"
-        description={`${getPestCount()} common pests — identification, treatment, and prevention.`}
+        description={`${getPestCount()} common pests: identification, treatment, and prevention.`}
       />
       <DatabaseNav />
       <PestSearchPanel />

@@ -3,6 +3,7 @@
 import { PageHeader } from "@/components/page-header";
 import { AchievementCard } from "@/components/achievements/achievement-card";
 import { EmptyState } from "@/components/empty-state";
+import { PlantySuccess } from "@/components/brand/planty";
 import { useEngagement } from "@/lib/store/engagement-provider";
 
 export default function AchievementsPage() {
@@ -13,8 +14,11 @@ export default function AchievementsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Achievements"
-        description={`${unlocked} of ${achievements.length} unlocked — keep growing!`}
+        description={`${unlocked} of ${achievements.length} earned. Keep growing!`}
       />
+      {unlocked > 0 && (
+        <PlantySuccess size="sm" message="Nice. You kept learning." />
+      )}
       {unlocked === 0 ? (
         <EmptyState
           icon="🏆"

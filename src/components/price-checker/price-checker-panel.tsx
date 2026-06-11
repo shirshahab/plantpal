@@ -138,7 +138,7 @@ export function PriceCheckerPanel() {
       toast(
         res.data.source === "ai"
           ? "Price check ready."
-          : "Price check ready — based on typical nursery pricing."
+          : "Price check ready. Based on typical nursery pricing."
       );
     } else {
       setError(friendlyAiError(res.error, "price check"));
@@ -213,7 +213,7 @@ export function PriceCheckerPanel() {
 
       <Card padding="md" className="bg-amber-50/50 border-amber-100">
         <p className="text-sm text-gray-700 leading-relaxed">
-          Check fair price ranges first — then use{" "}
+          Check fair price ranges first, then use{" "}
           <Link href="/shop-assistant" className="text-green-700 font-medium hover:underline">
             Shop Assistant
           </Link>{" "}
@@ -341,7 +341,7 @@ export function PriceCheckerPanel() {
           {error && (
             <Card padding="sm" className="border-amber-200 bg-amber-50">
               <p className="text-sm text-amber-800">
-                Live price analysis didn&apos;t go through — showing an estimate based on
+                Live price analysis didn&apos;t go through. Showing an estimate based on
                 typical nursery pricing instead. You can check this plant again in a moment.
               </p>
             </Card>

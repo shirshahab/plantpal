@@ -244,7 +244,7 @@ export function LandscapeResultsMvp({
           <div className="flex gap-2 text-xs text-gray-500">
             <ImageIcon className="w-4 h-4 shrink-0" />
             <p>
-              Concept render unavailable right now — your design details, plant list,
+              Concept render unavailable right now. Your design details, plant list,
               and phased plan are below.
             </p>
           </div>

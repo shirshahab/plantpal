@@ -47,7 +47,7 @@ export function LessonQuizBlock({
           <div>
             <p className="font-semibold text-green-800">Lesson Complete!</p>
             <p className="text-sm text-green-700 mt-0.5">
-              Great job — you passed the quiz and earned progress toward your
+              Great job. You passed the quiz and earned progress toward your
               next care level.
             </p>
           </div>
@@ -94,7 +94,7 @@ export function LessonQuizBlock({
         <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 text-red-800 text-sm mb-4">
           <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium">Not quite — here&apos;s why:</p>
+            <p className="font-medium">Not quite. Here&apos;s why:</p>
             <p className="mt-1 opacity-90">{quiz.explanation}</p>
           </div>
         </div>

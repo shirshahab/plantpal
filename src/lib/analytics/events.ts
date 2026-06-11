@@ -1,8 +1,10 @@
 export type AnalyticsEventName =
   | "signup"
+  | "login"
   | "scan"
   | "lesson_completed"
   | "plant_added"
+  | "care_plan_generated"
   | "session_start"
   | "onboarding_complete"
   | "referral_redeemed"

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { BetaBadge } from "@/components/brand/beta-badge";
 
 const WHAT_TO_TEST = [
-  { icon: Leaf, text: "Add a plant — scan, search, or type it in" },
+  { icon: Leaf, text: "Add a plant: scan, search, or type it in" },
   { icon: ScanLine, text: "Scan a plant with your camera" },
   { icon: ListTodo, text: "Complete a task from Today or Dashboard" },
   { icon: GraduationCap, text: "Finish one Academy lesson" },
@@ -26,8 +26,8 @@ const WHAT_TO_TEST = [
 
 const KNOWN_ISSUES = [
   "Some features keep data on this device until cloud sync is fully wired",
-  "All Pro features are unlocked for free during the beta",
-  "Scan and diagnosis results are guidance only — always verify with your own judgment",
+  "All Pro features are free during the beta",
+  "Scan and diagnosis results are guidance only. Always verify with your own judgment",
 ];
 
 export default function BetaStartPage() {
@@ -58,7 +58,7 @@ export default function BetaStartPage() {
             <p className="font-semibold text-gray-900">You&apos;re one of our first testers</p>
             <p className="text-sm text-gray-600 mt-1 leading-relaxed">
               Explore the app, try real workflows, and tell us what breaks or confuses you.
-              There are no wrong answers — honest feedback is the goal.
+              There are no wrong answers. Honest feedback is the goal.
             </p>
           </div>
         </div>

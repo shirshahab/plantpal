@@ -18,6 +18,8 @@ import { DashboardSuggestions } from "@/components/dashboard/suggestions-section
 import { DailyLessonCard } from "@/components/academy/daily-lesson-card";
 import { DashboardActivityFeed } from "@/components/social/dashboard-activity-feed";
 import { DashboardActiveChallenge } from "@/components/social/dashboard-active-challenge";
+import { GrowersNearYou } from "@/components/dashboard/growers-near-you";
+import { InviteFriendsCard } from "@/components/dashboard/invite-friends-card";
 import { DashboardEmptyState } from "@/components/dashboard/empty-state";
 import { FounderModeBadge } from "@/components/settings/founder-mode-badge";
 import { SendFeedbackButton } from "@/components/feedback/send-feedback-button";
@@ -122,12 +124,16 @@ export function DashboardHome() {
         <DashboardActivityFeed />
         <DashboardActiveChallenge />
 
+        {/* 5c. Invite friends */}
+        <InviteFriendsCard />
+
         {/* 6. Today's lesson + academy progress */}
         <DailyLessonCard />
         <DashboardContinueLearning />
 
-        {/* 7. Trending near you */}
+        {/* 7. Trending near you + local growers */}
         <DashboardTrending zipCode={zipCode} plants={plants} />
+        <GrowersNearYou zipCode={zipCode} />
 
         {/* 8. Suggestions */}
         <DashboardSuggestions />

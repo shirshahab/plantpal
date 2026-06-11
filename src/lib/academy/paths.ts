@@ -4,7 +4,7 @@ export const ACADEMY_PATHS: AcademyPath[] = [
   {
     id: "beginner-gardening",
     title: "Beginner Gardening",
-    description: "Start here — the essentials every plant parent needs.",
+    description: "Start here: the essentials every plant parent needs.",
     icon: "🌱",
     color: "#2D6A4F",
     kidSafe: true,
@@ -41,7 +41,7 @@ export const ACADEMY_PATHS: AcademyPath[] = [
   {
     id: "water-mastery",
     title: "Water Mastery",
-    description: "Water smarter — not more.",
+    description: "Water smarter, not more.",
     icon: "💧",
     color: "#2563EB",
     kidSafe: true,

@@ -105,7 +105,7 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
       }
 
       if (res.data.not_fully_confident) {
-        toast("Not fully confident — another photo may help");
+        toast("Not fully confident. Another photo may help");
       } else {
         toast("Plant identified");
       }
@@ -129,7 +129,7 @@ export function PlantScannerPanel({ embedded }: PlantScannerPanelProps = {}) {
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Plant Scanner</h1>
           <p className="text-sm text-gray-500 max-w-xs mx-auto">
-            Add up to 3 photos — whole plant, leaf, and flower — for the best ID
+            Add up to 3 photos for the best ID: whole plant, leaf, and flower
           </p>
         </div>
       )}

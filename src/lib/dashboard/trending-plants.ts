@@ -139,7 +139,7 @@ const CURATED_REASONS: Record<string, string> = {
   Magnolia: "Classic southern tree, popular across {area}.",
   "Blueberry Bush": "Backyard berries are taking off in {area}.",
   Peony: "Show-stopping spring blooms loved by local gardeners.",
-  Lilac: "Cold-hardy and fragrant — a regional classic.",
+  Lilac: "Cold-hardy and fragrant, a regional classic.",
   "Apple Tree": "A reliable backyard fruit tree for your zone.",
   "Raspberry Bush": "Easy berries that handle your winters well.",
 };
@@ -159,8 +159,8 @@ const SEASONAL_REASONS: Record<Season, Record<string, string>> = {
     Rose: "Fall is a great time to establish roses in {area}.",
   },
   winter: {
-    Lavender: "Plan ahead — a spring favorite in {area}.",
-    Rose: "Bare-root season — the best time to plant roses.",
+    Lavender: "Plan ahead: a spring favorite in {area}.",
+    Rose: "Bare-root season: the best time to plant roses.",
   },
 };
 
@@ -265,14 +265,14 @@ function plantingSeasonFor(plantType: string): string {
   switch (plantType) {
     case "tree":
     case "shrub":
-      return "Fall through early spring — cooler weather helps roots establish.";
+      return "Fall through early spring. Cooler weather helps roots establish.";
     case "flower":
       return "Spring, after the last frost in your area.";
     case "vegetable":
     case "herb":
       return "Spring and early summer for most varieties.";
     case "indoor":
-      return "Any time of year — indoor plants aren't tied to seasons.";
+      return "Any time of year. Indoor plants aren't tied to seasons.";
     default:
       return "Spring or fall, when temperatures are mild.";
   }
@@ -314,7 +314,7 @@ export function getTrendInsight(plant: TrendingPlant, zipCode: string): Trending
   const zoneNote = species
     ? zoneFit
       ? `Good fit for USDA Zone ${record.usdaZone} (thrives in zones ${species.hardiness_zone_min}–${species.hardiness_zone_max}).`
-      : `Best in zones ${species.hardiness_zone_min}–${species.hardiness_zone_max} — you're in zone ${record.usdaZone}, so it may need extra care.`
+      : `Best in zones ${species.hardiness_zone_min}–${species.hardiness_zone_max}. You're in zone ${record.usdaZone}, so it may need extra care.`
     : `You're in USDA Zone ${record.usdaZone}.`;
 
   return {

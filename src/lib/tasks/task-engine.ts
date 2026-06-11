@@ -115,7 +115,7 @@ function seasonalTasks(month: number, plant: Plant): PlantTask[] {
         plantId: plant.id,
         plantName: plant.name,
         title: `Spring feeding for ${plant.name}`,
-        description: "Active growth season — a light feed may help.",
+        description: "Active growth season. A light feed may help.",
         taskType: "fertilize",
         priority: "medium",
         dueDate: due,
@@ -152,7 +152,7 @@ function seasonalTasks(month: number, plant: Plant): PlantTask[] {
         priority: "low",
         dueDate: due,
         source: "seasonal",
-        whyItMatters: "Winter stress is common — catch it early.",
+        whyItMatters: "Winter stress is common. Catch it early.",
       })
     );
   }
@@ -213,9 +213,9 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
             title: `Water ${plant.name}`,
             description:
               plant.lastWateredAt === null
-                ? "First watering since you added this plant — check soil moisture."
+                ? "First watering since you added this plant. Check soil moisture."
                 : heatAlert
-                  ? `Heat alert — last watered ${waterDays} day(s) ago. Check soil today.`
+                  ? `Heat alert: last watered ${waterDays} day(s) ago. Check soil today.`
                   : `Last watered ${waterDays} day(s) ago.`,
             taskType: "water",
             priority,
@@ -265,7 +265,7 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
           plantId: plant.id,
           plantName: plant.name,
           title: `Health check: ${plant.name}`,
-          description: "Score is lower than usual — inspect leaves and soil.",
+          description: "Score is lower than usual. Inspect leaves and soil.",
           taskType: "scan",
           priority: plant.healthStatus === "critical" ? "urgent" : "high",
           dueDate: todayStr,
@@ -330,7 +330,7 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
             priority: "medium",
             dueDate: todayStr,
             source: "ai_plan",
-            whyItMatters: "From your PlantPal care plan — tailored to this plant.",
+            whyItMatters: "From your PlantPal care plan, tailored to this plant.",
           })
         );
       });

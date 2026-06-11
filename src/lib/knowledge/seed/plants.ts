@@ -126,7 +126,7 @@ export function makeSpecies(p: PartialSpecies): PlantSpecies {
     description:
       p.description ??
       `${p.common_name} (${p.scientific_name}) is a popular ${p.type} valued by home gardeners for its beauty and manageable care requirements.`,
-    toxicity: p.toxicity ?? "Varies — verify before pets/children",
+    toxicity: p.toxicity ?? "Varies, verify before pets/children",
     image_url: p.image_url ?? IMG("1416879595882-337324a7f4f9"),
     secondary_images: p.secondary_images ?? [],
     companion_plants:
@@ -143,7 +143,7 @@ export function makeSpecies(p: PartialSpecies): PlantSpecies {
 
 /** 100+ plant species seed data */
 export const PLANT_SPECIES_SEED: PlantSpecies[] = [
-  makeSpecies({ common_name: "Meyer Lemon Tree", scientific_name: "Citrus × meyeri", type: "tree", family: "Rutaceae", hardiness_zone_min: 8, hardiness_zone_max: 11, toxicity: "Mild — citrus oils", image_url: IMG("1558618666-fcd25c85cd64") }),
+  makeSpecies({ common_name: "Meyer Lemon Tree", scientific_name: "Citrus × meyeri", type: "tree", family: "Rutaceae", hardiness_zone_min: 8, hardiness_zone_max: 11, toxicity: "Mild, citrus oils", image_url: IMG("1558618666-fcd25c85cd64") }),
   makeSpecies({ common_name: "Japanese Maple", scientific_name: "Acer palmatum", type: "tree", family: "Sapindaceae", sunlight: "Partial shade", hardiness_zone_min: 5, hardiness_zone_max: 8, image_url: IMG("1592150628122-0e8b6a11a6b0") }),
   makeSpecies({ common_name: "Fiddle Leaf Fig", scientific_name: "Ficus lyrata", type: "indoor", family: "Moraceae", toxicity: "Mildly toxic to pets", image_url: IMG("1593691502-6c263a056f09") }),
   makeSpecies({ common_name: "Bougainvillea", scientific_name: "Bougainvillea spp.", type: "vine", family: "Nyctaginaceae", hardiness_zone_min: 9, hardiness_zone_max: 11, image_url: IMG("1593691502-6c263a056f09") }),
@@ -288,7 +288,7 @@ export const PLANT_SPECIES_SEED: PlantSpecies[] = [
   makeSpecies({ common_name: "Loquat Tree", scientific_name: "Eriobotrya japonica", type: "tree", family: "Rosaceae", hardiness_zone_min: 8, hardiness_zone_max: 10 }),
   makeSpecies({ common_name: "Dragon Fruit Cactus", scientific_name: "Hylocereus undatus", type: "succulent", family: "Cactaceae", hardiness_zone_min: 10, hardiness_zone_max: 11 }),
   makeSpecies({ common_name: "Lucky Bamboo", scientific_name: "Dracaena sanderiana", type: "indoor", family: "Asparagaceae", sunlight: "Indirect light", watering: "Keep roots in water or moist soil" }),
-  makeSpecies({ common_name: "Air Plant", scientific_name: "Tillandsia spp.", type: "indoor", family: "Bromeliaceae", soil_preference: "No soil — mount or hang", watering: "Mist 2–3× weekly" }),
+  makeSpecies({ common_name: "Air Plant", scientific_name: "Tillandsia spp.", type: "indoor", family: "Bromeliaceae", soil_preference: "No soil. Mount or hang", watering: "Mist 2–3× weekly" }),
   makeSpecies({ common_name: "Bromeliad", scientific_name: "Guzmania lingulata", type: "indoor", family: "Bromeliaceae", watering: "Fill central cup; keep moist" }),
   makeSpecies({ common_name: "Orchid", scientific_name: "Phalaenopsis spp.", type: "indoor", family: "Orchidaceae", soil_preference: "Orchid bark mix", watering: "Weekly soak; drain fully" }),
   makeSpecies({ common_name: "Cyclamen", scientific_name: "Cyclamen persicum", type: "flower", family: "Primulaceae", sunlight: "Bright indirect; cool temps" }),

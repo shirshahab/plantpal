@@ -458,7 +458,7 @@ export function AddPlantWizard() {
             <div>
               <p className="text-sm font-medium text-green-900">Your first plant</p>
               <p className="text-sm text-green-800 mt-1">
-                Add one plant to unlock daily tasks, care schedules, and your garden dashboard.
+                Add one plant to get daily tasks, care schedules, and your garden dashboard.
               </p>
             </div>
             <button
@@ -502,7 +502,7 @@ export function AddPlantWizard() {
         {step === 0 && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-900">Add a plant</h2>
-            <p className="text-sm text-gray-500">Pick the fastest way for you — you can always add a photo later.</p>
+            <p className="text-sm text-gray-500">Pick the fastest way for you. You can always add a photo later.</p>
             <div className="space-y-3">
               <button
                 type="button"
@@ -514,7 +514,7 @@ export function AddPlantWizard() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900">Scan plant</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Use your camera — we&apos;ll identify it</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Use your camera. We&apos;ll identify it</p>
                 </div>
               </button>
               <button
@@ -590,7 +590,7 @@ export function AddPlantWizard() {
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-900">Plant name</h2>
             <p className="text-sm text-gray-500">
-              Start typing and pick your plant — we&apos;ll fill in its photo and care.
+              Start typing and pick your plant. We&apos;ll fill in its photo and care.
             </p>
             {speciesSelection ? (
               <SelectedSpeciesCard

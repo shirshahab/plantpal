@@ -51,10 +51,10 @@ function buildCard(input: {
     message = input.missingKeyMessage;
   } else if (!probe.reachable) {
     status = "error";
-    message = probe.error ?? "API unreachable — using fallback.";
+    message = probe.error ?? "API unreachable. Using fallback.";
   } else if (!probe.authOk) {
     status = "error";
-    message = probe.error ?? "Key rejected by provider — using fallback.";
+    message = probe.error ?? "Key rejected by provider. Using fallback.";
   } else if (!liveWhen) {
     status = "mock_fallback";
     message = input.fallbackMessage;
@@ -104,8 +104,8 @@ export async function getIntegrationsHealth(): Promise<IntegrationHealthCard[]> 
       probe: supabase,
       liveWhen: isSupabaseConfigured() && supabase.reachable && supabase.authOk,
       configuredMessage: "Database and auth env vars set.",
-      liveMessage: "Cloud database reachable — live sync when signed in.",
-      fallbackMessage: "Local mock mode — data stays in this browser.",
+      liveMessage: "Cloud database reachable. Live sync when signed in.",
+      fallbackMessage: "Local mock mode. Data stays in this browser.",
       missingKeyMessage: "Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
     }),
 
@@ -117,7 +117,7 @@ export async function getIntegrationsHealth(): Promise<IntegrationHealthCard[]> 
       probe: openai,
       liveWhen: true,
       configuredMessage: "OPENAI_API_KEY set.",
-      liveMessage: "Live AI — scanner, doctor, care plans, and price analysis.",
+      liveMessage: "Live AI: scanner, doctor, care plans, and price analysis.",
       fallbackMessage: "Smart mock responses when OpenAI unavailable.",
       missingKeyMessage: "Add OPENAI_API_KEY for live AI features.",
     }),
@@ -133,7 +133,7 @@ export async function getIntegrationsHealth(): Promise<IntegrationHealthCard[]> 
       liveMessage: "Live weather on /today and weather cards.",
       fallbackMessage:
         weatherConfigured && weatherProvider !== "openweather"
-          ? `Key present but WEATHER_PROVIDER is "${weatherProvider}" — set WEATHER_PROVIDER=openweather for live data.`
+          ? `Key present but WEATHER_PROVIDER is "${weatherProvider}". Set WEATHER_PROVIDER=openweather for live data.`
           : "Climate-aware mock weather when key missing or unreachable.",
       missingKeyMessage: "Add OPENWEATHER_API_KEY and WEATHER_PROVIDER=openweather.",
     }),

@@ -49,7 +49,7 @@ function HouseholdSetup() {
     <div className="space-y-6 max-w-lg mx-auto page-enter">
       <PageHeader
         title="PlantPal Family"
-        description="Grow together — shared XP, streaks, and challenges"
+        description="Grow together: shared XP, streaks, and challenges"
       />
 
       <Card padding="md" className="border-pink-100 bg-gradient-to-br from-pink-50/40 to-white">
@@ -159,7 +159,7 @@ export function FamilyDashboard() {
     <div className="space-y-6 max-w-lg mx-auto page-enter">
       <PageHeader
         title="PlantPal Family"
-        description="Grow together — shared XP, streaks, and challenges"
+        description="Grow together: shared XP, streaks, and challenges"
         action={
           <div className="flex items-center gap-1.5 rounded-xl bg-green-50 px-3 py-1.5">
             <Users className="w-4 h-4 text-green-600" />
@@ -245,7 +245,7 @@ export function FamilyDashboard() {
         {members.length === 1 && (
           <Card padding="md" className="mt-3 border-dashed border-gray-200 bg-gray-50/50">
             <p className="text-sm text-gray-600 text-center">
-              Waiting for family to join — share your invite code{" "}
+              Waiting for family to join. Share your invite code{" "}
               <span className="font-mono font-semibold">{household.inviteCode}</span>
             </p>
           </Card>
@@ -255,7 +255,7 @@ export function FamilyDashboard() {
       <Card padding="md" className="border-amber-100 bg-amber-50/30">
         <p className="text-sm font-semibold text-gray-900">Family challenges</p>
         <p className="text-xs text-gray-500 mt-1">
-          Weekly team challenges unlock once a second member joins your household.
+          Weekly team challenges start once a second member joins your household.
         </p>
       </Card>
     </div>

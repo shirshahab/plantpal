@@ -27,7 +27,7 @@ export const DAILY_TIPS: DailyTip[] = [
   },
   {
     id: "tip-5",
-    text: "Check soil moisture before watering — your finger is the best tool you have.",
+    text: "Check soil moisture before watering. Your finger is the best tool you have.",
     lessonId: "overwatering-signs",
   },
   {
@@ -42,7 +42,7 @@ export const DAILY_TIPS: DailyTip[] = [
   },
   {
     id: "tip-8",
-    text: "Citrus trees are hungry in spring but rest in winter — match feeding to growth.",
+    text: "Citrus trees are hungry in spring but rest in winter. Match feeding to growth.",
     lessonId: "fertilize-citrus",
   },
   {
@@ -52,7 +52,7 @@ export const DAILY_TIPS: DailyTip[] = [
   },
   {
     id: "tip-10",
-    text: "Water at the drip line for trees — that's where the roots actually drink.",
+    text: "Water at the drip line for trees. That's where the roots actually drink.",
     lessonId: "maple-watering",
   },
   {
@@ -62,7 +62,7 @@ export const DAILY_TIPS: DailyTip[] = [
   },
   {
     id: "tip-12",
-    text: "Out-of-season leaf drop with spots is not normal — investigate before waiting.",
+    text: "Out-of-season leaf drop with spots is not normal. Investigate before waiting.",
     lessonId: "seasonal-leaf-drop",
   },
   {

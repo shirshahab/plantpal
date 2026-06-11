@@ -69,7 +69,7 @@ export function quickLesson(
     `Getting ${title.toLowerCase()} right saves you from the guess-and-hope cycle.`;
   const realWorldExample =
     extras?.realWorldExample ??
-    `Picture a patio plant wilting at 2pm but perky by morning — that's a clue about ${title.toLowerCase()}, not a death sentence.`;
+    `Picture a patio plant wilting at 2pm but perky by morning. That's a clue about ${title.toLowerCase()}, not a death sentence.`;
 
   return buildAcademyLesson({
     id,
@@ -77,7 +77,7 @@ export function quickLesson(
     title,
     icon,
     description: body.slice(0, 120) + (body.length > 120 ? "…" : ""),
-    introduction: `${plantyMoment} Today we're tackling ${title.toLowerCase()} — ${whyItMatters.toLowerCase()}`,
+    introduction: `${plantyMoment} Today we're tackling ${title.toLowerCase()}: ${whyItMatters.toLowerCase()}`,
     content: `${body}\n\nWhy it matters: ${whyItMatters}\n\nReal-world example: ${realWorldExample}`,
     funFacts: [
       plantyMoment,
@@ -93,13 +93,13 @@ export function quickLesson(
     ],
     actionStep:
       extras?.actionStep ??
-      `Pick one plant and test one ${title.toLowerCase()} adjustment today — then note what changes in 48 hours.`,
+      `Pick one plant and test one ${title.toLowerCase()} adjustment today, then note what changes in 48 hours.`,
     summary: `You can now spot ${title.toLowerCase()} issues early and fix them with confidence.`,
     quiz: {
       question: quizQ,
       options: [quizWrong[0], quizCorrect, quizWrong[1] ?? quizWrong[0], quizWrong[2] ?? "Water daily no matter what"],
       correctIndex: 1,
-      explanation: `${quizCorrect} — that's the move that keeps plants happy long-term.`,
+      explanation: `${quizCorrect}. That's the move that keeps plants happy long-term.`,
     },
   });
 }

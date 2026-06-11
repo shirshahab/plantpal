@@ -111,7 +111,7 @@ export function redeemReferral(referrerCode: string, newUserId: string): Referra
 
   return {
     ok: true,
-    message: "Welcome! You unlocked 7 days of PlantPal Plus.",
+    message: "Welcome! You earned 7 days of PlantPal Plus.",
     trialGranted: true,
   };
 }

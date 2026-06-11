@@ -67,7 +67,7 @@ function buildAlerts(input: {
       title: "Frost watch",
       message:
         input.tempLowF <= 32
-          ? `Overnight low near ${Math.round(input.tempLowF)}°F — protect tender plants.`
+          ? `Overnight low near ${Math.round(input.tempLowF)}°F. Protect tender plants.`
           : "Overnight lows may dip near frost line.",
       wateringAdjustment: "Cover citrus, bougainvillea, and avocado on cold nights.",
     });
@@ -89,7 +89,7 @@ function buildAlerts(input: {
       severity: input.rainChance >= 75 ? "warning" : "info",
       title: "Rain expected",
       message: `${Math.round(input.rainChance)}% chance of rain today.`,
-      wateringAdjustment: "Skip manual watering — let rainfall soak in, then check soil tomorrow.",
+      wateringAdjustment: "Skip manual watering. Let rainfall soak in, then check soil tomorrow.",
     });
   }
 
@@ -97,7 +97,7 @@ function buildAlerts(input: {
     alerts.push({
       type: "humidity",
       severity: "info",
-      title: "High humidity — fungus risk",
+      title: "High humidity, fungus risk",
       message: "Humid conditions favor mildew and leaf spot on dense foliage.",
       wateringAdjustment: "Avoid wetting leaves when watering; improve airflow around plants.",
     });
@@ -107,7 +107,7 @@ function buildAlerts(input: {
     alerts.push({
       type: "drought",
       severity: "info",
-      title: "Dry spell — drought stress risk",
+      title: "Dry spell, drought stress risk",
       message: "Hot, dry conditions with no rain in sight can stress shallow-rooted plants.",
       wateringAdjustment: "Water deeply in the early morning and add mulch to hold moisture.",
     });
@@ -140,8 +140,8 @@ function buildMockWeather(zipCode: string): WeatherInsights {
 
   const summary =
     alerts.length > 0
-      ? `${profile.city} — ${alerts[0].title.toLowerCase()}. ${alerts[0].wateringAdjustment}`
-      : `${profile.city} (${profile.usdaZone}) — ${profile.climateType} climate. Adjust care to local conditions.`;
+      ? `${profile.city}: ${alerts[0].title.toLowerCase()}. ${alerts[0].wateringAdjustment}`
+      : `${profile.city} (${profile.usdaZone}): ${profile.climateType} climate. Adjust care to local conditions.`;
 
   return enrichSnapshot(
     {
@@ -250,7 +250,7 @@ async function fetchOpenWeather(zipCode: string): Promise<WeatherInsights | null
     const location = `${zipProfile.city || geo.name}, ${zipProfile.state}`;
     const summary =
       alerts.length > 0
-        ? `${location} — ${alerts[0].title}. ${recommendedWateringAdjustment}`
+        ? `${location}: ${alerts[0].title}. ${recommendedWateringAdjustment}`
         : `${location} · ${tempF}°F · ${condition}.`;
 
     return enrichSnapshot(

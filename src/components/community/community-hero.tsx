@@ -25,7 +25,7 @@ export function CommunityHero({
           </h2>
           <p className="text-sm text-green-100/90 mt-2 max-w-lg leading-relaxed">
             Browse tips, transformations, and featured gardens from the PlantPal
-            community. Sharing and posting open soon — explore the preview below.
+            community. Sharing and posting open soon. Explore the preview below.
           </p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

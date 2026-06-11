@@ -39,7 +39,7 @@ export function FounderModeSection() {
             Founder Mode
           </p>
           <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-            Unlocks all Plus and Pro features, removes limits and upgrade prompts for testing.
+            Enables all Plus and Pro features, removes limits and upgrade prompts for testing.
           </p>
         </div>
         <Badge variant={active ? "success" : "outline"}>
@@ -66,13 +66,13 @@ export function FounderModeSection() {
 
       {active && (
         <p className="text-xs text-green-800 bg-green-50 rounded-lg px-3 py-2 leading-relaxed">
-          Founder Mode Active — all features unlocked, paywalls hidden.
+          Founder Mode Active. All features enabled, paywalls hidden.
         </p>
       )}
 
       {betaUnlockAll && !active && (
         <p className="text-xs text-amber-800">
-          BETA_UNLOCK_ALL env is also active — full access from server config.
+          BETA_UNLOCK_ALL env is also active. Full access from server config.
         </p>
       )}
     </div>

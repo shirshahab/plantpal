@@ -66,7 +66,7 @@ export function AcademyQuizBlock({
           <div>
             <p className="font-semibold text-green-800">Lesson Complete!</p>
             <p className="text-sm text-green-700 mt-0.5">
-              Quiz passed — check your celebration below for XP and streak updates.
+              Quiz passed. Check your celebration below for XP and streak updates.
             </p>
           </div>
         </div>
@@ -89,7 +89,7 @@ export function AcademyQuizBlock({
         <div className="mb-4 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 aspect-video flex flex-col items-center justify-center text-gray-400">
           <ImageIcon className="w-10 h-10 mb-2" />
           <p className="text-sm font-medium">{quiz.placeholderLabel}</p>
-          <p className="text-xs mt-1">Image quiz coming soon — use the options below</p>
+          <p className="text-xs mt-1">Image quiz coming soon. Use the options below</p>
         </div>
       )}
 
@@ -171,7 +171,7 @@ export function AcademyQuizBlock({
         <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 text-red-800 text-sm mb-4">
           <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium">Not quite — here&apos;s why:</p>
+            <p className="font-medium">Not quite. Here&apos;s why:</p>
             <p className="mt-1 opacity-90">{quiz.explanation}</p>
           </div>
         </div>

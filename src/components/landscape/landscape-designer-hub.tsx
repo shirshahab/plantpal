@@ -152,7 +152,7 @@ export function LandscapeDesignerHub() {
     setSaving(false);
 
     if (!localOk) {
-      toast("Could not save locally — photo may be too large.");
+      toast("Could not save locally. Photo may be too large.");
       return;
     }
 
@@ -222,7 +222,7 @@ export function LandscapeDesignerHub() {
           <div>
             <p className="font-medium text-gray-900">Six garden styles</p>
             <p className="text-sm text-gray-600 mt-1">
-              Modern · Japanese · Cottage · Tropical · Desert · Edible garden — each with plants,
+              Modern · Japanese · Cottage · Tropical · Desert · Edible garden. Each with plants,
               maintenance level, and estimated cost for your ZIP code.
             </p>
           </div>

@@ -14,12 +14,12 @@ import { lookupZipRecord } from "@/lib/location/usda-zones";
 function seasonNote(): string {
   const month = new Date().getMonth();
   if (month >= 2 && month <= 4)
-    return "Spring planting window — ideal for new shrubs and ground cover.";
+    return "Spring planting window. Ideal for new shrubs and ground cover.";
   if (month >= 5 && month <= 7)
-    return "Summer heat — prioritize drought-tolerant choices and irrigation.";
+    return "Summer heat. Prioritize drought-tolerant choices and irrigation.";
   if (month >= 8 && month <= 10)
     return "Fall is excellent for trees and climate-native planting.";
-  return "Winter dormancy — plan structure; plant bare-root trees where appropriate.";
+  return "Winter dormancy. Plan structure; plant bare-root trees where appropriate.";
 }
 
 type SpaceType = LandscapeDesignRequest["spaceType"];
@@ -67,7 +67,7 @@ const STYLE_PLANTS: Record<
   modern: {
     trees: ["Multi-stem birch", "Olive standard (dwarf)"],
     shrubs: ["Boxwood hedge", "Ornamental grass (Miscanthus)", "Agave accent"],
-    flowers: ["Minimal — structural green focus"],
+    flowers: ["Minimal: structural green focus"],
     ground_cover: ["Decomposed granite", "Black mulch beds"],
   },
   japanese: {
@@ -144,7 +144,7 @@ const AFTER_CHANGES: Record<StyleGoal, string[]> = {
   desert: [
     "Replace thirsty lawn with gravel and sculptural succulents",
     "Group agave and yucca on berms for drainage",
-    "Minimal irrigation — deep soak zones only",
+    "Minimal irrigation: deep soak zones only",
   ],
   edible_garden: [
     "Install raised beds along sunniest edge",
@@ -271,7 +271,7 @@ export function mockLandscapeDesign(
 
   const afterConcept: AfterConcept = {
     headline: `${styleOpt.label} transformation`,
-    description: `Your ${SPACE_TYPE_LABELS[req.spaceType].toLowerCase()} reimagined as a ${styleOpt.label.toLowerCase()} garden — ${styleOpt.description.toLowerCase()} Plants are selected for Zone ${record.usdaZone} and ${record.climateType} climate.`,
+    description: `Your ${SPACE_TYPE_LABELS[req.spaceType].toLowerCase()} reimagined as a ${styleOpt.label.toLowerCase()} garden: ${styleOpt.description.toLowerCase()} Plants are selected for Zone ${record.usdaZone} and ${record.climateType} climate.`,
     key_changes: AFTER_CHANGES[req.styleGoal],
     accent_color: styleOpt.afterGradient.split(" ")[1]?.replace("via-", "") ?? "green-100",
   };
@@ -285,10 +285,10 @@ export function mockLandscapeDesign(
       sunlight: req.sunExposure,
       sunlight_notes:
         req.sunExposure === "full_sun"
-          ? "Open exposure — 6+ hours direct sun expected."
+          ? "Open exposure: 6+ hours direct sun expected."
           : req.sunExposure === "shade"
-            ? "Limited direct sun — shade-tolerant plants prioritized."
-            : "Mixed light — zone plants by microclimate.",
+            ? "Limited direct sun. Shade-tolerant plants prioritized."
+            : "Mixed light. Zone plants by microclimate.",
       site_notes:
         req.notes?.trim() ||
         `${styleOpt.label} layout · ${YARD_SIZE_LABELS[req.yardSize].toLowerCase()}.`,
@@ -327,7 +327,7 @@ export function mockLandscapeDesign(
         tier: "budget",
         label: "Budget Plan",
         estimated_cost: formatCostRange(budgetBase.budget, costFactor),
-        summary: "Starter plants, mulch, basic drip — DIY weekend install.",
+        summary: "Starter plants, mulch, basic drip. DIY weekend install.",
         plant_list: recommendations.trees.slice(0, 1).concat(recommendations.shrubs.slice(0, 2)),
         highlights: ["Big-box nursery", "Mulch-heavy beds"],
       },

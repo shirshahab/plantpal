@@ -6,7 +6,7 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { VISIBILITY_OPTIONS } from "@/lib/social/constants";
 import type { FeedVisibility } from "@/lib/social/types";
-import { publishActivityEvent } from "@/lib/social/events";
+import { defaultFeedVisibility, publishActivityEvent } from "@/lib/social/events";
 import { useAuth } from "@/lib/store/auth-provider";
 import { useToast } from "@/lib/store/toast-provider";
 
@@ -29,7 +29,7 @@ export function SharePhotoDialog({
 }: SharePhotoDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [visibility, setVisibility] = useState<FeedVisibility>("friends");
+  const [visibility, setVisibility] = useState<FeedVisibility>(defaultFeedVisibility);
   const [sharing, setSharing] = useState(false);
 
   async function handleShare() {
@@ -55,7 +55,7 @@ export function SharePhotoDialog({
           body: JSON.stringify({
             plantId,
             entryType: "photo",
-            body: caption ?? `Growth photo — ${plantName}`,
+            body: caption ?? `Growth photo: ${plantName}`,
             photoUrl,
             visibility,
           }),
@@ -63,12 +63,12 @@ export function SharePhotoDialog({
         const json = (await res.json()) as { ok: boolean };
         if (!json.ok) {
           setSharing(false);
-          toast("Couldn't share that photo — please try again.");
+          toast("Couldn't share that photo. Please try again.");
           return;
         }
       } catch {
         setSharing(false);
-        toast("Couldn't share that photo — check your connection and try again.");
+        toast("Couldn't share that photo. Check your connection and try again.");
         return;
       }
     }
@@ -82,7 +82,7 @@ export function SharePhotoDialog({
     <Modal open={open} onClose={onClose} title="Share growth photo">
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          Celebrate progress with friends and family — always positive, always optional.
+          Celebrate progress with friends and family. Always positive, always optional.
         </p>
         <div className="grid grid-cols-2 gap-2">
           {VISIBILITY_OPTIONS.map((opt) => (

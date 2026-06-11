@@ -22,6 +22,8 @@ import { PlantImage } from "@/components/plants/plant-image";
 import { RemovePlantModal } from "@/components/plants/remove-plant-modal";
 import { SendFeedbackButton } from "@/components/feedback/send-feedback-button";
 import { GenerateCarePlanButton } from "@/components/ai/ai-plant-actions";
+import { Planty } from "@/components/brand/planty";
+import { RequestExpertReview } from "@/components/health/request-expert-review";
 import { GoalAwareCareSchedule } from "@/components/journey/goal-aware-care-schedule";
 import { LocalCareCard } from "@/components/climate/local-care-card";
 import { GrowthTimeline } from "@/components/growth/growth-timeline";
@@ -122,7 +124,7 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
       {plant.photoStatus === "needs_photo" && (
         <Card padding="md" className="border-amber-100 bg-amber-50/80">
           <p className="text-sm text-amber-800 font-medium">
-            No photo yet — add one when you&apos;re near this plant.
+            No photo yet. Add one when you&apos;re near this plant.
           </p>
           <Link href={`/plants/${plant.id}/edit`} className="inline-block mt-2">
             <Button variant="secondary" size="sm" className="touch-manipulation">
@@ -275,9 +277,12 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
           <Card>
             <CardHeader>
               <h2 className="text-lg font-semibold text-gray-900">PlantPal Care Plan</h2>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Personalized tips based on your plant, location, and goals.
-              </p>
+              <Planty
+                variant="thinking"
+                subtle
+                message="Here's what your plant needs next."
+                className="mt-2"
+              />
             </CardHeader>
             <CardContent>
               <GenerateCarePlanButton plant={plant} />
@@ -309,18 +314,25 @@ export function PlantDetailView({ plant, showWelcome }: PlantDetailViewProps) {
       )}
 
       {tab === "notes" && (
-        <Card padding="md">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Health notes</h2>
-          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
-            {plant.healthNotes || "No notes yet. Edit your plant to add observations."}
-          </p>
-          <Link href={`/plants/${plant.id}/edit`} className="inline-block mt-4">
-            <Button variant="outline" size="sm" className="touch-manipulation">
-              <Pencil className="w-4 h-4" />
-              Edit notes
-            </Button>
-          </Link>
-        </Card>
+        <>
+          <Card padding="md">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Health notes</h2>
+            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+              {plant.healthNotes || "No notes yet. Edit your plant to add observations."}
+            </p>
+            <Link href={`/plants/${plant.id}/edit`} className="inline-block mt-4">
+              <Button variant="outline" size="sm" className="touch-manipulation">
+                <Pencil className="w-4 h-4" />
+                Edit notes
+              </Button>
+            </Link>
+          </Card>
+          <RequestExpertReview
+            plantId={plant.id}
+            cropType={plant.species}
+            defaultDescription={plant.healthNotes ?? ""}
+          />
+        </>
       )}
 
       <RemovePlantModal

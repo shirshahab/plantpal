@@ -47,7 +47,7 @@ export function InstallPrompt() {
               <ol className="list-decimal list-inside space-y-0.5 opacity-90">
                 <li>Tap the Share button in Safari</li>
                 <li>Scroll down and tap &quot;Add to Home Screen&quot;</li>
-                <li>Tap Add — PlantPal opens like a native app</li>
+                <li>Tap Add. PlantPal opens like a native app</li>
               </ol>
             </div>
           )}

@@ -7,6 +7,7 @@ import type {
 } from "@/lib/types/care-goals";
 import { parseGallonSize } from "./plant-size";
 import { defaultCareForSpecies } from "./care-defaults";
+import { dedupeTipStrings } from "@/lib/care/dedupe-care-tips";
 
 /** Infer plant profile from species name for milestone/mission templates. */
 export function inferPlantProfile(species: string, name: string) {
@@ -79,11 +80,11 @@ export function generateGoalBasedCarePlan(
   // Size-aware care adjustments
   if (plant.plantingType === "pot") {
     wateringAdjustment.push(
-      "Container plants dry faster than in-ground — check soil moisture more often."
+      "Container plants dry faster than in-ground. Check soil moisture more often."
     );
     if (plant.potDiameterInches && plant.potDiameterInches <= 8) {
       waterDays = Math.max(waterDays - 1, 2);
-      goalSpecificTips.push("Small pot — may need water every few days in heat.");
+      goalSpecificTips.push("Small pot: may need water every few days in heat.");
     }
   }
 
@@ -92,31 +93,31 @@ export function generateGoalBasedCarePlan(
     if (gallons <= 3) {
       waterDays = Math.max(waterDays - 1, 2);
       wateringAdjustment.push(
-        `${plant.nurseryContainerSize} nursery stock — smaller root ball needs more frequent checks.`
+        `${plant.nurseryContainerSize} nursery stock: smaller root ball needs more frequent checks.`
       );
     } else if (gallons >= 15) {
       waterDays = Math.min(waterDays + 2, 14);
       wateringAdjustment.push(
-        `${plant.nurseryContainerSize} tree — deep, less frequent watering once established.`
+        `${plant.nurseryContainerSize} tree: deep, less frequent watering once established.`
       );
     }
   }
 
   if (plant.sizeType === "height" && (plant.heightFeet ?? 0) >= 4) {
-    wateringAdjustment.push("Taller specimen — deep soak to reach the full root zone.");
+    wateringAdjustment.push("Taller specimen: deep soak to reach the full root zone.");
   }
 
   if (profile === "bonsai" && plant.potDiameterInches) {
     waterDays = Math.max(waterDays - 2, 1);
     goalSpecificTips.push(
-      `Bonsai in ${plant.potDiameterInches}" pot — monitor daily; shallow soil dries quickly.`
+      `Bonsai in ${plant.potDiameterInches}" pot: monitor daily, shallow soil dries quickly.`
     );
   }
 
   if (isNewPlant && plant.plantedDate) {
     waterDays = Math.max(waterDays - 1, 2);
     wateringAdjustment.push(
-      "Newly planted — establishment watering: deep soak 2–3× per week for the first season."
+      "Newly planted. Establishment watering: deep soak 2 to 3 times per week for the first season."
     );
   }
   const climateNote =
@@ -131,10 +132,24 @@ export function generateGoalBasedCarePlan(
     waterDays = Math.min(waterDays + 1, 10);
     fertWeeks = Math.max(fertWeeks + 2, 10);
     wateringAdjustment.push(
-      "Ease up on stress — keep soil evenly moist while your plant recovers."
+      "Stabilize watering: keep soil evenly moist while your plant recovers. No swings from bone dry to soaked."
+    );
+    fertilizerAdjustment.push(
+      "Cut fertilizer back while your plant is stressed. Feeding a sick plant makes it worse."
     );
     warnings.push("Hold off on heavy pruning until health improves.");
-    goalSpecificTips.push("Do this next: inspect leaves and stems for pests or rot.");
+    warnings.push("Shield from harsh afternoon sun while recovering.");
+    goalSpecificTips.push("Inspect leaves and stems for pests or rot.");
+    goalSpecificTips.push("Watch for new growth. It's the first sign recovery is working.");
+  }
+
+  if (hasGoal(goals, "pest-recovery")) {
+    fertWeeks = Math.max(fertWeeks + 1, 8);
+    seasonalTasks.push(
+      `${seasonLabel(season)}: treat weekly with insecticidal soap or neem until pests are gone.`
+    );
+    warnings.push("Isolate this plant from its neighbors until the pests are gone.");
+    goalSpecificTips.push("Check leaf undersides and stem joints every few days. Pests hide there.");
   }
 
   if (hasGoal(goals, "low-maintenance", "drought-tolerance")) {
@@ -153,62 +168,101 @@ export function generateGoalBasedCarePlan(
     fertilizerAdjustment.push(
       "Feed lightly but regularly during active growth to support faster development."
     );
-    goalSpecificTips.push("This week's mission: check for new growth at branch tips.");
+    pruningAdjustment.push(
+      "Tip-prune leggy stems to trigger branching and fresh growth."
+    );
+    goalSpecificTips.push("Check for new growth at branch tips this week.");
+    goalSpecificTips.push("Maximize light: more light means faster growth, full stop.");
+    if (plant.plantingType === "pot") {
+      goalSpecificTips.push(
+        "Roots circling the pot? Root-bound plants stall. Size up the pot to keep growth moving."
+      );
+    }
   }
 
-  if (hasGoal(goals, "more-fruit", "bigger-fruit", "earlier-fruiting")) {
+  if (hasGoal(goals, "more-fruit", "bigger-fruit", "earlier-fruiting", "bigger-harvest")) {
     fertWeeks = Math.max(fertWeeks - 1, 4);
     fertilizerAdjustment.push(
-      "Because your goal is more fruit, increase fertilizer attention during active growth — use a potassium-rich blend before bloom."
+      "Your goal is more fruit, so feed with a potassium-rich blend before bloom."
     );
     pruningAdjustment.push(
-      "Avoid heavy pruning during bloom and fruit set — trim lightly after harvest instead."
+      "Avoid heavy pruning during bloom and fruit set. Trim lightly after harvest, and prune to keep productive fruiting wood."
     );
     seasonalTasks.push(
       `${seasonLabel(season)}: watch for flower buds and feed before fruit set.`
     );
-    goalSpecificTips.push("Track flowering stages — first buds mean you're on track.");
-    if (profile === "fruit") {
-      warnings.push("Don't let soil dry completely while fruit is forming.");
+    goalSpecificTips.push("Track flowering stages. First buds mean you're on track.");
+    goalSpecificTips.push(
+      "Help pollination along: plant pollinator flowers nearby, or hand-pollinate indoor bloomers with a soft brush."
+    );
+    warnings.push("Keep watering consistent while fruit forms. Swings cause fruit drop and split skins.");
+    if (hasGoal(goals, "bigger-harvest", "bigger-fruit")) {
+      goalSpecificTips.push(
+        "Thin crowded fruit clusters early. Fewer fruits per branch means bigger ones at harvest."
+      );
     }
   }
 
   if (hasGoal(goals, "more-flowers", "bigger-blooms", "longer-bloom-season")) {
     fertWeeks = Math.max(fertWeeks - 1, 5);
     fertilizerAdjustment.push(
-      "Use a bloom-boosting fertilizer as buds form for more and bigger flowers."
+      "Use a bloom-boosting fertilizer as buds form. Skip high-nitrogen feeds, they grow leaves instead of flowers."
     );
     pruningAdjustment.push(
-      "Deadhead spent blooms to extend the flowering season."
+      "Deadhead spent blooms, and do shaping cuts right after a bloom cycle ends."
     );
     seasonalTasks.push(`${seasonLabel(season)}: pinch tips lightly to encourage branching and buds.`);
     goalSpecificTips.push("Remove faded flowers promptly to keep new ones coming.");
+    goalSpecificTips.push("More sun, more flowers. Move it to the brightest spot it can handle.");
   }
 
   if (hasGoal(goals, "pollinator-attraction")) {
-    goalSpecificTips.push("Avoid pesticides during bloom — pollinators need open flowers.");
+    goalSpecificTips.push("Avoid pesticides during bloom. Pollinators need open flowers.");
     seasonalTasks.push("Plant companion flowers nearby to draw more pollinators.");
+  }
+
+  if (hasGoal(goals, "prune-for-growth", "prune-for-shape", "better-shape")) {
+    pruningAdjustment.push(
+      hasGoal(goals, "prune-for-growth")
+        ? "Prune with intent: cut just above outward-facing buds to trigger branching where you want it."
+        : "Shape with small, frequent cuts. One big haircut stresses the plant and ruins the silhouette."
+    );
+    seasonalTasks.push(
+      `${seasonLabel(season)}: review the Prune for Growth guide before you cut.`
+    );
+    goalSpecificTips.push("Photograph your plant before pruning so you can judge the result.");
+    warnings.push("Never remove more than a third of the plant in one session.");
+  }
+
+  if (hasGoal(goals, "learn-this-plant")) {
+    goalSpecificTips.push(
+      `Get to know ${plant.species || "this plant"}: check its care guide in the Database and watch how it responds to water and light.`
+    );
+    seasonalTasks.push("Take a weekly photo. You'll learn this plant faster by comparing weeks.");
   }
 
   if (hasGoal(goals, "bonsai-training", "trunk-thickening", "styling-development", "show-preparation")) {
     fertWeeks = Math.min(fertWeeks + 2, 12);
     waterDays = Math.min(waterDays + 1, 10);
     fertilizerAdjustment.push(
-      "Because your goal is bonsai training, use lighter fertilizer — strength over speed."
+      "Your goal is bonsai training, so use lighter, controlled feeding. Strength over speed."
     );
     pruningAdjustment.push(
-      "Schedule wiring and pruning windows — spring and early summer are prime times."
+      "Schedule wiring, shape pruning, and root-prune/repot cycles. Spring and early summer are prime windows."
     );
     seasonalTasks.push(`${seasonLabel(season)}: check wire tension and remove if biting in.`);
-    goalSpecificTips.push("Do this next: photograph your tree from all angles to track styling progress.");
+    goalSpecificTips.push("Photograph your tree from all angles to track styling progress.");
     if (hasGoal(goals, "trunk-thickening")) {
       goalSpecificTips.push("Let sacrifice branches run to thicken the trunk, then cut back.");
     }
   }
 
   if (hasGoal(goals, "privacy-screen", "more-shade")) {
-    pruningAdjustment.push("Shape lightly — let height and width develop for coverage.");
+    pruningAdjustment.push(
+      "Hedge-prune lightly and often: trim sides to stay dense, control height once it reaches your target."
+    );
     goalSpecificTips.push("Space plants for mature width to avoid overcrowding.");
+    goalSpecificTips.push("Keep the base wider than the top so lower growth stays full.");
   }
 
   if (hasGoal(goals, "organic-care")) {
@@ -217,19 +271,19 @@ export function generateGoalBasedCarePlan(
   }
 
   if (hasGoal(goals, "repot-later")) {
-    soilAdjustment.push("Plan repotting for early spring — refresh soil and check roots.");
+    soilAdjustment.push("Plan repotting for early spring: refresh soil and check roots.");
     if (isNewPlant) {
-      warnings.push("New plants often need 2–4 weeks to settle before repotting.");
+      warnings.push("New plants often need 2 to 4 weeks to settle before repotting.");
     }
   }
 
   if (hasGoal(goals, "pest-prevention", "reduce-leaf-drop")) {
     seasonalTasks.push(`${seasonLabel(season)}: inspect undersides of leaves for pests.`);
-    goalSpecificTips.push("Stable watering reduces indoor leaf drop — avoid swings wet to dry.");
+    goalSpecificTips.push("Stable watering reduces indoor leaf drop. Avoid swings from wet to dry.");
   }
 
   if (hasGoal(goals, "better-leaf-color")) {
-    fertilizerAdjustment.push("Ensure adequate light and micronutrients — iron or Epsom salt if leaves pale.");
+    fertilizerAdjustment.push("Ensure adequate light and micronutrients. Try iron or Epsom salt if leaves pale.");
     goalSpecificTips.push("Rotate the pot weekly for even light and color.");
   }
 
@@ -241,22 +295,33 @@ export function generateGoalBasedCarePlan(
   goalSpecificTips.push(`Care tuned for ZIP ${zipCode} (${climateNote}).`);
 
   if (isNewPlant) {
-    warnings.push("New plant — go easy for the first two weeks while roots settle.");
+    warnings.push("New plant. Go easy for the first two weeks while roots settle.");
   }
 
+  // Two goals can produce the same advice. Show each tip once.
+  const dedupedSeasonal = dedupeTipStrings(seasonalTasks, "seasonal");
+  const dedupedWarnings = dedupeTipStrings(warnings, "general");
+  const dedupedTips = dedupeTipStrings(goalSpecificTips, "general");
+
   return {
-    wateringAdjustment: wateringAdjustment.join(" ") || "Stick to your base watering rhythm.",
+    wateringAdjustment:
+      dedupeTipStrings(wateringAdjustment, "watering").join(" ") ||
+      "Stick to your base watering rhythm.",
     fertilizerAdjustment:
-      fertilizerAdjustment.join(" ") || "Follow your regular feeding schedule.",
+      dedupeTipStrings(fertilizerAdjustment, "fertilizing").join(" ") ||
+      "Follow your regular feeding schedule.",
     pruningAdjustment:
-      pruningAdjustment.join(" ") || `Prune on schedule: ${pruneSchedule}.`,
-    soilAdjustment: soilAdjustment.join(" ") || "Use well-draining soil suited to your plant.",
+      dedupeTipStrings(pruningAdjustment, "pruning").join(" ") ||
+      `Prune on schedule: ${pruneSchedule}.`,
+    soilAdjustment:
+      dedupeTipStrings(soilAdjustment, "soil").join(" ") ||
+      "Use well-draining soil suited to your plant.",
     seasonalTasks:
-      seasonalTasks.length > 0
-        ? seasonalTasks
+      dedupedSeasonal.length > 0
+        ? dedupedSeasonal
         : [`${seasonLabel(season)}: walk your garden and note new growth.`],
-    warnings,
-    goalSpecificTips,
+    warnings: dedupedWarnings,
+    goalSpecificTips: dedupedTips,
     waterFrequencyDays: waterDays,
     fertilizeFrequencyWeeks: fertWeeks,
     pruneSchedule,
@@ -315,7 +380,7 @@ export function generateMilestonesForPlant(
     templates.push(
       { title: "Establish roots", description: "Plant settles in and roots spread.", daysOffset: 30 },
       { title: "First flush of new growth", description: "Fresh leaves or shoots appear.", daysOffset: 60 },
-      { title: "First flower set", description: "Flower buds form — fruit is on the way.", daysOffset: 180 },
+      { title: "First flower set", description: "Flower buds form. Fruit is on the way.", daysOffset: 180 },
       { title: "First fruit set", description: "Small fruit holds on the branch.", daysOffset: 240 },
       { title: "First harvest", description: "Pick your first ripe fruit.", daysOffset: 365 }
     );
@@ -378,7 +443,7 @@ export function generateMissionsForPlant(
     plantId,
     userId,
     title: `Check soil moisture on ${plant.name}`,
-    description: "Stick a finger in the soil — water only if the top inch is dry.",
+    description: "Stick a finger in the soil. Water only if the top inch is dry.",
     season,
     taskType: "water",
     rewardPoints: 10,
@@ -433,7 +498,7 @@ export function generateMissionsForPlant(
       plantId,
       userId,
       title: `Review wiring on ${plant.name}`,
-      description: "Check that wire isn't cutting into bark — adjust or remove.",
+      description: "Check that wire isn't cutting into bark. Adjust or remove.",
       season,
       taskType: "prune",
       rewardPoints: 18,

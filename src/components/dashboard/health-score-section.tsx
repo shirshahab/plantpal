@@ -20,7 +20,7 @@ export function DashboardHealthScore({ health, plants }: DashboardHealthScorePro
 
   const statusLine =
     needsAttention === 0
-      ? "Your garden is thriving — keep up the great care!"
+      ? "Your garden is thriving. Keep up the great care!"
       : needsAttention === 1
         ? "Your garden is healthy, but 1 plant needs attention."
         : `Your garden is healthy, but ${needsAttention} plants need attention.`;

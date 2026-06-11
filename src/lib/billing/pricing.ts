@@ -46,7 +46,7 @@ export const PLAN_INCLUDES: Record<AccountTier, string[]> = {
     "Unlimited plants",
     "Advanced diagnosis (Plant Doctor)",
     "Garden Designer",
-    "Full Academy — all learning paths",
+    "Full Academy: all learning paths",
     "Seasonal courses",
     "Export care reports",
     "Climate intelligence & Price Checker",

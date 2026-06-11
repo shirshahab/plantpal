@@ -23,11 +23,17 @@ function notifyChanged(): void {
 
 export interface ExpertReviewRequest {
   id: string;
-  healthReportId: string;
+  /** Linked pro health report, if the request came from one. */
+  healthReportId: string | null;
   plantId: string | null;
   urgency: "low" | "medium" | "high";
+  /** What the user is seeing, in their words. */
   notes: string;
-  status: "pending";
+  /** e.g. "citrus", "houseplant". Helps route to the right expert later. */
+  cropType?: string;
+  /** Photo URLs or data refs attached to the request. */
+  photos?: string[];
+  status: "pending" | "reviewing" | "answered" | "closed";
   createdAt: string;
 }
 
@@ -234,6 +240,9 @@ async function syncExpertRequestToSupabase(
       plant_id: request.plantId,
       urgency: request.urgency,
       notes: request.notes,
+      description: request.notes,
+      crop_type: request.cropType ?? null,
+      photos: request.photos ?? [],
       status: request.status,
       created_at: request.createdAt,
     });

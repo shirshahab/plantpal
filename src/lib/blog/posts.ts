@@ -41,6 +41,26 @@ export interface BlogPost {
   intro: string;
   sections: BlogSection[];
   faqs: BlogFaq[];
+  /** Optional one-liner for the "Planty says" tip box. Falls back to a rotating default. */
+  plantyTip?: string;
+}
+
+/** Default Planty lines for posts without a custom tip. Picked by slug. */
+export const PLANTY_BLOG_TIPS = [
+  "Yellow leaves are not a personality trait. Check the soil first.",
+  "Check the soil before you panic.",
+  "Your plant is being dramatic. It usually just wants consistent water.",
+  "That leaf is trying to tell us something. Look at the underside too.",
+  "Water less than you think, more consistently than you do.",
+];
+
+export function getPlantyTipForPost(post: BlogPost): string {
+  if (post.plantyTip) return post.plantyTip;
+  let hash = 0;
+  for (let i = 0; i < post.slug.length; i++) {
+    hash = (hash * 31 + post.slug.charCodeAt(i)) | 0;
+  }
+  return PLANTY_BLOG_TIPS[Math.abs(hash) % PLANTY_BLOG_TIPS.length];
 }
 
 const POSTS: BlogPost[] = [
@@ -55,6 +75,7 @@ const POSTS: BlogPost[] = [
     tags: ["yellow leaves", "diagnosis", "watering", "houseplants"],
     intro:
       "Yellow leaves are your plant filing a complaint. The good news: most complaints fall into three buckets. Water, light, or food. Here's how to figure out which one you're dealing with.",
+    plantyTip: "Yellow leaves are not a personality trait. Check the soil first.",
     sections: [
       {
         heading: "Check the watering first",

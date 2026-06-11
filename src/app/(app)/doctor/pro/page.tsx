@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { ProDoctorClient } from "@/components/health/pro-doctor-client";
 
 export const metadata = {
-  title: "Advanced Plant Doctor — PlantPal",
+  title: "Advanced Plant Doctor | PlantPal",
 };
 
 export default function ProDoctorPage() {

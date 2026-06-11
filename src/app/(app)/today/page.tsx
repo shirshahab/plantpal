@@ -37,7 +37,7 @@ export default function TodayPage() {
         description={
           totalPending > 0
             ? `${groups.overdue.length + groups.dueToday.length} tasks need attention`
-            : "You're all caught up — nice work!"
+            : "You're all caught up. Nice work!"
         }
         action={
           <div className="flex items-center gap-2">
@@ -69,7 +69,7 @@ export default function TodayPage() {
           {groups.overdue.length > 0 && (
             <Card padding="md" className="bg-amber-50 border-amber-100">
               <p className="text-sm font-medium text-amber-800">
-                {groups.overdue.length} task{groups.overdue.length !== 1 ? "s" : ""} waiting from earlier — a quick catch-up and you&apos;re set.
+                {groups.overdue.length} task{groups.overdue.length !== 1 ? "s" : ""} waiting from earlier. A quick catch-up and you&apos;re set.
               </p>
             </Card>
           )}
@@ -122,7 +122,7 @@ export default function TodayPage() {
               icon="✨"
               compact
               title="You're clear today"
-              description="No tasks due — enjoy your garden or check the calendar for what's coming up."
+              description="No tasks due. Enjoy your garden or check the calendar for what's coming up."
               actionLabel="View Calendar"
               actionHref="/calendar"
             />

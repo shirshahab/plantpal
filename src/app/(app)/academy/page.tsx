@@ -28,7 +28,7 @@ export default function AcademyPage() {
     <div className="space-y-8 pb-8">
       <PageHeader
         title="PlantPal Academy"
-        description="Level up your gardening skills — one fun lesson at a time."
+        description="Level up your gardening skills, one fun lesson at a time."
         action={
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <SendFeedbackButton />

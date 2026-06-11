@@ -31,7 +31,7 @@ export function SpeciesAutocomplete({
   onTextChange,
   onSelect,
   label = "Species",
-  placeholder = "Start typing — e.g. Bougainvillea, Meyer Lemon…",
+  placeholder = "Start typing, e.g. Bougainvillea, Meyer Lemon…",
 }: {
   value: string;
   onTextChange: (text: string) => void;

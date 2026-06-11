@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { VISIBILITY_OPTIONS } from "@/lib/social/constants";
 import type { FeedVisibility, PlantJournalEntry } from "@/lib/social/types";
-import { relativeSocialTime } from "@/lib/social/events";
+import { defaultFeedVisibility, relativeSocialTime } from "@/lib/social/events";
 import { useToast } from "@/lib/store/toast-provider";
 
 const MILESTONES = [
@@ -27,7 +27,7 @@ export function PlantJournalTab({ plantId, plantName }: PlantJournalTabProps) {
   const { toast } = useToast();
   const [entries, setEntries] = useState<PlantJournalEntry[]>([]);
   const [note, setNote] = useState("");
-  const [visibility, setVisibility] = useState<FeedVisibility>("friends");
+  const [visibility, setVisibility] = useState<FeedVisibility>(defaultFeedVisibility);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -66,10 +66,10 @@ export function PlantJournalTab({ plantId, plantName }: PlantJournalTabProps) {
         setNote("");
         toast(entryType === "milestone" ? "Milestone shared!" : "Journal entry saved.");
       } else {
-        toast("Couldn't save that entry — please try again.");
+        toast("Couldn't save that entry. Please try again.");
       }
     } catch {
-      toast("Couldn't save that entry — check your connection and try again.");
+      toast("Couldn't save that entry. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ export function PlantJournalTab({ plantId, plantName }: PlantJournalTabProps) {
             <h2 className="text-lg font-semibold text-gray-900">{plantName} Journal</h2>
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            Photos, notes, and milestones — shared with your circle when you choose.
+            Photos, notes, and milestones, shared with your circle when you choose.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">

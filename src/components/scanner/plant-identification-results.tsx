@@ -73,7 +73,7 @@ export function PlantIdentificationResults({
               className="w-full touch-manipulation border-amber-300"
               onClick={onAcknowledgeLowConfidence}
             >
-              I understand — show save option
+              I understand, show save option
             </Button>
           )}
         </div>

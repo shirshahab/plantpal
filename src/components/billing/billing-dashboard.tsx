@@ -147,7 +147,7 @@ export function BillingDashboard() {
 
           {betaUnlockAll && (
             <p className="text-sm text-amber-800 bg-amber-50 rounded-xl px-4 py-3">
-              Beta / founder access — limits are bypassed for testing.
+              Beta / founder access. Limits are bypassed for testing.
             </p>
           )}
         </CardContent>
@@ -180,7 +180,7 @@ export function BillingDashboard() {
           {tier === "free" && !betaUnlockAll && (
             <Link href="/upgrade">
               <Button className="w-full touch-manipulation">
-                Upgrade to PlantPal Pro — ${PRO_MONTHLY_PRICE.toFixed(2)}/mo
+                Upgrade to PlantPal Pro: ${PRO_MONTHLY_PRICE.toFixed(2)}/mo
               </Button>
             </Link>
           )}

@@ -14,7 +14,7 @@ export const BUYING_GUIDES: BuyingGuideDetail[] = [
     picks: ["Meyer lemon", "Hass avocado", "Fuerte avocado (pollinator)", "Peach (low-chill)", "Fig"],
     productIds: ["prod-meyer-lemon", "prod-hass-avocado", "prod-citrus-soil", "prod-citrus-fert"],
     plantPicks: [
-      { name: "Meyer Lemon", why: "Compact, productive, zones 8–11 — ideal patio tree.", zone: "8–11" },
+      { name: "Meyer Lemon", why: "Compact, productive, zones 8–11. Ideal patio tree.", zone: "8–11" },
       { name: "Hass Avocado", why: "Best home-garden avocado in frost-free areas.", zone: "9–11" },
       { name: "Brown Turkey Fig", why: "Forgiving, handles heat, fruits twice in warm climates.", zone: "7–10" },
     ],
@@ -26,13 +26,13 @@ export const BUYING_GUIDES: BuyingGuideDetail[] = [
     description: "Plants that forgive missed waterings and need minimal pruning.",
     icon: "🌵",
     intro:
-      "Low maintenance does not mean zero care — it means plants that tolerate irregular attention and local climate without constant intervention.",
+      "Low maintenance does not mean zero care. It means plants that tolerate irregular attention and local climate without constant intervention.",
     picks: ["Lavender", "Rosemary", "Snake plant", "Olive (dwarf)", "Agave (accent)"],
     productIds: ["prod-lavender", "prod-snake-plant", "prod-drip-kit"],
     plantPicks: [
       { name: "Lavender", why: "Drought-tolerant once established; full sun.", zone: "5–10" },
       { name: "Rosemary", why: "Edible, aromatic, handles heat and poor soil.", zone: "7–10" },
-      { name: "Snake Plant", why: "Indoor champion — water monthly in winter.", zone: "Indoor" },
+      { name: "Snake Plant", why: "Indoor champion. Water monthly in winter.", zone: "Indoor" },
     ],
   },
   {
@@ -58,7 +58,7 @@ export const BUYING_GUIDES: BuyingGuideDetail[] = [
     description: "Understory and north-side plants for limited direct sun.",
     icon: "🌿",
     intro:
-      "Shade does not mean dark — most 'shade' plants want bright indirect light or morning sun. Match plants to hours of direct exposure.",
+      "Shade does not mean dark. Most 'shade' plants want bright indirect light or morning sun. Match plants to hours of direct exposure.",
     picks: ["Hosta", "Ferns", "Japanese maple", "Hydrangea", "Snake plant (low light)"],
     productIds: ["prod-shade-hosta", "prod-snake-plant"],
     plantPicks: [
@@ -74,7 +74,7 @@ export const BUYING_GUIDES: BuyingGuideDetail[] = [
     description: "Drainage-first mixes for containers and in-ground planting.",
     icon: "🪴",
     intro:
-      "Citrus roots hate wet feet. Use fast-draining, slightly acidic mix — never heavy clay or moisture-retaining lawn soil.",
+      "Citrus roots hate wet feet. Use fast-draining, slightly acidic mix, never heavy clay or moisture-retaining lawn soil.",
     picks: ["Citrus planting mix", "Perlite amendment", "Pumice top-dress"],
     productIds: ["prod-citrus-soil", "prod-air-pot"],
     plantPicks: [],
@@ -86,7 +86,7 @@ export const BUYING_GUIDES: BuyingGuideDetail[] = [
     description: "Feeding schedules and formulas for Hass and Fuerte trees.",
     icon: "🥑",
     intro:
-      "Avocados need nitrogen plus micronutrients (zinc, manganese). Feed lightly and often during active growth — not when stressed or dry.",
+      "Avocados need nitrogen plus micronutrients (zinc, manganese). Feed lightly and often during active growth, not when stressed or dry.",
     picks: ["Avocado-specific granular", "Liquid kelp supplement", "Compost top-dress"],
     productIds: ["prod-avocado-fert", "prod-citrus-fert"],
     plantPicks: [],

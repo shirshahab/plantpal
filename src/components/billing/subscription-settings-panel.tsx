@@ -57,10 +57,10 @@ export function SubscriptionSettingsPanel() {
               <h2 className="font-semibold text-gray-900">Subscription</h2>
               <p className="text-sm text-gray-500">
                 {founderMode
-                  ? "Founder Mode Active — all features unlocked"
+                  ? "Founder Mode Active: all features enabled"
                   : betaUnlockAll
-                    ? "Beta Access Enabled — all features unlocked"
-                    : "Preview mode — no billing yet"}
+                    ? "Beta Access Enabled: all features available"
+                    : "Preview mode: no billing yet"}
               </p>
             </div>
           </div>
@@ -160,8 +160,8 @@ export function SubscriptionSettingsPanel() {
           {betaUnlockAll && (
             <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 leading-relaxed">
               {founderMode && !isBetaUnlockAll()
-                ? "Founder Mode is enabled — full access stored locally for testing."
-                : "BETA_UNLOCK_ALL is enabled — upgrade prompts are hidden for testers."}
+                ? "Founder Mode is enabled. Full access stored locally for testing."
+                : "BETA_UNLOCK_ALL is enabled. Upgrade prompts are hidden for testers."}
             </p>
           )}
         </CardContent>

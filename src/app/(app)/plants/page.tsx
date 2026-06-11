@@ -41,7 +41,7 @@ export default function PlantsPage() {
         <EmptyState
           icon="🌿"
           title="Let's add your first plant."
-          description="Build your collection — each plant gets its own care schedule and journey."
+          description="Build your collection. Each plant gets its own care schedule and journey."
           actionLabel="Scan Plant"
           actionHref="/scanner"
           secondaryLabel="Add Plant Manually"

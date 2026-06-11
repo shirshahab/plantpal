@@ -61,7 +61,7 @@ export const UPGRADE_COPY: Record<
 > = {
   plant_limit: {
     title: "You have reached the free limit of 25 plants.",
-    message: "Unlock unlimited plants with PlantPal Pro.",
+    message: "Get unlimited plants with PlantPal Pro.",
     lockLabel: "Pro Feature",
   },
   scan_limit: {
@@ -75,7 +75,7 @@ export const UPGRADE_COPY: Record<
     lockLabel: "Pro Feature",
   },
   unlimited_plants: {
-    title: "Unlock unlimited plants.",
+    title: "Get unlimited plants.",
     message: "Track every tree, pot, and bed with PlantPal Pro.",
     lockLabel: "Pro Feature",
   },
@@ -171,7 +171,7 @@ export const UPGRADE_COPY: Record<
   },
   full_academy: {
     title: "Full Academy",
-    message: "Unlock every learning path with PlantPal Pro.",
+    message: "Get every learning path with PlantPal Pro.",
     lockLabel: "Pro Feature",
   },
   advanced_diagnosis: {
@@ -205,7 +205,7 @@ export function getUpgradeCopy(feature: string) {
   const copy = UPGRADE_COPY[feature as keyof typeof UPGRADE_COPY];
   if (copy) return copy;
   return {
-    title: "Upgrade to unlock",
+    title: "Upgrade for full access",
     message: "This feature requires a paid plan.",
     lockLabel: getFeatureLockLabel(feature),
   };

@@ -60,7 +60,7 @@ export default function NotificationsSettingsPage() {
       : settings.notificationPermission === "granted"
         ? "Enabled"
         : settings.notificationPermission === "denied"
-          ? "Blocked — enable in browser settings"
+          ? "Blocked. Enable in browser settings"
           : "Not requested yet";
 
   const sendTest = async () => {
@@ -106,7 +106,7 @@ export default function NotificationsSettingsPage() {
                 <p className="font-semibold text-gray-900">Pause all notifications</p>
                 <p className="text-sm text-gray-500">
                   {paused
-                    ? "Notifications are paused — nothing will be generated or sent."
+                    ? "Notifications are paused. Nothing will be generated or sent."
                     : "One switch to silence reminders, alerts, and digests."}
                 </p>
               </div>
@@ -143,7 +143,7 @@ export default function NotificationsSettingsPage() {
       <Card padding="none">
         <CardHeader className="px-4 pt-4 pb-0">
           <h2 className="font-semibold text-gray-900">Care reminders</h2>
-          <p className="text-sm text-gray-500">Capped at 3 per day — no spam</p>
+          <p className="text-sm text-gray-500">Capped at 3 per day. No spam</p>
         </CardHeader>
         <CardContent className="divide-y divide-gray-50 px-4">
           <ToggleRow
@@ -263,7 +263,7 @@ export default function NotificationsSettingsPage() {
                 Send test notification
               </Button>
               {testStatus === "sent" && (
-                <p className="text-sm text-green-700">Test sent — check your notifications.</p>
+                <p className="text-sm text-green-700">Test sent. Check your notifications.</p>
               )}
               {testStatus === "failed" && (
                 <p className="text-sm text-red-600">

@@ -43,7 +43,7 @@ export default function IntegrationsSettingsPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
         title="Integrations"
-        description="Live API status — keys are never shown, only whether each service is configured and reachable."
+        description="Live API status. Keys are never shown, only whether each service is configured and reachable."
         action={
           <Link href="/settings">
             <Button variant="ghost" size="sm">

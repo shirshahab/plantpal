@@ -74,8 +74,8 @@ export function TrophyBadgeCard({
       {unlocked && (
         <span className="mt-2 text-[10px] font-semibold uppercase text-brand-primary">
           {unlockedAt
-            ? `Unlocked ${new Date(unlockedAt).toLocaleDateString()}`
-            : "Unlocked"}
+            ? `Earned ${new Date(unlockedAt).toLocaleDateString()}`
+            : "Earned"}
         </span>
       )}
     </div>

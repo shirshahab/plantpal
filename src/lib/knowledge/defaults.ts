@@ -19,7 +19,7 @@ export function defaultPollinatorValue(type: PlantSpeciesType): string {
   const map: Record<PlantSpeciesType, string> = {
     tree: "Many fruit and flowering trees support bees, butterflies, and birds when in bloom",
     shrub: "Flowering shrubs often attract bees and hummingbirds during bloom season",
-    flower: "High pollinator value — nectar and pollen for bees, butterflies, and hummingbirds",
+    flower: "High pollinator value: nectar and pollen for bees, butterflies, and hummingbirds",
     vegetable: "Flowers and herbs nearby boost pollination for fruiting crops",
     herb: "Many herbs (basil, lavender, thyme) are excellent pollinator magnets when flowering",
     indoor: "Limited outdoor pollinator value; flowering indoor plants rarely attract wild pollinators",
@@ -49,7 +49,7 @@ export function defaultFruitingInfo(type: PlantSpeciesType, commonName: string):
     return "Produces edible fruit when mature; timing varies by climate and cultivar";
   }
   const map: Record<PlantSpeciesType, string> = {
-    tree: "Fruiting varies by species — check if ornamental or edible fruiting type",
+    tree: "Fruiting varies by species. Check if ornamental or edible fruiting type",
     shrub: "Some shrubs produce berries or edible fruit; many are ornamental only",
     flower: "Typically grown for blooms, not fruit",
     vegetable: "Harvest fruit or edible parts at peak ripeness for best flavor",
@@ -57,7 +57,7 @@ export function defaultFruitingInfo(type: PlantSpeciesType, commonName: string):
     indoor: "Rarely fruits indoors unless given ideal light and pollination",
     succulent: "Some produce edible fruit (e.g. prickly pear); many are ornamental",
     vine: "Many vines produce grapes, berries, or gourds when properly pollinated",
-    grass: "Ornamental — not typically grown for edible grain in home gardens",
+    grass: "Ornamental, not typically grown for edible grain in home gardens",
   };
   return map[type] ?? "Not primarily grown for fruit.";
 }
@@ -65,7 +65,7 @@ export function defaultFruitingInfo(type: PlantSpeciesType, commonName: string):
 export function defaultFloweringInfo(type: PlantSpeciesType): string {
   const map: Record<PlantSpeciesType, string> = {
     tree: "Spring to early summer bloom typical; some species flower in fall",
-    shrub: "Seasonal bloom — spring or summer depending on species",
+    shrub: "Seasonal bloom: spring or summer depending on species",
     flower: "Peak bloom in warm season; deadhead to extend flowering",
     vegetable: "Many vegetables flower before fruit set; bolting ends harvest quality",
     herb: "Allow some herbs to flower for pollinators; pinch basil to delay bloom",
@@ -91,8 +91,8 @@ export function enrichPlantSpecies(
     description:
       species.description ??
       `${species.common_name} (${species.scientific_name}) is a popular ${species.type} for home gardeners.`,
-    sunlight: species.sunlight ?? "Varies — see care guide",
-    watering: species.watering ?? "Varies — see care guide",
+    sunlight: species.sunlight ?? "Varies, see care guide",
+    watering: species.watering ?? "Varies, see care guide",
     soil_preference: species.soil_preference ?? "Well-draining soil",
     hardiness_zone_min: species.hardiness_zone_min ?? 5,
     hardiness_zone_max: species.hardiness_zone_max ?? 9,

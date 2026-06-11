@@ -60,8 +60,8 @@ export function BetaFeedbackForm({
     return (
       <p className={cn("text-sm text-green-600 bg-green-50 rounded-xl px-4 py-3", className)}>
         {sent === "supabase"
-          ? "Thanks — your feedback was sent to the team."
-          : "Thanks — saved on this device. It will be sent when you're back online."}
+          ? "Thanks. Your feedback was sent to the team."
+          : "Thanks. Saved on this device. It will be sent when you're back online."}
       </p>
     );
   }
@@ -166,7 +166,7 @@ export function SendFeedbackButton({
               </button>
             </div>
             <p className="text-sm text-gray-500 mb-4">
-              Help us improve the beta — we read every note.
+              Help us improve the beta. We read every note.
             </p>
             <BetaFeedbackForm
               defaultCategory={defaultCategory}

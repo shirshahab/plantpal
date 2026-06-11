@@ -64,7 +64,7 @@ function PlantGenomeContent({ plant }: { plant: Plant }) {
             <IntelligenceScoreBadge score={genome.intelligenceScore} />
           </div>
           <p className="text-xs text-indigo-700/80 mt-3 leading-relaxed">
-            Living digital twin — updates from completed tasks, missed care, health scans, growth
+            Living digital twin. Updates from completed tasks, missed care, health scans, growth
             photos, weather alerts, and your plant goals. Growth forecasting ready.
           </p>
         </CardHeader>

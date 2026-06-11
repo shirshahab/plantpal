@@ -121,7 +121,7 @@ export default function AcademyPathPage({
         <Card padding="md" className="border-brand-primary bg-green-50 text-center">
           <p className="text-lg font-semibold text-brand-primary">Path complete!</p>
           <p className="text-sm text-gray-600 mt-1">
-            Certificate earned — view it in your Trophy Room.
+            Certificate earned. View it in your Trophy Room.
           </p>
           <Link href="/academy/trophies" className="text-sm text-brand-primary font-medium mt-2 inline-block">
             View certificates →

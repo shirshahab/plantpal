@@ -171,7 +171,7 @@ function getRecommendation(
   if (condition === "wilting" || condition === "root_bound") {
     return {
       recommendation: "Needs Inspection",
-      text: "Inspect roots and overall health in person before buying — condition flags reduce value.",
+      text: "Inspect roots and overall health in person before buying. Condition flags reduce value.",
     };
   }
   if (condition === "yellow_leaves") {
@@ -191,7 +191,7 @@ function mockPhotoInspection(): PhotoInspection {
     visibleLeaves: "healthy",
     structure: "acceptable",
     risk: "medium",
-    recommendation: "Inspect roots before buying — photo inspection is limited.",
+    recommendation: "Inspect roots before buying. Photo inspection is limited.",
     comingSoon: true,
   };
 }
@@ -227,7 +227,7 @@ export function checkPlantPrice(input: PriceCheckInput): PriceCheckResult {
     tiers: [
       { label: "Budget", range: `Under $${budgetHi}`, description: "Big box / sale pricing" },
       { label: "Fair", range: `$${fairLo} to $${fairHi}`, description: "Typical local nursery range" },
-      { label: "Expensive", range: `$${expensiveLo} to $${premiumLo - 1}`, description: "Above average — needs justification" },
+      { label: "Expensive", range: `$${expensiveLo} to $${premiumLo - 1}`, description: "Above average, needs justification" },
       { label: "Premium", range: `$${premiumLo}+`, description: "Specimen / specialty nursery" },
     ],
     bigBoxLabel: formatRange(pricing.bigBoxRange),

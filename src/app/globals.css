@@ -11,6 +11,18 @@
   --brand-text-secondary: #6b7280;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Global app-page bottom clearance: bottom nav + raised center button +
+     floating action + device safe area + breathing room. Keeps the last row
+     of every scrollable app page above the fixed bottom chrome. */
+  --app-bottom-nav-height: 92px;
+  --app-floating-action-height: 96px;
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-page-bottom-padding: calc(
+    var(--app-bottom-nav-height) +
+    var(--app-floating-action-height) +
+    var(--app-safe-bottom) +
+    40px
+  );
 }
 
 @theme inline {
@@ -45,6 +57,19 @@ body {
 
 .safe-bottom {
   padding-bottom: var(--safe-bottom);
+}
+
+/* Bottom padding for the main app content area. Mobile gets full clearance
+   for the fixed bottom nav stack; desktop (sidebar layout, no bottom nav)
+   only needs normal page padding. */
+.app-page-bottom {
+  padding-bottom: var(--app-page-bottom-padding);
+}
+
+@media (min-width: 768px) {
+  .app-page-bottom {
+    padding-bottom: 2rem;
+  }
 }
 
 .page-enter {

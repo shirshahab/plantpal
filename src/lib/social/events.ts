@@ -8,6 +8,7 @@ import type {
   SocialNotification,
 } from "./types";
 import { EVENT_EMOJI } from "./constants";
+import { loadUserProfile } from "@/lib/profile/user-profile";
 
 const FEED_KEY = "plantpal-social-feed";
 const FRIENDS_KEY = "plantpal-social-friends";
@@ -94,13 +95,24 @@ export interface PublishEventInput {
   actorName?: string;
 }
 
+/**
+ * The user's default sharing level from settings. Privacy first:
+ * if they never chose one, activity stays private.
+ */
+export function defaultFeedVisibility(): FeedVisibility {
+  const level = loadUserProfile().socialSharing ?? "private";
+  if (level === "local") return "circle";
+  return level;
+}
+
 /** Publish activity to API (Supabase) with localStorage fallback. */
 export async function publishActivityEvent(input: PublishEventInput): Promise<void> {
+  const visibility = input.visibility ?? defaultFeedVisibility();
   const body = {
     eventType: input.eventType,
     title: input.title,
     body: input.body ?? "",
-    visibility: input.visibility ?? "friends",
+    visibility,
     groupId: input.groupId ?? null,
     payload: input.payload ?? {},
     emoji: EVENT_EMOJI[input.eventType],
@@ -109,7 +121,7 @@ export async function publishActivityEvent(input: PublishEventInput): Promise<vo
   appendLocalFeedEvent({
     userId: input.userId,
     eventType: input.eventType,
-    visibility: input.visibility ?? "friends",
+    visibility,
     groupId: input.groupId ?? null,
     title: input.title,
     body: input.body ?? "",
@@ -162,5 +174,5 @@ export function formatFeedLine(actorName: string, title: string): string {
   ) {
     return `${actorName} ${trimmed}`;
   }
-  return `${actorName} — ${trimmed}`;
+  return `${actorName}: ${trimmed}`;
 }

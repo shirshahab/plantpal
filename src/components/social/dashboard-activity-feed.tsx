@@ -53,13 +53,15 @@ export function DashboardActivityFeed() {
       ) : events.length === 0 ? (
         <Card padding="md" className="text-center">
           <p className="text-2xl mb-1">🌻</p>
-          <p className="text-sm font-medium text-gray-900">Grow with friends and family.</p>
+          <p className="text-sm font-medium text-gray-900">
+            Plants are more fun when other people are also trying not to kill them.
+          </p>
           <p className="text-xs text-gray-500 mt-1">
-            See their garden wins, share yours, and grow together.
+            Add friends to see their garden wins, share yours, and keep each other honest.
           </p>
           <Link href="/invite" className="inline-block mt-3">
             <Button size="sm" className="touch-manipulation">
-              Invite someone <ArrowRight className="w-3.5 h-3.5" />
+              Invite a friend <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </Card>
@@ -71,9 +73,9 @@ export function DashboardActivityFeed() {
         </div>
       )}
 
-      <Link href="/activity" className="inline-block mt-3">
+      <Link href="/feed" className="inline-block mt-3 w-full">
         <Button variant="outline" size="sm" className="w-full touch-manipulation">
-          View all activity
+          View the full feed
         </Button>
       </Link>
     </section>

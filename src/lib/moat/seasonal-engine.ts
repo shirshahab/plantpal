@@ -61,7 +61,7 @@ export function generateSeasonalTasks(input: {
       {
         id: "s-aphid-watch",
         title: "Watch for aphids",
-        description: "Check new growth on roses and citrus — blast with water early.",
+        description: "Check new growth on roses and citrus. Blast with water early.",
         horizon: "week",
         category: "pest",
         priority: "high",

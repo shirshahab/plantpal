@@ -44,7 +44,7 @@ export function AiDoctorDisplay({
 
       {report.needs_professional_help && (
         <p className="text-sm text-amber-800 bg-amber-50 rounded-lg px-3 py-2">
-          Based on your inputs, this may need a local nursery or extension office — check
+          Based on your inputs, this may need a local nursery or extension office. Check
           this first if things worsen quickly.
         </p>
       )}

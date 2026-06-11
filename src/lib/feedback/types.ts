@@ -3,6 +3,7 @@ export type BetaFeedbackCategory =
   | "confusing"
   | "wrong_plant_result"
   | "missing_feature"
+  | "support"
   | "love_this";
 
 export interface BetaFeedbackCategoryOption {
@@ -12,10 +13,11 @@ export interface BetaFeedbackCategoryOption {
 }
 
 export const BETA_FEEDBACK_CATEGORIES: BetaFeedbackCategoryOption[] = [
-  { id: "bug", label: "Bug", emoji: "🐛" },
+  { id: "bug", label: "Report a bug", emoji: "🐛" },
+  { id: "missing_feature", label: "Request a feature", emoji: "💡" },
+  { id: "support", label: "Contact support", emoji: "💬" },
   { id: "confusing", label: "Confusing", emoji: "🤔" },
   { id: "wrong_plant_result", label: "Wrong plant result", emoji: "🌿" },
-  { id: "missing_feature", label: "Missing feature", emoji: "💡" },
   { id: "love_this", label: "Love this", emoji: "❤️" },
 ];
 

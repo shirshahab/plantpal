@@ -82,7 +82,7 @@ export function calculateSuitabilityScore(
   );
 
   const city = record.city;
-  const summary = `${species.common_name} in ${input.zipCode} (${city}): ${score}/100 — ${scoreLabel(score).toLowerCase()} match for zone ${record.usdaZone}.`;
+  const summary = `${species.common_name} in ${input.zipCode} (${city}): ${score}/100: ${scoreLabel(score).toLowerCase()} match for zone ${record.usdaZone}.`;
 
   return {
     score,
@@ -129,10 +129,10 @@ export function getLocalMatchCheck(input: {
       tips.push("Young avocado trees need heat protection and excellent drainage in hot dry summers.");
     }
     if (record.heatRisk === "high" && input.locationType === "outdoor") {
-      tips.push(`${record.city} summers run hot — plan for deep watering, not daily sprinkles.`);
+      tips.push(`${record.city} summers run hot. Plan for deep watering, not daily sprinkles.`);
     }
     if (record.frostRisk !== "low" && input.locationType === "outdoor") {
-      tips.push("Frost is possible — have a cover plan for cold snaps.");
+      tips.push("Frost is possible. Have a cover plan for cold snaps.");
     }
     if (input.plantingType === "pot" && species.type === "tree") {
       tips.push("Large trees in pots need bigger containers and more frequent water than in-ground.");
@@ -147,12 +147,12 @@ export function getLocalMatchCheck(input: {
     const message =
       fitLabel === "Great fit" || fitLabel === "Good fit"
         ? `This plant is a ${fitLabel.toLowerCase()} for ${record.city}, zone ${record.usdaZone}.`
-        : `This plant may struggle in ${record.city} — review zone and sun needs carefully.`;
+        : `This plant may struggle in ${record.city}. Review zone and sun needs carefully.`;
 
     return { fitLabel, score: result.score, message, tips };
   }
 
-  tips.push(`Zone ${record.usdaZone} (${record.climateType}) — match watering to local heat and rain.`);
+  tips.push(`Zone ${record.usdaZone} (${record.climateType}): match watering to local heat and rain.`);
   if (input.species.toLowerCase().includes("avocado")) {
     tips.push("Young avocado trees need heat protection and excellent drainage.");
   }
@@ -160,7 +160,7 @@ export function getLocalMatchCheck(input: {
   return {
     fitLabel: "Good fit",
     score: 72,
-    message: `Adding ${input.name || "this plant"} in ${record.city} — we'll tailor care to your local climate.`,
+    message: `Adding ${input.name || "this plant"} in ${record.city}. We'll tailor care to your local climate.`,
     tips,
   };
 }

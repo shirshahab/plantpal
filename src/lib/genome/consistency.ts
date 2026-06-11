@@ -50,10 +50,10 @@ export function computeWateringConsistency(
 
   const detail =
     days === null
-      ? "No watering logged yet — mark watering to track consistency."
+      ? "No watering logged yet. Mark watering to track consistency."
       : days <= 3
         ? `Last watered ${days === 0 ? "today" : `${days}d ago`} · ${recentLogs} logs this month`
-        : `Last watered ${days}d ago — ${missedWaterTasks > 0 ? `${missedWaterTasks} missed task(s)` : "consider watering soon"}`;
+        : `Last watered ${days}d ago: ${missedWaterTasks > 0 ? `${missedWaterTasks} missed task(s)` : "consider watering soon"}`;
 
   return { score, label, detail };
 }
@@ -83,7 +83,7 @@ export function computeFertilizerConsistency(
 
   const detail =
     days === null
-      ? "No fertilizer logged — most plants benefit from seasonal feeding."
+      ? "No fertilizer logged. Most plants benefit from seasonal feeding."
       : `Last fed ${days}d ago · ${recentLogs} feeding(s) in 90 days`;
 
   return { score, label, detail };
@@ -112,7 +112,7 @@ export function computePhotoProgress(
 
   const detail =
     photoCount === 0
-      ? "Upload growth photos to unlock visual progress tracking."
+      ? "Upload growth photos to start visual progress tracking."
       : `${photoCount} photo(s) · ${growthEntryCount} growth log(s) · ${healthScanCount} health scan(s)`;
 
   return { score, label, detail };

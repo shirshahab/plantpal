@@ -3,16 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Leaf, ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
+import { Leaf, ChevronRight, ChevronLeft } from "lucide-react";
+import { PlantyAvatar } from "@/components/brand/planty";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { BetaBadge } from "@/components/brand/beta-badge";
+import { AuthDebug } from "@/components/dev/auth-debug";
 import { cn } from "@/lib/utils";
-import { saveUserProfile } from "@/lib/profile/user-profile";
+import { loadUserProfile, saveUserProfile } from "@/lib/profile/user-profile";
+import {
+  hydrateProfileFromCloud,
+  syncProfileToCloud,
+} from "@/lib/profile/cloud-profile";
 import { trackEvent } from "@/lib/analytics/track";
-import { createClient } from "@/lib/supabase/client";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   capturePendingReferral,
   getPendingReferral,
@@ -51,11 +55,56 @@ export default function OnboardingPageClient() {
   const [experience, setExperience] = useState<ExperienceLevel | null>(null);
   const [zipCode, setZipCode] = useState("");
   const [referralMessage, setReferralMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) capturePendingReferral(ref);
   }, [searchParams]);
+
+  // Restore in-progress selections (refresh mid-onboarding shouldn't lose
+  // them) and skip onboarding entirely if it's already done, locally or in
+  // the cloud profile of the signed-in user.
+  useEffect(() => {
+    let cancelled = false;
+
+    const local = loadUserProfile();
+    if (local.experienceLevel) setExperience(local.experienceLevel);
+    if (local.zipCode) setZipCode(local.zipCode);
+    if (local.growTypes.length > 0) setGrowTypes(local.growTypes);
+    if (local.onboardingComplete) {
+      router.replace("/dashboard");
+      return;
+    }
+
+    void hydrateProfileFromCloud().then((snapshot) => {
+      if (cancelled) return;
+      if (snapshot.onboardingComplete) {
+        router.replace("/dashboard");
+        return;
+      }
+      const hydrated = loadUserProfile();
+      if (hydrated.experienceLevel) setExperience(hydrated.experienceLevel);
+      if (hydrated.zipCode) setZipCode(hydrated.zipCode);
+      if (hydrated.growTypes.length > 0) setGrowTypes(hydrated.growTypes);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // Run once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Save in-progress answers locally so a refresh doesn't wipe them. */
+  function persistStepDraft() {
+    saveUserProfile({
+      ...(experience ? { experienceLevel: experience } : {}),
+      ...(zipCode.trim() ? { zipCode: zipCode.trim() } : {}),
+      ...(growTypes.length > 0 ? { growTypes } : {}),
+    });
+  }
 
   function toggleGrow(id: GrowType) {
     setGrowTypes((prev) =>
@@ -87,32 +136,14 @@ export default function OnboardingPageClient() {
     return key;
   }
 
-  /** Best-effort mirror of onboarding answers to the cloud profile. */
-  function syncProfileToCloud(mainGoal: MainGoal) {
-    if (!isSupabaseConfigured()) return;
-    const supabase = createClient();
-    void supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      void supabase
-        .from("profiles")
-        .update({
-          zip_code: zipCode.trim(),
-          experience_level: experience,
-          main_goal: mainGoal,
-          grow_types: growTypes,
-          onboarding_complete: true,
-          onboarding_completed_at: new Date().toISOString(),
-        })
-        .eq("id", user.id)
-        .then(({ error }) => {
-          if (error) console.warn("[onboarding] profile sync skipped:", error.message);
-        });
-    });
-  }
-
-  function persistProfile(
+  /**
+   * Save onboarding completion locally AND to the signed-in profile.
+   * Returns false (and surfaces the real error) if the cloud save failed,
+   * so the user isn't silently left with a profile that never registered.
+   */
+  async function persistProfile(
     extra: { firstPlantAdded?: boolean; firstPlantSkipped?: boolean } = {}
-  ) {
+  ): Promise<boolean> {
     const mainGoal = deriveMainGoal(growTypes);
     saveUserProfile({
       onboardingComplete: true,
@@ -124,7 +155,19 @@ export default function OnboardingPageClient() {
       ...extra,
     });
 
-    syncProfileToCloud(mainGoal);
+    const sync = await syncProfileToCloud({
+      zipCode,
+      experienceLevel: experience,
+      mainGoal,
+      growTypes,
+    });
+    if (!sync.ok) {
+      setSaveError(
+        `We couldn't save your profile to your account: ${sync.error}. Your answers are saved on this device. Tap again to retry.`
+      );
+      return false;
+    }
+    setSaveError(null);
 
     trackEvent("onboarding_complete", {
       experience: experience ?? "unknown",
@@ -140,22 +183,31 @@ export default function OnboardingPageClient() {
       }
       clearPendingReferral();
     }
+    return true;
+  }
+
+  async function completeAndGo(
+    extra: { firstPlantAdded?: boolean; firstPlantSkipped?: boolean },
+    destination: string
+  ) {
+    if (saving) return;
+    setSaving(true);
+    const ok = await persistProfile(extra);
+    setSaving(false);
+    if (ok) router.push(destination);
   }
 
   function handleAddPlant() {
     // Clear any stale skip flag from a previous onboarding run.
-    persistProfile({ firstPlantSkipped: false });
-    router.push("/plants/new?first=1");
+    void completeAndGo({ firstPlantSkipped: false }, "/plants/new?first=1");
   }
 
   function handleScanPlant() {
-    persistProfile({ firstPlantSkipped: false });
-    router.push("/scanner");
+    void completeAndGo({ firstPlantSkipped: false }, "/scanner");
   }
 
   function handleSkipFirstPlant() {
-    persistProfile({ firstPlantSkipped: true });
-    router.push("/dashboard");
+    void completeAndGo({ firstPlantSkipped: true }, "/dashboard");
   }
 
   return (
@@ -194,18 +246,22 @@ export default function OnboardingPageClient() {
           </Card>
         )}
 
+        {saveError && (
+          <Card padding="md" className="mb-4 bg-red-50 border-red-100">
+            <p className="text-sm text-red-700">{saveError}</p>
+          </Card>
+        )}
+
         {step === 0 && (
           <div className="text-center pt-8 space-y-6 page-enter">
-            <div className="w-20 h-20 rounded-3xl bg-green-100 flex items-center justify-center mx-auto">
-              <Sparkles className="w-10 h-10 text-green-600" />
-            </div>
+            <PlantyAvatar variant="happy" size={72} className="mx-auto" />
             <div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-                Welcome to PlantPal
+                Let&apos;s keep something alive.
               </h1>
               <p className="text-gray-500 mt-3 leading-relaxed">
-                Your smart plant care coach. Track every plant, know what to do today,
-                and get local advice for your climate.
+                Your plant coach in your pocket. Track every plant, know what to do
+                today, and get local advice for your climate.
               </p>
             </div>
             <ul className="text-left space-y-3 text-sm text-gray-600">
@@ -310,21 +366,28 @@ export default function OnboardingPageClient() {
                 Add your first plant
               </h1>
               <p className="text-gray-500 mt-1 text-sm">
-                Every PlantPal garden starts with one plant — that&apos;s where tasks and care plans begin.
+                Every PlantPal garden starts with one plant. That&apos;s where tasks and care plans begin.
               </p>
             </div>
 
-            <Button className="w-full" size="lg" onClick={handleScanPlant}>
+            <Button className="w-full" size="lg" loading={saving} onClick={handleScanPlant}>
               Scan Plant
               <ChevronRight className="w-4 h-4" />
             </Button>
 
-            <Button variant="outline" className="w-full" size="lg" onClick={handleAddPlant}>
+            <Button
+              variant="outline"
+              className="w-full"
+              size="lg"
+              disabled={saving}
+              onClick={handleAddPlant}
+            >
               Add Plant Manually
             </Button>
 
             <button
               type="button"
+              disabled={saving}
               onClick={handleSkipFirstPlant}
               className="w-full text-center text-sm text-gray-500 hover:text-gray-700 py-2 touch-manipulation"
             >
@@ -333,8 +396,8 @@ export default function OnboardingPageClient() {
 
             <Card padding="md" className="border-gray-100 bg-gray-50/50">
               <p className="text-sm text-gray-600 leading-relaxed">
-                Point your camera at any plant to identify it instantly, or add it manually —
-                tasks and care plans start the moment your first plant is in.
+                Point your camera at any plant to identify it instantly, or add it manually.
+                Tasks and care plans start the moment your first plant is in.
               </p>
             </Card>
           </div>
@@ -351,7 +414,10 @@ export default function OnboardingPageClient() {
               </Button>
             )}
             <Button
-              onClick={() => setStep((s) => s + 1)}
+              onClick={() => {
+                persistStepDraft();
+                setStep((s) => s + 1);
+              }}
               disabled={!canContinue()}
               className="flex-1"
             >
@@ -368,6 +434,8 @@ export default function OnboardingPageClient() {
           Sign in
         </Link>
       </p>
+
+      <AuthDebug />
     </div>
   );
 }

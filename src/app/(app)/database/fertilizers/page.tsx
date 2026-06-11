@@ -10,7 +10,7 @@ export default function FertilizersDatabasePage() {
     <div className="space-y-6">
       <PageHeader
         title="Fertilizer Database"
-        description={`${getFertilizerCount()} fertilizers — NPK, usage, frequency, and best plants.`}
+        description={`${getFertilizerCount()} fertilizers: NPK, usage, frequency, and best plants.`}
       />
       <DatabaseNav />
       <FertilizerSearchPanel />

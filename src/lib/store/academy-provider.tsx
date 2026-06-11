@@ -363,7 +363,6 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
           userId: "local-user",
           eventType: "lesson_completed",
           title: `completed ${lesson?.title ?? "an Academy lesson"}`,
-          visibility: "friends",
         });
         for (const badgeId of result.newBadges) {
           const badge = ACADEMY_BADGES.find((b) => b.id === badgeId);
@@ -371,7 +370,6 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
             userId: "local-user",
             eventType: "badge_earned",
             title: `earned ${badge?.title ?? "a badge"}`,
-            visibility: "friends",
           });
         }
         if (result.streakMilestone) {
@@ -379,7 +377,6 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
             userId: "local-user",
             eventType: "streak_milestone",
             title: `completed a ${result.streak}-day streak`,
-            visibility: "friends",
           });
         }
       }
@@ -413,7 +410,7 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
-    toast("Streak freeze used — your streak is protected for today.");
+    toast("Streak freeze used. Your streak is protected for today.");
   }, [toast]);
 
   useEffect(() => {

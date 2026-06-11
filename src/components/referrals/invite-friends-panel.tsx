@@ -31,7 +31,7 @@ export function InviteFriendsPanel({ compact = false }: { compact?: boolean }) {
       await navigator.clipboard.writeText(link);
       toast("Invite link copied!");
     } catch {
-      toast("Could not copy — select the link manually.");
+      toast("Could not copy. Select the link manually.");
     }
   }
 
@@ -60,7 +60,7 @@ export function InviteFriendsPanel({ compact = false }: { compact?: boolean }) {
         <div>
           <h2 className="font-semibold text-gray-900">Invite a friend</h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            Share PlantPal — you both get <strong>7 days of PlantPal Plus</strong> when they join.
+            Share PlantPal. You both get <strong>7 days of PlantPal Plus</strong> when they join.
           </p>
         </div>
       </div>

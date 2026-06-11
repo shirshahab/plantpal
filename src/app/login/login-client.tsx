@@ -11,8 +11,8 @@ import { isMockMode } from "@/lib/supabase/config";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
 import { BRAND } from "@/lib/brand/tokens";
 import { capturePendingReferral } from "@/lib/referrals/index";
-import { isOnboardingComplete, saveUserProfile } from "@/lib/profile/user-profile";
-import type { UserProfile } from "@/lib/types/profile";
+import { isOnboardingComplete } from "@/lib/profile/user-profile";
+import { hydrateProfileFromCloud } from "@/lib/profile/cloud-profile";
 import { trackEvent } from "@/lib/analytics/track";
 import { reportFeatureFailure } from "@/lib/errors/report-error";
 
@@ -34,48 +34,12 @@ export default function LoginPageClient() {
     if (ref) capturePendingReferral(ref);
     if (searchParams.get("signup") === "1") setMode("signup");
     if (searchParams.get("error") === "confirmation_failed") {
-      setError("That confirmation link expired or was already used. Try signing in — or sign up again to get a fresh link.");
+      setError("That confirmation link expired or was already used. Try signing in, or sign up again to get a fresh link.");
     }
     if (searchParams.get("confirmed") === "1") {
       setNotice("Email confirmed! Sign in below.");
     }
   }, [searchParams]);
-
-  /**
-   * Cross-device fix: restore onboarding state from the server profile so a
-   * returning user on a new browser isn't forced through onboarding again.
-   */
-  async function hydrateProfileFromCloud() {
-    try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("onboarding_complete, zip_code, experience_level, main_goal, grow_types")
-        .eq("id", user.id)
-        .single();
-      if (data?.onboarding_complete) {
-        saveUserProfile({
-          onboardingComplete: true,
-          ...(typeof data.zip_code === "string" && data.zip_code
-            ? { zipCode: data.zip_code }
-            : {}),
-          ...(data.experience_level
-            ? { experienceLevel: data.experience_level as UserProfile["experienceLevel"] }
-            : {}),
-          ...(data.main_goal ? { mainGoal: data.main_goal as UserProfile["mainGoal"] } : {}),
-          ...(Array.isArray(data.grow_types)
-            ? { growTypes: data.grow_types as UserProfile["growTypes"] }
-            : {}),
-        });
-      }
-    } catch {
-      /* non-fatal — local onboarding flow still works */
-    }
-  }
 
   function postAuthRedirect(isSignup: boolean) {
     if (isSignup) {
@@ -99,7 +63,7 @@ export default function LoginPageClient() {
       return "Email or password is incorrect. If you just signed up, confirm your email first.";
     }
     if (m.includes("rate limit")) {
-      return "Too many attempts — wait a minute and try again.";
+      return "Too many attempts. Wait a minute and try again.";
     }
     return message;
   }
@@ -207,7 +171,13 @@ export default function LoginPageClient() {
         setLoading(false);
         return;
       }
-      await hydrateProfileFromCloud();
+      trackEvent("login", { method: "email" });
+      // Restore onboarding/profile state from the cloud BEFORE deciding
+      // where to send the user. Errors are reported, not swallowed.
+      const snapshot = await hydrateProfileFromCloud();
+      if (snapshot.status === "error") {
+        reportFeatureFailure("auth", `profile hydration: ${snapshot.error}`, "auth_failure");
+      }
       postAuthRedirect(false);
     }
 
@@ -323,7 +293,7 @@ export default function LoginPageClient() {
 
           <p className="text-center text-xs text-gray-400 mt-6">
             {mock
-              ? "Mock mode — any credentials will work until Supabase is connected"
+              ? "Mock mode: any credentials will work until Supabase is connected"
               : "Your plants are saved securely to your account"}
           </p>
 

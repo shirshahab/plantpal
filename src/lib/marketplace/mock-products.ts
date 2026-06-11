@@ -20,7 +20,7 @@ export const MOCK_PRODUCTS: ProductRecommendation[] = [
     description: "Most common home-garden avocado with excellent flavor.",
     bestFor: "Mild climates, frost-free yards, avocado enthusiasts",
     priceRange: "$45–$120 (5 gal)",
-    whyItFits: "Type A flower pattern — pair with Fuerte or Lamb for better fruit set.",
+    whyItFits: "Type A flower pattern. Pair with Fuerte or Lamb for better fruit set.",
     whatToAvoid: "Wilted leaves, cracked trunk, trees with no graft union visible",
   },
   {
@@ -40,7 +40,7 @@ export const MOCK_PRODUCTS: ProductRecommendation[] = [
     description: "Fast-draining, slightly acidic blend for citrus and avocados.",
     bestFor: "Citrus trees, avocados, container planting",
     priceRange: "$12–$22 (1.5 cu ft bag)",
-    whyItFits: "Proper drainage prevents root rot — critical for citrus in containers.",
+    whyItFits: "Proper drainage prevents root rot. Critical for citrus in containers.",
     whatToAvoid: "Heavy topsoil, moisture-control mixes that stay wet, unlabeled generic soil",
   },
   {
@@ -120,7 +120,7 @@ export const MOCK_PRODUCTS: ProductRecommendation[] = [
     description: "Concave cutter + knob cutter + leaf scissors starter trio.",
     bestFor: "First bonsai, juniper and ficus refinement",
     priceRange: "$30–$70",
-    whyItFits: "Right tools prevent bark tearing — essential for clean bonsai cuts.",
+    whyItFits: "Right tools prevent bark tearing. Essential for clean bonsai cuts.",
     whatToAvoid: "Kitchen scissors, rusty tools, oversized cutters on small trees",
   },
   {

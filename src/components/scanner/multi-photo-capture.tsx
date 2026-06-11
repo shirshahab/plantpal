@@ -146,7 +146,7 @@ export function MultiPhotoCapture({
                 <Camera className="w-10 h-10 text-green-400" />
               </div>
               <p className="text-gray-400 text-sm text-center max-w-[240px]">
-                Add up to 3 photos — whole plant, leaf, and flower or fruit — in natural light
+                Add up to 3 photos in natural light: whole plant, leaf, and flower or fruit
               </p>
             </div>
           )}
@@ -248,7 +248,7 @@ export function MultiPhotoCapture({
       {photos.length > 0 && (
         <p className="text-xs text-center text-gray-500">
           {photos.length} of 3 photos added
-          {photos.length < 3 && " — add leaf or flower shots for better accuracy"}
+          {photos.length < 3 && ". Add leaf or flower shots for better accuracy"}
           {" · "}
           {SCAN_UPLOAD_LIMIT_LABEL}
           {" · "}

@@ -48,7 +48,7 @@ export function GardenMapHub() {
     <div className="space-y-6 max-w-lg mx-auto page-enter">
       <PageHeader
         title="My Garden"
-        description="Your digital twin — zones, plants, and health at a glance"
+        description="Your digital twin: zones, plants, and health at a glance"
         action={
           <Link href="/garden-map/designer">
             <Button variant="secondary" size="sm">
@@ -112,7 +112,7 @@ export function GardenMapHub() {
             </div>
             <p className="font-semibold text-gray-900">Map your garden</p>
             <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto">
-              Create a space — like a backyard, balcony, or raised bed — then place
+              Create a space, like a backyard, balcony, or raised bed, then place
               your plants to see zone-by-zone health.
             </p>
             <Button size="sm" className="mt-4" onClick={() => setShowCreate(true)}>

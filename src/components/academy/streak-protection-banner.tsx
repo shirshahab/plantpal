@@ -41,7 +41,7 @@ export function StreakProtectionBanner() {
             <p className="font-semibold text-gray-900">Streak at risk!</p>
             <p className="text-sm text-gray-600 mt-1">
               You missed a day. Use a streak freeze to protect your {progress.currentStreak}-day
-              streak — or complete a lesson today to start fresh.
+              streak, or complete a lesson today to start fresh.
             </p>
             <Button
               size="sm"

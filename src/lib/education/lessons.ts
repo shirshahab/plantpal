@@ -12,9 +12,9 @@ export const LESSONS: Lesson[] = [
       "Yellow leaves are a signal, not a single problem. Learn to read the pattern.",
     icon: "🍂",
     content:
-      "Yellow leaves are not one problem. They are a signal. The main causes are overwatering, underwatering, nutrient deficiency, pest pressure, root stress, or seasonal shedding.\n\nStart by looking at which leaves are yellow — older leaves at the bottom often mean natural aging or nitrogen deficiency. Yellow on new growth points to root issues, iron deficiency, or overwatering. Spotted or patchy yellowing may indicate pests or disease.\n\nBefore you act, check the soil, inspect the roots if possible, and note whether the plant is in active growth or dormancy.",
+      "Yellow leaves are not one problem. They are a signal. The main causes are overwatering, underwatering, nutrient deficiency, pest pressure, root stress, or seasonal shedding.\n\nStart by looking at which leaves are yellow. Older leaves at the bottom often mean natural aging or nitrogen deficiency. Yellow on new growth points to root issues, iron deficiency, or overwatering. Spotted or patchy yellowing may indicate pests or disease.\n\nBefore you act, check the soil, inspect the roots if possible, and note whether the plant is in active growth or dormancy.",
     keyTakeaways: [
-      "Yellow leaves usually mean stress — not always disaster",
+      "Yellow leaves usually mean stress, not always disaster",
       "Check soil before adding more water",
       "Look at the pattern: old leaves, new leaves, edges, spots",
       "Do not fertilize a sick plant without checking roots first",
@@ -36,7 +36,7 @@ export const LESSONS: Lesson[] = [
       ],
       correctIndex: 1,
       explanation:
-        "Soil moisture tells you whether the problem is too much or too little water — the most common cause of yellow leaves.",
+        "Soil moisture tells you whether the problem is too much or too little water, the most common cause of yellow leaves.",
     },
     relatedPlantTypes: ["citrus", "ficus", "maple", "bougainvillea", "indoor", "outdoor"],
   },
@@ -51,7 +51,7 @@ export const LESSONS: Lesson[] = [
       "Deep watering builds stronger roots. Shallow watering creates weak, surface-dependent plants.",
     icon: "💧",
     content:
-      "Deep watering means soaking the root zone until water runs out the drainage holes, then letting the soil dry before the next session. This encourages roots to grow downward in search of moisture.\n\nFor outdoor trees and shrubs, water slowly at the drip line — where the outer branches reach — not right against the trunk. For pots, water until you see runoff, then empty the saucer.\n\nFrequency depends on the plant, pot size, and climate — but depth matters more than a rigid schedule.",
+      "Deep watering means soaking the root zone until water runs out the drainage holes, then letting the soil dry before the next session. This encourages roots to grow downward in search of moisture.\n\nFor outdoor trees and shrubs, water slowly at the drip line, where the outer branches reach, not right against the trunk. For pots, water until you see runoff, then empty the saucer.\n\nFrequency depends on the plant, pot size, and climate. But depth matters more than a rigid schedule.",
     keyTakeaways: [
       "Water until the root zone is soaked, not just the surface",
       "Let soil dry between waterings for most plants",
@@ -90,7 +90,7 @@ export const LESSONS: Lesson[] = [
       "Most potted plants die from poor drainage, not lack of love. Learn why drainage matters.",
     icon: "🪴",
     content:
-      "Drainage is how quickly water moves through soil and out of the pot. When soil stays wet too long, roots can't breathe and root rot begins — often before you see any above-ground symptoms.\n\nGood potting mix contains materials like perlite, bark, or pumice that create air pockets. Garden soil alone is too dense for containers.\n\nTest drainage by watering thoroughly: if water sits on the surface or the pot stays heavy for days, you have a drainage problem.",
+      "Drainage is how quickly water moves through soil and out of the pot. When soil stays wet too long, roots can't breathe and root rot begins, often before you see any above-ground symptoms.\n\nGood potting mix contains materials like perlite, bark, or pumice that create air pockets. Garden soil alone is too dense for containers.\n\nTest drainage by watering thoroughly: if water sits on the surface or the pot stays heavy for days, you have a drainage problem.",
     keyTakeaways: [
       "Roots need air as much as they need water",
       "Heavy, compacted soil suffocates roots",
@@ -103,14 +103,14 @@ export const LESSONS: Lesson[] = [
       "Choosing decorative pots with no drainage hole",
     ],
     actionStep:
-      "Check your pot's drainage holes and lift the pot after watering — it should feel lighter within a few days.",
+      "Check your pot's drainage holes and lift the pot after watering. It should feel lighter within a few days.",
     quiz: {
       question: "What happens when soil stays wet too long?",
       options: [
         "Plants grow faster",
         "Roots can't breathe and may rot",
         "Leaves turn darker green",
-        "Nothing — plants love wet soil",
+        "Nothing, plants love wet soil",
       ],
       correctIndex: 1,
       explanation:
@@ -129,12 +129,12 @@ export const LESSONS: Lesson[] = [
       "Citrus are hungry plants. Timing and formula matter more than quantity.",
     icon: "🍋",
     content:
-      "Citrus trees need regular feeding during active growth — typically spring through early fall. Use a fertilizer with higher nitrogen and include micronutrients like iron, zinc, and manganese.\n\nStop fertilizing in late fall and winter when growth slows. Over-fertilizing a dormant plant wastes nutrients and can burn roots.\n\nYellow leaves with green veins on new growth often signal iron deficiency — common in citrus and fixable with chelated iron.",
+      "Citrus trees need regular feeding during active growth, typically spring through early fall. Use a fertilizer with higher nitrogen and include micronutrients like iron, zinc, and manganese.\n\nStop fertilizing in late fall and winter when growth slows. Over-fertilizing a dormant plant wastes nutrients and can burn roots.\n\nYellow leaves with green veins on new growth often signal iron deficiency. Common in citrus and fixable with chelated iron.",
     keyTakeaways: [
       "Feed citrus during active growth, not dormancy",
       "Use citrus-specific or balanced fertilizer with micronutrients",
       "Yellow new leaves with green veins may mean iron deficiency",
-      "Less is more — follow label rates",
+      "Less is more. Follow label rates",
     ],
     commonMistakes: [
       "Fertilizing in winter when the tree is resting",
@@ -168,7 +168,7 @@ export const LESSONS: Lesson[] = [
       "Light labels on plant tags are vague. Here is what they actually mean.",
     icon: "☀️",
     content:
-      "Full sun means 6 or more hours of direct sunlight daily. Partial sun is 3–6 hours, often morning sun with afternoon shade. Shade means less than 3 hours of direct sun.\n\n'Full sun' plants in hot climates may still need afternoon protection. 'Shade' plants in dark corners may become leggy and weak.\n\nWatch your space across a full day before placing a plant — a spot that looks sunny at noon may be in shadow by 3 PM.",
+      "Full sun means 6 or more hours of direct sunlight daily. Partial sun is 3–6 hours, often morning sun with afternoon shade. Shade means less than 3 hours of direct sun.\n\n'Full sun' plants in hot climates may still need afternoon protection. 'Shade' plants in dark corners may become leggy and weak.\n\nWatch your space across a full day before placing a plant. A spot that looks sunny at noon may be in shadow by 3 PM.",
     keyTakeaways: [
       "Full sun = 6+ hours of direct light",
       "Partial sun = 3–6 hours, often morning preferred",
@@ -202,7 +202,7 @@ export const LESSONS: Lesson[] = [
       "Good pruning helps plants. Bad pruning creates wounds that never heal properly.",
     icon: "✂️",
     content:
-      "Always cut just above a node or bud at a 45-degree angle. Remove dead, diseased, or crossing branches first — these are the priority.\n\nNever remove more than one-third of a plant in a single session. For trees, avoid 'topping' — cutting the main leader creates weak, bushy regrowth.\n\nUse clean, sharp tools. Disinfect between cuts when working on diseased material.",
+      "Always cut just above a node or bud at a 45-degree angle. Remove dead, diseased, or crossing branches first. These are the priority.\n\nNever remove more than one-third of a plant in a single session. For trees, avoid 'topping': cutting the main leader creates weak, bushy regrowth.\n\nUse clean, sharp tools. Disinfect between cuts when working on diseased material.",
     keyTakeaways: [
       "Cut above a node at a slight angle",
       "Remove dead and crossing branches first",
@@ -241,7 +241,7 @@ export const LESSONS: Lesson[] = [
       "Overwatering looks like underwatering from above. The difference is in the soil.",
     icon: "🌊",
     content:
-      "Overwatered plants often have yellow leaves, soft stems, and soil that stays wet for days. You may also see fungus gnats, mold on the soil surface, or a musty smell from the pot.\n\nUnderwatered plants have crispy, brown leaf edges and soil that pulls away from the pot walls.\n\nThe fix for overwatering is not less water forever — it's better drainage and a corrected watering rhythm.",
+      "Overwatered plants often have yellow leaves, soft stems, and soil that stays wet for days. You may also see fungus gnats, mold on the soil surface, or a musty smell from the pot.\n\nUnderwatered plants have crispy, brown leaf edges and soil that pulls away from the pot walls.\n\nThe fix for overwatering is not less water forever. It's better drainage and a corrected watering rhythm.",
     keyTakeaways: [
       "Yellow + wet soil = likely overwatering",
       "Crispy brown edges + dry soil = likely underwatering",
@@ -277,10 +277,10 @@ export const LESSONS: Lesson[] = [
     difficulty: "Beginner",
     estimatedMinutes: 4,
     description:
-      "New leaves and shoots tell you whether your plant is happy — or struggling.",
+      "New leaves and shoots tell you whether your plant is happy, or struggling.",
     icon: "🌱",
     content:
-      "Healthy new growth is firm, evenly colored, and proportional to the plant's size. Pale, stunted, or curled new leaves suggest something is off — usually light, nutrients, or water.\n\nIf a plant is producing new growth, it's generally healthy enough to care for actively. No new growth during the growing season is a warning sign.\n\nCompare new growth to older leaves on the same plant — differences in color or size reveal what the plant needs right now.",
+      "Healthy new growth is firm, evenly colored, and proportional to the plant's size. Pale, stunted, or curled new leaves suggest something is off, usually light, nutrients, or water.\n\nIf a plant is producing new growth, it's generally healthy enough to care for actively. No new growth during the growing season is a warning sign.\n\nCompare new growth to older leaves on the same plant. Differences in color or size reveal what the plant needs right now.",
     keyTakeaways: [
       "New growth is the best health indicator",
       "Pale or stunted new leaves signal a problem",
@@ -319,7 +319,7 @@ export const LESSONS: Lesson[] = [
       "Citrus trees need consistent moisture but hate wet feet. Here is the balance.",
     icon: "🍊",
     content:
-      "Citrus prefer deep, infrequent watering over daily light sprinkles. In containers, water when the top 2 inches of soil are dry. In ground, water at the drip line and mulch to retain moisture.\n\nReduce watering in winter when growth slows. Increase during fruit development and hot spells.\n\nLeaf drop after inconsistent watering is common — establish a rhythm and stick to it.",
+      "Citrus prefer deep, infrequent watering over daily light sprinkles. In containers, water when the top 2 inches of soil are dry. In ground, water at the drip line and mulch to retain moisture.\n\nReduce watering in winter when growth slows. Increase during fruit development and hot spells.\n\nLeaf drop after inconsistent watering is common. Establish a rhythm and stick to it.",
     keyTakeaways: [
       "Water deeply when top 2 inches of soil are dry",
       "Reduce watering in winter dormancy",
@@ -358,11 +358,11 @@ export const LESSONS: Lesson[] = [
       "Japanese maples and other delicate trees scorch in harsh afternoon light.",
     icon: "🌳",
     content:
-      "Many ornamental trees — especially Japanese maples — prefer morning sun and afternoon shade. Hot afternoon sun scorches leaf edges and causes leaf curl.\n\nIf your tree shows brown, crispy leaf margins in summer, it's likely getting too much afternoon exposure. A shade cloth or relocation may help.\n\nIn cooler climates, these same trees may tolerate more sun. Always adjust for your specific microclimate.",
+      "Many ornamental trees, especially Japanese maples, prefer morning sun and afternoon shade. Hot afternoon sun scorches leaf edges and causes leaf curl.\n\nIf your tree shows brown, crispy leaf margins in summer, it's likely getting too much afternoon exposure. A shade cloth or relocation may help.\n\nIn cooler climates, these same trees may tolerate more sun. Always adjust for your specific microclimate.",
     keyTakeaways: [
       "Morning sun + afternoon shade suits many maples",
       "Scorched leaf edges mean too much hot sun",
-      "Microclimate matters — watch your specific spot",
+      "Microclimate matters. Watch your specific spot",
       "Shade cloth is a quick fix for young trees",
     ],
     commonMistakes: [
@@ -371,7 +371,7 @@ export const LESSONS: Lesson[] = [
       "Not providing shade during heat waves",
     ],
     actionStep:
-      "Note whether your tree gets direct sun after 2 PM — if yes, consider afternoon shade.",
+      "Note whether your tree gets direct sun after 2 PM. If yes, consider afternoon shade.",
     quiz: {
       question: "What light pattern suits Japanese maples in hot climates?",
       options: [
@@ -421,7 +421,7 @@ export const LESSONS: Lesson[] = [
       ],
       correctIndex: 1,
       explanation:
-        "Most absorbing roots are at the drip line — where the canopy edge meets the ground.",
+        "Most absorbing roots are at the drip line, where the canopy edge meets the ground.",
     },
     relatedPlantTypes: ["maple", "acer", "tree"],
   },
@@ -436,7 +436,7 @@ export const LESSONS: Lesson[] = [
       "Some leaf loss is normal. Some is a cry for help. Learn the difference.",
     icon: "🍃",
     content:
-      "Deciduous trees naturally drop leaves in fall — uniform yellowing followed by leaf fall is expected. Evergreens shed older interior needles periodically.\n\nDisease-related drop is different: spots, patches, wilting, or leaves falling out of season. Pest damage shows chewed edges or sticky residue.\n\nIf leaf drop happens during the growing season with discoloration patterns, investigate soil, water, and pests before assuming it's seasonal.",
+      "Deciduous trees naturally drop leaves in fall. Uniform yellowing followed by leaf fall is expected. Evergreens shed older interior needles periodically.\n\nDisease-related drop is different: spots, patches, wilting, or leaves falling out of season. Pest damage shows chewed edges or sticky residue.\n\nIf leaf drop happens during the growing season with discoloration patterns, investigate soil, water, and pests before assuming it's seasonal.",
     keyTakeaways: [
       "Fall leaf drop on deciduous trees is normal",
       "Out-of-season drop with spots or wilting is not",
@@ -475,7 +475,7 @@ export const LESSONS: Lesson[] = [
       "Dry indoor air stresses tropical plants. Simple fixes make a big difference.",
     icon: "🏠",
     content:
-      "Most houseplants come from humid environments. Indoor heating and AC drop humidity to 20–30%, while many plants prefer 40–60%.\n\nGrouping plants together, using pebble trays with water, and placing plants away from heating vents all help. Misting provides only brief relief — a humidifier is the most effective solution.\n\nBrown leaf tips on fiddle leaf figs and ferns often mean the air is too dry.",
+      "Most houseplants come from humid environments. Indoor heating and AC drop humidity to 20–30%, while many plants prefer 40–60%.\n\nGrouping plants together, using pebble trays with water, and placing plants away from heating vents all help. Misting provides only brief relief. A humidifier is the most effective solution.\n\nBrown leaf tips on fiddle leaf figs and ferns often mean the air is too dry.",
     keyTakeaways: [
       "Indoor air is often too dry for tropical plants",
       "Grouping plants raises local humidity",
@@ -499,7 +499,7 @@ export const LESSONS: Lesson[] = [
       ],
       correctIndex: 1,
       explanation:
-        "A humidifier consistently raises ambient humidity — misting only helps for minutes.",
+        "A humidifier consistently raises ambient humidity. Misting only helps for minutes.",
     },
     relatedPlantTypes: ["ficus", "fiddle", "indoor"],
   },
@@ -514,7 +514,7 @@ export const LESSONS: Lesson[] = [
       "Citrus yellowing has specific causes. Learn to diagnose before you treat.",
     icon: "🟡",
     content:
-      "Citrus yellow leaves often trace to one of four causes: overwatering, nitrogen deficiency, iron deficiency, or cold stress.\n\nIron deficiency shows yellow new leaves with green veins (interveinal chlorosis). Nitrogen deficiency yellows older leaves first. Overwatering yellows leaves while soil stays wet.\n\nTreat the cause, not the symptom — and never fertilize a waterlogged tree.",
+      "Citrus yellow leaves often trace to one of four causes: overwatering, nitrogen deficiency, iron deficiency, or cold stress.\n\nIron deficiency shows yellow new leaves with green veins (interveinal chlorosis). Nitrogen deficiency yellows older leaves first. Overwatering yellows leaves while soil stays wet.\n\nTreat the cause, not the symptom. And never fertilize a waterlogged tree.",
     keyTakeaways: [
       "Yellow new leaves with green veins = likely iron deficiency",
       "Yellow old leaves first = likely nitrogen deficiency",
@@ -527,7 +527,7 @@ export const LESSONS: Lesson[] = [
       "Assuming all yellow citrus leaves need the same fix",
     ],
     actionStep:
-      "Look at which citrus leaves are yellow — old, new, or all — and check soil moisture.",
+      "Look at which citrus leaves are yellow: old, new, or all. Then check soil moisture.",
     quiz: {
       question: "Yellow new leaves with green veins on citrus usually indicate:",
       options: [
@@ -553,9 +553,9 @@ export const LESSONS: Lesson[] = [
       "Avoid overpaying for stressed plants. Learn what to inspect before you buy.",
     icon: "🏷️",
     content:
-      "Buying a nursery plant is like a mini health inspection. Start with the roots — gently tip the pot and look for white, firm roots. Brown mush or circling roots are red flags.\n\nCheck the trunk or main stem for damage, scars, or soft spots. Leaves should match the season: new growth should look fresh, not crispy or yellow unless the plant is dormant.\n\nUnderstand nursery sizes: a 1-gallon is starter size, 3–5 gallon is common for fruit trees, 15-gallon is established. Bigger is not always better if roots are bound.\n\nFor fruit trees, grafted trees produce predictable fruit; seed-grown avocados and citrus may never fruit well. Big box stores can be great values on common plants; local nurseries often have better variety tags and staff knowledge.\n\nCheap plants that die cost more than a fair-price healthy plant. When in doubt, pass and come back next week.",
+      "Buying a nursery plant is like a mini health inspection. Start with the roots. Gently tip the pot and look for white, firm roots. Brown mush or circling roots are red flags.\n\nCheck the trunk or main stem for damage, scars, or soft spots. Leaves should match the season: new growth should look fresh, not crispy or yellow unless the plant is dormant.\n\nUnderstand nursery sizes: a 1-gallon is starter size, 3–5 gallon is common for fruit trees, 15-gallon is established. Bigger is not always better if roots are bound.\n\nFor fruit trees, grafted trees produce predictable fruit; seed-grown avocados and citrus may never fruit well. Big box stores can be great values on common plants; local nurseries often have better variety tags and staff knowledge.\n\nCheap plants that die cost more than a fair-price healthy plant. When in doubt, pass and come back next week.",
     keyTakeaways: [
-      "Inspect roots before you buy — firm and white, not mushy or circling",
+      "Inspect roots before you buy: firm and white, not mushy or circling",
       "Fruit trees should be grafted with a visible, healthy union",
       "Nursery size labels describe pot volume, not instant maturity",
       "Big box can save money; local nurseries excel on specialty stock",
@@ -593,17 +593,17 @@ export const LESSONS: Lesson[] = [
     description: "Your ZIP code changes how often you water, when you fertilize, and what risks to watch for.",
     icon: "🌡️",
     content:
-      "Plant care is not one-size-fits-all. A watering schedule that works in Seattle will fail in Pasadena.\n\nYour local climate — heat, humidity, frost, and rain patterns — determines how fast soil dries, when plants grow, and when they rest.\n\nPlantPal uses your ZIP to estimate USDA zone and seasonal patterns so recommendations match where you actually garden.",
+      "Plant care is not one-size-fits-all. A watering schedule that works in Seattle will fail in Pasadena.\n\nYour local climate's heat, humidity, frost, and rain patterns determine how fast soil dries, when plants grow, and when they rest.\n\nPlantPal uses your ZIP to estimate USDA zone and seasonal patterns so recommendations match where you actually garden.",
     keyTakeaways: [
       "Climate beats calendar dates for watering decisions",
-      "Heat increases evaporation — pots dry faster than in-ground plants",
+      "Heat increases evaporation. Pots dry faster than in-ground plants",
       "Local frost dates matter for citrus, avocado, and tropicals",
     ],
     commonMistakes: [
       "Copying a friend's schedule from a different state",
       "Watering on the same day every week regardless of weather",
     ],
-    actionStep: "Check your garden soil moisture before watering today — not the calendar.",
+    actionStep: "Check your garden soil moisture before watering today, not the calendar.",
     quiz: {
       question: "What should drive your watering schedule most?",
       options: ["The day of the week", "Soil moisture and local weather", "Fertilizer schedule", "Plant height"],
@@ -622,7 +622,7 @@ export const LESSONS: Lesson[] = [
     description: "USDA hardiness zones estimate the average coldest winter temperature in your area.",
     icon: "🗺️",
     content:
-      "USDA zones (like 10a or 8b) help you match plants to winter survival. A plant rated zones 8–10 can handle winters in those zones.\n\nZones do not tell you about summer heat, drought, or humidity — but they are a essential first filter when buying trees and shrubs.",
+      "USDA zones (like 10a or 8b) help you match plants to winter survival. A plant rated zones 8–10 can handle winters in those zones.\n\nZones do not tell you about summer heat, drought, or humidity. But they are a essential first filter when buying trees and shrubs.",
     keyTakeaways: [
       "Zone = average minimum winter temperature",
       "Always check zone range on nursery tags",
@@ -648,7 +648,7 @@ export const LESSONS: Lesson[] = [
     description: "Extreme heat shuts down growth, increases water loss, and makes fertilizer risky.",
     icon: "☀️",
     content:
-      "During heat waves, plants close stomata to conserve water — growth slows even when soil is wet.\n\nLeaf scorch, wilting, and dropped fruit are common. Young trees and potted plants suffer first.\n\nDeep morning watering, mulch, and afternoon shade help. Hold fertilizer until temperatures moderate.",
+      "During heat waves, plants close stomata to conserve water. Growth slows even when soil is wet.\n\nLeaf scorch, wilting, and dropped fruit are common. Young trees and potted plants suffer first.\n\nDeep morning watering, mulch, and afternoon shade help. Hold fertilizer until temperatures moderate.",
     keyTakeaways: [
       "Heat stress looks like underwatering but may need shade, not more water",
       "Avoid fertilizing during extreme heat",
@@ -671,10 +671,10 @@ export const LESSONS: Lesson[] = [
     category: "Climate",
     difficulty: "Beginner",
     estimatedMinutes: 4,
-    description: "Mediterranean and desert climates need deep, infrequent watering — not daily sprinkles.",
+    description: "Mediterranean and desert climates need deep, infrequent watering, not daily sprinkles.",
     icon: "💧",
     content:
-      "In hot dry summers, shallow watering trains roots to stay near the surface where soil heats up fast.\n\nWater deeply until moisture reaches the root zone, then let the top inch dry before watering again.\n\nMorning is best — less evaporation and plants enter the hot afternoon hydrated.",
+      "In hot dry summers, shallow watering trains roots to stay near the surface where soil heats up fast.\n\nWater deeply until moisture reaches the root zone, then let the top inch dry before watering again.\n\nMorning is best: less evaporation and plants enter the hot afternoon hydrated.",
     keyTakeaways: [
       "Deep and less often beats shallow and daily",
       "Morning watering reduces evaporation loss",
@@ -697,10 +697,10 @@ export const LESSONS: Lesson[] = [
     category: "Climate",
     difficulty: "Beginner",
     estimatedMinutes: 4,
-    description: "One cold night can damage citrus, bougainvillea, and avocado — plan ahead.",
+    description: "One cold night can damage citrus, bougainvillea, and avocado. Plan ahead.",
     icon: "❄️",
     content:
-      "Frost injures tender tissue when water inside cells freezes. Lower leaves and new growth go first.\n\nCover plants with frost cloth or sheets — not plastic touching leaves. Move pots indoors or against a warm wall.\n\nWater soil before a frost night — moist soil holds heat better than dry soil.",
+      "Frost injures tender tissue when water inside cells freezes. Lower leaves and new growth go first.\n\nCover plants with frost cloth or sheets, not plastic touching leaves. Move pots indoors or against a warm wall.\n\nWater soil before a frost night. Moist soil holds heat better than dry soil.",
     keyTakeaways: [
       "Cover before sunset on frost nights",
       "Potted plants are most vulnerable",
@@ -712,7 +712,7 @@ export const LESSONS: Lesson[] = [
       question: "When should you cover plants for frost?",
       options: ["After leaves turn black", "Before sunset on cold nights", "Only in snow", "Never cover citrus"],
       correctIndex: 1,
-      explanation: "Covers trap ground heat — install before sunset for best protection.",
+      explanation: "Covers trap ground heat. Install before sunset for best protection.",
     },
     relatedPlantTypes: ["citrus", "avocado", "bougainvillea", "outdoor"],
   },

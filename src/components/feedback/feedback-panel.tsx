@@ -59,13 +59,15 @@ export function FloatingFeedbackButton() {
 
   return (
     <>
+      {/* Desktop only: on mobile this floated over list rows and the bottom
+          nav. Feedback stays reachable on mobile via More -> Support. */}
       <button
         type="button"
         onClick={() => {
           setCategory(undefined);
           setOpen(true);
         }}
-        className="fixed bottom-24 md:bottom-8 right-4 z-40 w-12 h-12 rounded-full bg-green-600 text-white shadow-lg shadow-green-900/20 flex items-center justify-center touch-manipulation hover:bg-green-700 transition-colors safe-bottom"
+        className="hidden md:flex fixed bottom-8 right-4 z-40 w-12 h-12 rounded-full bg-green-600 text-white shadow-lg shadow-green-900/20 items-center justify-center touch-manipulation hover:bg-green-700 transition-colors"
         aria-label="Send feedback"
       >
         <MessageSquare className="w-5 h-5" />

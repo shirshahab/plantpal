@@ -43,7 +43,7 @@ export function PlantJourneySection({ plant }: PlantJourneySectionProps) {
           <Target className="w-10 h-10 text-gray-300 mx-auto" />
           <p className="font-medium text-gray-900">No goals yet</p>
           <p className="text-sm text-gray-500">
-            Add a goal to unlock your personalized plant journey.
+            Add a goal and we&apos;ll build a plant journey around it.
           </p>
           <Button size="sm" onClick={() => setEditOpen(true)}>
             Add goals

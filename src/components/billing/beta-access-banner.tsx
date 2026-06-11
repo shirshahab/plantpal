@@ -15,8 +15,8 @@ export function BetaAccessBanner({ className, compact }: BetaAccessBannerProps) 
   const title = founderMode ? "Founder Mode Active" : "Beta Access Enabled";
   const Icon = founderMode ? Crown : Sparkles;
   const description = founderMode
-    ? "All Plus and Pro features are unlocked. Upgrade prompts and paywalls are hidden."
-    : "All Plus and Family features are unlocked for testing. Upgrade prompts are hidden.";
+    ? "All Plus and Pro features are enabled. Upgrade prompts and paywalls are hidden."
+    : "All Plus and Family features are enabled for testing. Upgrade prompts are hidden.";
 
   return (
     <div

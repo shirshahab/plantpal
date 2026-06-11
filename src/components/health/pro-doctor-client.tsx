@@ -218,7 +218,7 @@ export function ProDoctorClient() {
       const dataUrl = await compressImageFile(file);
       setPhotos((prev) => ({ ...prev, [slotId]: dataUrl }));
     } catch {
-      toast("Could not read that image — try another photo.");
+      toast("Could not read that image. Try another photo.");
     }
   }
 
@@ -368,8 +368,8 @@ export function ProDoctorClient() {
 
       <Card padding="md" className="bg-green-50/50 border-green-100">
         <p className="text-sm text-gray-600">
-          The more detail you provide — photos, symptoms, and environment — the
-          more useful the diagnosis. PlantPal uses cautious, evidence-based
+          More detail means a more useful diagnosis: photos, symptoms, and
+          environment all help. PlantPal uses cautious, evidence-based
           language and will tell you when expert verification is worth it.
         </p>
       </Card>
@@ -421,7 +421,7 @@ export function ProDoctorClient() {
         />
         {linkedPlant && (
           <p className="text-xs text-gray-400">
-            Linked to {linkedPlant.name} — the report and recovery tasks will
+            Linked to {linkedPlant.name}. The report and recovery tasks will
             reference this plant.
           </p>
         )}
@@ -431,7 +431,7 @@ export function ProDoctorClient() {
       <Card padding="md" className="space-y-3">
         <h2 className="text-base font-semibold text-gray-900">2. Photos</h2>
         <p className="text-sm text-gray-500">
-          Add as many angles as you can — leaf undersides and close-ups help the
+          Add as many angles as you can. Leaf undersides and close-ups help the
           most. All photos are optional.
         </p>
         <div className="grid grid-cols-3 gap-2">
@@ -552,7 +552,7 @@ export function ProDoctorClient() {
               <FlaskConical className="w-4 h-4 text-indigo-600" /> Commercial grower mode
             </h2>
             <p className="text-sm text-gray-500 mt-0.5">
-              For controlled environment grows and high-value crops — adds
+              For controlled environment grows and high-value crops. Adds
               room-level risk assessment.
             </p>
           </div>
@@ -633,7 +633,7 @@ export function ProDoctorClient() {
             </div>
             <Input
               label="Estimated crop value (optional)"
-              placeholder="Kept private — used only to weight urgency"
+              placeholder="Kept private, used only to weight urgency"
               value={commercial.estimatedCropValue}
               onChange={(e) => setCommercialField("estimatedCropValue", e.target.value)}
             />
@@ -645,7 +645,7 @@ export function ProDoctorClient() {
         <div className="text-sm bg-red-50 rounded-lg px-3 py-2 space-y-1">
           <p className="text-red-600">{error}</p>
           <p className="text-red-500 text-xs">
-            Your answers are kept — tap the button below to try again.
+            Your answers are kept. Tap the button below to try again.
           </p>
         </div>
       )}
@@ -680,7 +680,7 @@ export function ProDoctorClient() {
               >
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-medium text-gray-900 truncate">
-                    {r.diagnosis.likelyIssue} — {r.species}
+                    {r.diagnosis.likelyIssue}, {r.species}
                   </span>
                   <span className="block text-xs text-gray-400 mt-0.5 capitalize">
                     {new Date(r.createdAt).toLocaleDateString()} · {r.status} ·{" "}
@@ -710,7 +710,7 @@ export function ProDoctorClient() {
               return (
                 <li key={req.id} className="text-sm text-gray-600">
                   {linked
-                    ? `${linked.diagnosis.likelyIssue} — ${linked.species}`
+                    ? `${linked.diagnosis.likelyIssue}, ${linked.species}`
                     : "Health report"}{" "}
                   <span className="text-xs text-violet-600 font-medium capitalize">
                     ({req.urgency} urgency · pending)

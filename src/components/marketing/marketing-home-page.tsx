@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PhoneMockup } from "@/components/marketing/phone-mockup";
 import { WaitlistCta } from "@/components/marketing/waitlist-cta";
+import { Planty } from "@/components/brand/planty";
 
 const FEATURES = [
   { icon: ScanLine, title: "Plant Scanner", copy: "Know what it is." },
@@ -70,6 +71,13 @@ export function MarketingHomePage() {
               </Link>
             </div>
             <p className="text-sm text-brand-text-secondary mt-5">No green thumb required.</p>
+            <div className="flex justify-center lg:justify-start mt-8">
+              <Planty
+                variant="main"
+                subtle
+                message="I help you not kill your plants."
+              />
+            </div>
           </div>
           <div className="flex justify-center lg:justify-end">
             <PhoneMockup />

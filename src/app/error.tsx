@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { reportClientError } from "@/lib/errors/report-error";
 import { Button } from "@/components/ui/button";
+import { PlantyAvatar } from "@/components/brand/planty";
 
 export default function ErrorPage({
   error,
@@ -23,10 +24,10 @@ export default function ErrorPage({
   return (
     <div className="min-h-screen bg-[#f8faf8] flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-        <span className="text-5xl block mb-4">🌿</span>
-        <h1 className="text-xl font-semibold text-gray-900">Something went wrong</h1>
+        <PlantyAvatar variant="uhOh" size={72} className="mx-auto mb-4" />
+        <h1 className="text-xl font-semibold text-gray-900">That didn&apos;t work.</h1>
         <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-          PlantPal hit an unexpected error. We&apos;ve logged it so we can fix it.
+          Plants are dramatic. Apps are too. We logged the error so we can fix it.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
           <Button onClick={reset}>Try again</Button>

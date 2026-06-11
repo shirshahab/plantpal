@@ -240,7 +240,7 @@ export function LandscapeMvpHub() {
 
     console.info("[garden-designer] generate ok", { source: res.data.source });
     setDesign(res.data);
-    const name = `${STYLE_GOAL_LABELS[styleGoal]} — ${SPACE_TYPE_LABELS[activeSpace]}`;
+    const name = `${STYLE_GOAL_LABELS[styleGoal]}: ${SPACE_TYPE_LABELS[activeSpace]}`;
     setProjectName(name);
 
     // Auto-save so the design is never lost, even if the user navigates away.
@@ -256,7 +256,7 @@ export function LandscapeMvpHub() {
 
     toast(
       saveResult.localOk || saveResult.remoteOk
-        ? "Design ready — saved to your projects."
+        ? "Design ready. Saved to your projects."
         : "Design ready. Tap Save to keep it."
     );
   }
@@ -268,7 +268,7 @@ export function LandscapeMvpHub() {
     setSaving(false);
 
     if (!localOk && !remoteOk) {
-      toast("Could not save — photos may be too large.");
+      toast("Could not save. Photos may be too large.");
       return;
     }
     toast("Garden design saved.");
@@ -376,7 +376,7 @@ export function LandscapeMvpHub() {
 
               {step === 1 && (
                 <Card padding="md" className="space-y-5">
-                  <p className="font-semibold text-gray-900">Step 1 — Property profile</p>
+                  <p className="font-semibold text-gray-900">Step 1: Property profile</p>
                   <Input
                     label="ZIP code"
                     value={profile.zipCode}
@@ -454,7 +454,7 @@ export function LandscapeMvpHub() {
                               {BUDGET_MVP_SYMBOLS[id]}
                             </span>
                             <span className="text-[9px] text-gray-500 leading-tight block mt-1 px-1">
-                              {BUDGET_MVP_LABELS[id].split(" — ")[1]}
+                              {BUDGET_MVP_LABELS[id].split(" - ")[1]}
                             </span>
                           </button>
                         )
@@ -495,7 +495,7 @@ export function LandscapeMvpHub() {
 
               {step === 2 && (
                 <Card padding="md" className="space-y-4">
-                  <p className="font-semibold text-gray-900">Step 2 — Upload yard photos</p>
+                  <p className="font-semibold text-gray-900">Step 2: Upload yard photos</p>
                   <p className="text-sm text-gray-500">
                     Front yard, backyard, and side yard. Photos sync to your account when signed in.
                   </p>
@@ -564,7 +564,7 @@ export function LandscapeMvpHub() {
               {step === 3 && (
                 <div className="space-y-4">
                   <Card padding="md">
-                    <p className="font-semibold text-gray-900 mb-3">Step 3 — Design style</p>
+                    <p className="font-semibold text-gray-900 mb-3">Step 3: Design style</p>
                     <StyleGoalPicker value={styleGoal} onChange={setStyleGoal} />
                   </Card>
                   {error && (

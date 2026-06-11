@@ -23,7 +23,7 @@ export function getMockDoctorReport(issue: string, plantName: string): DoctorRep
     };
   }
   return {
-    likelyIssue: "General stress — likely water or light imbalance",
+    likelyIssue: "General stress: likely water or light imbalance",
     confidence: "medium",
     why: `${plantName} shows signs that care conditions may not match its needs right now.`,
     doToday: "Review watering schedule and sun exposure. Log what you observe today.",

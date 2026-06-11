@@ -146,7 +146,7 @@ export function mapPlantInputToDb(
     water_frequency: care.waterFrequencyDays,
     fertilizer_frequency: care.fertilizeFrequencyWeeks,
     pruning_frequency: care.pruneSchedule,
-    notes: input.notes ?? "Newly added — monitor for the first two weeks.",
+    notes: input.notes ?? "Newly added. Monitor for the first two weeks.",
     last_watered_at: null,
     last_fertilized_at: null,
     last_pruned_at: null,

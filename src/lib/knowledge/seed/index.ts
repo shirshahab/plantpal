@@ -149,7 +149,7 @@ export function buildCareGuide(species: PlantSpecies): PlantCareGuide {
       species.type === "indoor" || species.type === "succulent"
         ? "Repot every 1–2 years in spring when roots circle the pot. Use fresh appropriate mix."
         : "Container plants benefit from repotting every 2–3 years with refreshed soil.",
-    seasonal_care: `Zones ${species.hardiness_zone_min}–${species.hardiness_zone_max}: protect from extremes outside range. Adjust watering seasonally — less in winter for most plants.`,
+    seasonal_care: `Zones ${species.hardiness_zone_min}–${species.hardiness_zone_max}: protect from extremes outside range. Adjust watering seasonally: less in winter for most plants.`,
     common_problems: "Overwatering, insufficient light, and pest outbreaks are the most common issues. Match care to the plant's native habits.",
     beginner_tips: `Start with consistent ${species.watering.toLowerCase()}. Place where it gets ${species.sunlight.toLowerCase()}. Check soil before watering.`,
   };

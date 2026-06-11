@@ -73,7 +73,7 @@ export function NotificationPreviews() {
       notificationType: "friend",
       friendActivity: {
         title: "Sabina added a Meyer Lemon",
-        body: "A new tree joined her garden — leave a reaction.",
+        body: "A new tree joined her garden. Leave a reaction.",
       },
       seed,
     });

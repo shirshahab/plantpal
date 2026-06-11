@@ -18,11 +18,13 @@ import { DeveloperToolsSection } from "@/components/settings/developer-tools";
 import { FounderModeBadge } from "@/components/settings/founder-mode-badge";
 import { useAuth } from "@/lib/store/auth-provider";
 import { createClient } from "@/lib/supabase/client";
-import { loadUserProfile } from "@/lib/profile/user-profile";
+import { loadUserProfile, saveUserProfile } from "@/lib/profile/user-profile";
 import {
   GROW_TYPE_OPTIONS,
   EXPERIENCE_OPTIONS,
   MAIN_GOAL_OPTIONS,
+  SOCIAL_SHARING_OPTIONS,
+  type SocialSharingLevel,
 } from "@/lib/types/profile";
 
 export default function SettingsPage() {
@@ -36,6 +38,10 @@ export default function SettingsPage() {
   const [resetOpen, setResetOpen] = useState(false);
   const [resetEduOpen, setResetEduOpen] = useState(false);
   const [profile, setProfile] = useState(loadUserProfile);
+
+  function handleSharingChange(level: SocialSharingLevel) {
+    setProfile(saveUserProfile({ socialSharing: level }));
+  }
 
   useEffect(() => {
     if (isMockMode) {
@@ -167,7 +173,7 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <h2 className="font-semibold text-gray-900">Your preferences</h2>
-          <p className="text-sm text-gray-500 mt-1">From onboarding — update anytime</p>
+          <p className="text-sm text-gray-500 mt-1">From onboarding. Update anytime</p>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {profile.onboardingComplete ? (
@@ -257,6 +263,35 @@ export default function SettingsPage() {
           <Link href="/settings/notifications">
             <Button variant="outline">Notification settings</Button>
           </Link>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="font-semibold text-gray-900">Social sharing</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Who sees your garden activity in the feed. Private by default.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {SOCIAL_SHARING_OPTIONS.map((option) => {
+            const active = (profile.socialSharing ?? "private") === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => handleSharingChange(option.id)}
+                className={`w-full text-left rounded-xl border-2 px-4 py-3 transition-colors touch-manipulation ${
+                  active
+                    ? "border-green-600 bg-green-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <p className="text-sm font-medium text-gray-900">{option.label}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{option.description}</p>
+              </button>
+            );
+          })}
         </CardContent>
       </Card>
 

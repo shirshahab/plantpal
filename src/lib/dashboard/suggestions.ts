@@ -55,7 +55,7 @@ export function buildDashboardSuggestions(
       id: "add-zip",
       icon: "📍",
       title: "Add your ZIP code",
-      description: "Unlock local weather alerts and plants trending near you.",
+      description: "Get local weather alerts and plants trending near you.",
       href: "/settings",
     });
   }
@@ -100,7 +100,7 @@ export function buildDashboardSuggestions(
       id: "invite-friend",
       icon: "👨‍👩‍👧",
       title: "Invite a family member",
-      description: "Gardens grow better together — share wins and tips.",
+      description: "Gardens grow better together. Share wins and tips.",
       href: "/invite",
     });
   }

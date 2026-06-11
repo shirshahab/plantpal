@@ -34,10 +34,10 @@ function buildYellowLeafPlan(input: ConciergePlanRequest): ConciergePlanData {
       "Soil may be staying wet too long, limiting oxygen to roots. Yellowing often appears on older leaves first when roots are stressed.",
     confidence: "medium",
     seven_day_plan: [
-      "Check soil moisture 2 inches deep — do not guess from the surface",
+      "Check soil moisture 2 inches deep. Do not guess from the surface",
       "Deep water once if dry; skip watering if soil is still damp",
       "Remove clearly damaged or yellow leaves to reduce stress",
-      "Do not fertilize yet — stressed roots cannot absorb nutrients",
+      "Do not fertilize yet. Stressed roots cannot absorb nutrients",
       "Improve drainage if water sits in saucer or soil smells sour",
       "Note which leaves are affected (old vs new growth)",
       "Take a baseline photo for comparison",
@@ -59,7 +59,7 @@ function buildYellowLeafPlan(input: ConciergePlanRequest): ConciergePlanData {
         actions: [
           "Upload a new progress photo",
           "Check for new green growth at tips",
-          "Adjust watering — longer dry window if soil stayed wet",
+          "Adjust watering: longer dry window if soil stayed wet",
           "Inspect for pests on leaf undersides",
         ],
       },
@@ -86,7 +86,7 @@ function buildYellowLeafPlan(input: ConciergePlanRequest): ConciergePlanData {
       "Do not fertilize while the plant is actively declining",
       "Avoid repotting during acute stress",
       "Do not increase watering without checking soil first",
-      "Skip harsh pruning — remove only damaged tissue",
+      "Skip harsh pruning. Remove only damaged tissue",
     ],
     when_to_rescan: "Rescan in 7 days, or sooner if yellowing spreads to new leaves.",
     products_needed: [
@@ -157,7 +157,7 @@ function buildPestPlan(input: ConciergePlanRequest): ConciergePlanData {
     ],
     what_to_avoid: [
       "Do not use harsh systemic chemicals on edible plants without label approval",
-      "Avoid over-watering while treating — wet foliage overnight can invite fungus",
+      "Avoid over-watering while treating. Wet foliage overnight can invite fungus",
       "Do not compost infested leaves",
     ],
     when_to_rescan: "Rescan in 3–5 days after first treatment to confirm pests are declining.",
@@ -175,7 +175,7 @@ function buildPestPlan(input: ConciergePlanRequest): ConciergePlanData {
 function buildGeneralPlan(input: ConciergePlanRequest): ConciergePlanData {
   const severity = inferSeverity(input.issue, input.healthStatus);
   return {
-    likely_issue: "General plant stress — water, light, or root imbalance",
+    likely_issue: "General plant stress: water, light, or root imbalance",
     severity,
     root_cause: `${input.nickname} may be out of sync with its ideal care rhythm for ${input.locationType} conditions in ZIP ${input.zipCode}.`,
     confidence: "medium",
@@ -228,7 +228,7 @@ function buildGeneralPlan(input: ConciergePlanRequest): ConciergePlanData {
       },
     ],
     what_to_avoid: [
-      "Do not change everything at once — hard to know what helped",
+      "Do not change everything at once. Hard to know what helped",
       "Avoid repotting during active stress",
       "Skip heavy pruning until health stabilizes",
     ],

@@ -10,7 +10,7 @@ export default function SoilsDatabasePage() {
     <div className="space-y-6">
       <PageHeader
         title="Soil Database"
-        description={`${getSoilCount()} soil types — drainage, water retention, pros, cons, and best plants.`}
+        description={`${getSoilCount()} soil types: drainage, water retention, pros, cons, and best plants.`}
       />
       <DatabaseNav />
       <SoilSearchPanel />
