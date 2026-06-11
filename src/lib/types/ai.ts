@@ -99,6 +99,16 @@ export interface AIPhotoAnalyzeResponse {
   recommended_lesson: string | null;
   safety_note: string;
   needs_professional_help: boolean;
+  /** Best plant guess from the photo, or a family-level guess. Null if unidentifiable. */
+  plant_id_guess: string | null;
+  /** Confidence in the plant identification, separate from diagnosis confidence. */
+  plant_id_confidence: "high" | "medium" | "low";
+  /** What the photos clearly show, e.g. "white powder on upper leaf surface". */
+  visible_observations: string[];
+  /** What extra photos or info would raise confidence. */
+  info_needed: string[];
+  /** Plain-language reason for the confidence level. */
+  confidence_reason: string;
   source: AIResponseSource;
 }
 
@@ -115,13 +125,24 @@ export interface ScanTagRequest {
 }
 
 export interface AnalyzePhotoRequest {
+  /** Primary photo (legacy single-photo clients). */
   imageDataUrl: string;
+  /** All photos including the primary, up to 3. */
+  imageDataUrls?: string[];
+  /** Free-text problem description from the user. Heavily weighted in diagnosis. */
+  userDescription?: string;
+  /** Selected symptom chip labels, e.g. ["Yellow leaves", "White powder"]. */
+  symptoms?: string[];
   plantId?: string;
   nickname?: string;
   species?: string;
   zipCode?: string;
   locationType?: LocationType;
   healthStatus?: HealthStatus;
+  /** ISO date of last watering, when a linked plant has one. */
+  lastWateredAt?: string;
+  /** ISO date of last fertilizing, when a linked plant has one. */
+  lastFertilizedAt?: string;
 }
 
 export interface AICarePlanResponse {

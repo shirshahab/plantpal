@@ -10,19 +10,22 @@ function goal(
   return { id, name, category, description, icon };
 }
 
-/** Catalog of all selectable plant goals — mirrors supabase plant_goals seed. */
+/** Catalog of all selectable plant goals. Mirrors supabase plant_goals seed. */
 export const PLANT_GOAL_CATALOG: PlantGoal[] = [
   // General
   goal("keep-it-alive", "Keep it alive", "general", "Build a simple routine that keeps your plant healthy.", "🌱"),
   goal("low-maintenance", "Low maintenance", "general", "Spend less time while still getting good results.", "☕"),
   goal("faster-growth", "Faster growth", "general", "Encourage vigorous new leaves and branches.", "🚀"),
-  goal("health-recovery", "Health recovery", "general", "Bring a stressed plant back to strength.", "💚"),
-  goal("repot-later", "Repot later", "general", "Plan the right time and method for repotting.", "🪴"),
+  goal("health-recovery", "Recover from stress", "general", "Bring a stressed plant back to strength.", "💚"),
+  goal("pest-recovery", "Pest recovery", "general", "Knock back an active pest problem and heal up.", "🐛"),
+  goal("repot-later", "Repot soon", "general", "Plan the right time and method for repotting.", "🪴"),
   goal("organic-care", "Organic care", "general", "Use natural fertilizers and gentle pest control.", "🍃"),
+  goal("learn-this-plant", "Learn this plant", "general", "Understand what this plant actually wants.", "📚"),
 
   // Fruit trees
   goal("more-fruit", "More fruit", "fruit_trees", "Maximize flower set and fruit production.", "🍊"),
   goal("bigger-fruit", "Bigger fruit", "fruit_trees", "Support larger, juicier harvests.", "🍑"),
+  goal("bigger-harvest", "Bigger harvest", "fruit_trees", "More food off the same plant.", "🧺"),
   goal("earlier-fruiting", "Earlier fruiting", "fruit_trees", "Encourage fruit sooner in the season.", "⏰"),
   goal("stronger-roots", "Stronger roots", "fruit_trees", "Build a deep root system for long-term health.", "🌳"),
 
@@ -46,6 +49,11 @@ export const PLANT_GOAL_CATALOG: PlantGoal[] = [
   goal("more-branching", "More branching", "bonsai", "Create ramification and pad density.", "🌿"),
   goal("styling-development", "Styling development", "bonsai", "Progress toward your design vision.", "🎨"),
   goal("show-preparation", "Show preparation", "bonsai", "Get show-ready before an exhibition.", "🏆"),
+
+  // Pruning & shape
+  goal("prune-for-growth", "Prune for growth", "pruning", "Cut strategically to trigger new growth.", "✂️"),
+  goal("prune-for-shape", "Prune for shape", "pruning", "Keep a clean, intentional silhouette.", "🔷"),
+  goal("better-shape", "Better shape", "pruning", "Fix legginess and build a balanced form.", "🌿"),
 
   // Indoor
   goal("fuller-growth", "Fuller growth", "indoor", "Encourage a bushy, balanced shape.", "🪴"),

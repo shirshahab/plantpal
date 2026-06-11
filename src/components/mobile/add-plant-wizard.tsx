@@ -811,9 +811,12 @@ export function AddPlantWizard() {
 
         {step === 4 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Your goal</h2>
+            <h2 className="text-xl font-bold text-gray-900">
+              What do you want from this plant?
+            </h2>
             <p className="text-sm text-gray-500">
-              We pre-selected &ldquo;Keep it alive&rdquo; — change it if you like.
+              Pick as many as you want. We pre-selected &ldquo;Keep it alive&rdquo;
+              because, well, priorities.
             </p>
             <GoalPicker
               selectedIds={goalIds}

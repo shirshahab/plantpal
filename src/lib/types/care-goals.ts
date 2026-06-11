@@ -6,6 +6,7 @@ export type GoalCategory =
   | "flowering"
   | "landscape"
   | "bonsai"
+  | "pruning"
   | "indoor";
 
 export type MissionStatus = "active" | "completed" | "skipped";
@@ -100,9 +101,10 @@ export interface CarePlanInput {
 
 export const GOAL_CATEGORY_LABELS: Record<GoalCategory, string> = {
   general: "General",
-  fruit_trees: "Fruit Trees",
+  fruit_trees: "Fruit & Harvest",
   flowering: "Flowering Plants",
   landscape: "Trees & Landscape",
   bonsai: "Bonsai",
+  pruning: "Pruning & Shape",
   indoor: "Indoor Plants",
 };

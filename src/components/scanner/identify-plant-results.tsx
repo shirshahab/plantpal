@@ -105,12 +105,14 @@ export function IdentifyPlantResults({
 
       {result.providers_disagree && !badPhoto && (
         <Card padding="md" className="border-amber-200 bg-amber-50">
-          <p className="text-sm font-semibold text-amber-950">
-            Identification sources disagree
-          </p>
+          <p className="text-sm font-semibold text-amber-950">Plant ID is uncertain</p>
           <p className="text-sm text-amber-900/90 mt-1 leading-relaxed">
-            OpenAI and Pl@ntNet suggest different plants — add another angle before adding to
-            your garden.
+            {result.plantnet_second_opinion?.[0]
+              ? `Pl@ntNet thinks ${
+                  result.plantnet_second_opinion[0].commonNames[0] ??
+                  result.plantnet_second_opinion[0].species
+                }. PlantPal sees ${result.common_name} traits. Add a leaf close-up or flower shot to settle it.`
+              : "Our identification sources suggest different plants. Add another angle before adding to your garden."}
           </p>
         </Card>
       )}
@@ -271,7 +273,7 @@ export function IdentifyPlantResults({
 
             {!result.plantnet_configured && (
               <p className="text-xs text-gray-400 text-center pt-1">
-                Optional Pl@ntNet second opinion not connected — add PLANTNET_API_KEY to enable.
+                Optional Pl@ntNet second opinion not connected. Add PLANTNET_API_KEY to enable.
               </p>
             )}
           </>
@@ -316,7 +318,7 @@ export function IdentifyPlantResults({
 
         <p className="text-[11px] text-gray-400 text-center">
           {liveAiUnavailable
-            ? "Live identification is temporarily unavailable — showing best match from PlantPal's library"
+            ? "Live identification is temporarily unavailable. Showing the best match from PlantPal's library."
             : `${primaryLabel}${plantNetLabel ? ` · ${plantNetLabel}` : ""}`}
         </p>
       </Card>

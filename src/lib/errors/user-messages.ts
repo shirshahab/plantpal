@@ -34,9 +34,11 @@ export function friendlySaveError(error: ErrorLike | string): string {
 }
 
 /** User-facing message for AI API failures shown in UI. */
-export function friendlyAiError(error: string | undefined, _feature = "AI"): string {
+export function friendlyAiError(error: string | undefined, feature = "AI"): string {
   if (!error?.trim()) {
-    return `We couldn't analyze those photos. Please try again.`;
+    return feature === "diagnosis"
+      ? "We need one clearer photo or a short description to figure this out."
+      : "We couldn't read those photos. Try a clearer shot in good light.";
   }
 
   const trimmed = error.trim();
