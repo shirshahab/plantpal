@@ -75,7 +75,9 @@ export function DashboardEmptyState() {
 
       {/* Invite friends */}
       <Card padding="md" className="text-center">
-        <p className="text-2xl mb-1">🌻</p>
+        <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
+          <Users className="w-5 h-5 text-green-700" />
+        </div>
         <p className="text-sm font-medium text-gray-900">Grow with friends and family.</p>
         <p className="text-xs text-gray-500 mt-1">
           Share garden wins, swap tips, and keep each other&apos;s plants alive.

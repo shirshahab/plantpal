@@ -32,6 +32,15 @@ export const PLANTY_MESSAGES = [
   "Your succulents would like less attention, actually.",
   "Dead leaves off, confidence up.",
   "The fern is fine. Probably. Let's check.",
+  "Let's keep this thing alive.",
+  "Your plant isn't dead yet.",
+  "Nice. New growth.",
+  "Congratulations. You have not killed it.",
+  "Plant drama detected.",
+  "That leaf looks suspicious.",
+  "Good news. It's probably fixable.",
+  "You're doing better than last week.",
+  "One less plant funeral.",
 ] as const;
 
 const LAST_INDEX_KEY = "plantpal-planty-message-index";

@@ -71,16 +71,18 @@ export function MarketingHomePage() {
               </Link>
             </div>
             <p className="text-sm text-brand-text-secondary mt-5">No green thumb required.</p>
-            <div className="flex justify-center lg:justify-start mt-8">
-              <Planty
-                variant="main"
-                subtle
-                message="I help you not kill your plants."
-              />
-            </div>
           </div>
           <div className="flex justify-center lg:justify-end">
-            <PhoneMockup />
+            <div className="relative">
+              <PhoneMockup />
+              {/* Planty waving from the corner. Small, friendly, out of the way. */}
+              <div className="absolute -bottom-4 -left-4 sm:-left-16 flex items-end gap-2">
+                <Planty variant="main" size={88} />
+                <p className="hidden sm:block mb-8 rounded-2xl rounded-bl-sm bg-white border border-brand-sage/30 shadow-sm px-3 py-2 text-xs text-brand-text">
+                  I help you not kill your plants.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>

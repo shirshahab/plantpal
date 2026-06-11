@@ -451,6 +451,10 @@ export function CameraHub() {
         <Planty variant="diagnosing" subtle message="Show me the damage." />
       )}
 
+      {tab === "diagnose" && preview && loading && (
+        <Planty variant="diagnosing" subtle message="Plant drama detected. Investigating." />
+      )}
+
       {tab === "diagnose" && !preview && (
         <Card padding="md" className="bg-green-50/50 border-green-100">
           <p className="text-xs font-semibold text-green-800 uppercase tracking-wide flex items-center gap-1.5">
@@ -881,6 +885,9 @@ export function CameraHub() {
           <p className="text-sm text-gray-500">
             <span className="font-medium">Rescan:</span> {diagnoseResult.when_to_rescan}
           </p>
+          {diagnoseResult.severity !== "serious" && (
+            <Planty variant="happy" subtle message="Good news. It's probably fixable." />
+          )}
           <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 leading-relaxed">
             {diagnoseResult.safety_note}
           </p>

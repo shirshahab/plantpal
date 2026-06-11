@@ -14,6 +14,7 @@ import { PlantOfWeekCard } from "@/components/community/plant-of-week-card";
 import { GrowersNearYou } from "@/components/dashboard/growers-near-you";
 import { ChallengesPanel } from "@/components/social/challenges-panel";
 import { loadUserProfile } from "@/lib/profile/user-profile";
+import { PlantyMood } from "@/components/brand/planty";
 import {
   PLANT_OF_WEEK,
   LOCAL_GROWER_TIPS,
@@ -34,6 +35,12 @@ export default function CommunityPage() {
         title="Community"
         description="Other people trying not to kill their plants. You belong here."
         action={<CommunityPreviewBadge />}
+      />
+
+      <PlantyMood
+        mood="happy"
+        subtle
+        message="You're doing better than last week. So is everyone here."
       />
 
       <div className="flex flex-col sm:flex-row gap-2">

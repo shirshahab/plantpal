@@ -1,15 +1,15 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { PlantyFaceSvg, type PlantyVariant } from "@/components/brand/planty";
+import { PlantyAvatar, type PlantyVariant } from "@/components/brand/planty";
 
 type PlantyMood = "happy" | "celebrate" | "tip" | "welcome";
 
-/** Map academy moods to the official mascot variants. */
+/** Map academy moods to the official mascot artwork. */
 const MOOD_VARIANT: Record<PlantyMood, PlantyVariant> = {
   welcome: "main",
   happy: "happy",
-  celebrate: "niceWork",
+  celebrate: "celebrating",
   tip: "thinking",
 };
 
@@ -46,16 +46,7 @@ export function Planty({ mood = "happy", message, size = "md", className }: Plan
 
   return (
     <div className={cn("flex items-start gap-3", className)}>
-      <div
-        className="shrink-0 rounded-2xl bg-brand-primary flex items-center justify-center"
-        style={{ width: px, height: px }}
-        aria-hidden
-      >
-        <PlantyFaceSvg
-          variant={MOOD_VARIANT[mood]}
-          className={size === "sm" ? "w-7 h-7" : size === "md" ? "w-10 h-10" : "w-14 h-14"}
-        />
-      </div>
+      <PlantyAvatar variant={MOOD_VARIANT[mood]} size={px} />
       <div className="relative flex-1 min-w-0">
         <div className="absolute -left-2 top-4 w-0 h-0 border-y-8 border-y-transparent border-r-8 border-r-white" />
         <div className="rounded-2xl rounded-tl-sm bg-white border border-brand-sage/30 px-4 py-3 shadow-sm">

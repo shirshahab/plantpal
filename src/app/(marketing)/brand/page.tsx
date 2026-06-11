@@ -10,6 +10,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { PlantPalIconTile, PlantPalLogo } from "@/components/brand/plantpal-logo";
+import { PlantyMood } from "@/components/brand/planty";
 import { OFFICIAL_APP_ICON } from "@/lib/brand/tokens";
 import { absoluteUrl, SOCIAL_LINKS } from "@/lib/marketing/site";
 import { cn } from "@/lib/utils";
@@ -150,57 +151,9 @@ function SectionHeading({
   );
 }
 
-type PlantyMood = "happy" | "thinking" | "celebrating" | "warning";
+type PlantyMoodName = "happy" | "thinking" | "celebrating" | "warning";
 
-/** Planty mascot face in four official moods. */
-function PlantyFace({ mood }: { mood: PlantyMood }) {
-  return (
-    <svg viewBox="0 0 40 40" className="w-16 h-16" fill="none" aria-hidden>
-      <path
-        d="M20 6C14 6 10 12 10 18c0 6 4 12 10 16 6-4 10-10 10-16 0-6-4-12-10-12z"
-        stroke="white"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M20 34V22" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-      {mood === "thinking" ? (
-        <>
-          <path d="M14.5 16.5l3 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-          <circle cx="24" cy="17" r="1.5" fill="white" />
-          <path d="M17 22.5h6" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-          <circle cx="30" cy="10" r="1.2" fill="white" />
-          <circle cx="33" cy="7" r="0.8" fill="white" />
-        </>
-      ) : mood === "warning" ? (
-        <>
-          <circle cx="16" cy="17" r="1.5" fill="white" />
-          <circle cx="24" cy="17" r="1.5" fill="white" />
-          <path d="M16.5 23q3.5-2.5 7 0" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M31 6v4" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="31" cy="13" r="1.1" fill="white" />
-        </>
-      ) : mood === "celebrating" ? (
-        <>
-          <path d="M14 17.5q2-2.5 4 0" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M22 17.5q2-2.5 4 0" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M15.5 21q4.5 4.5 9 0" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-          <circle cx="7" cy="9" r="1" fill="white" />
-          <circle cx="33" cy="11" r="1" fill="white" />
-          <circle cx="30" cy="5" r="0.8" fill="white" />
-        </>
-      ) : (
-        <>
-          <circle cx="16" cy="17" r="1.5" fill="white" />
-          <circle cx="24" cy="17" r="1.5" fill="white" />
-          <path d="M16 22q4 3 8 0" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-        </>
-      )}
-    </svg>
-  );
-}
-
-const PLANTY_MOODS: { mood: PlantyMood; name: string; when: string; line: string }[] = [
+const PLANTY_MOODS: { mood: PlantyMoodName; name: string; when: string; line: string }[] = [
   {
     mood: "happy",
     name: "Happy Planty",
@@ -682,7 +635,7 @@ export default function BrandPage() {
             {[
               {
                 title: "Planty mascot",
-                copy: "The face of PlantPal. Expressive, simple shapes, white linework on brand green.",
+                copy: "The face of PlantPal. A soft, friendly leaf character with the white leaf mark on the chest. Always from the official artwork. Never redrawn.",
               },
               {
                 title: "Plant illustrations",
@@ -715,8 +668,8 @@ export default function BrandPage() {
                 key={item.mood}
                 className="bg-white rounded-3xl border border-brand-sage/25 overflow-hidden"
               >
-                <div className="bg-brand-primary p-8 flex items-center justify-center">
-                  <PlantyFace mood={item.mood} />
+                <div className="bg-brand-sage/10 p-8 flex items-center justify-center">
+                  <PlantyMood mood={item.mood} size={96} />
                 </div>
                 <div className="p-6">
                   <h3 className="font-heading font-bold text-brand-text">{item.name}</h3>

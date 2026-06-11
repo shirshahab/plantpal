@@ -254,7 +254,7 @@ export default function OnboardingPageClient() {
 
         {step === 0 && (
           <div className="text-center pt-8 space-y-6 page-enter">
-            <PlantyAvatar variant="happy" size={72} className="mx-auto" />
+            <PlantyAvatar variant="main" size={104} className="mx-auto" />
             <div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                 Let&apos;s keep something alive.
