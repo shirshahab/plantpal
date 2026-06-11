@@ -11,8 +11,11 @@ import {
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { isMockMode } from "@/lib/supabase/config";
-import { clearLocalProfile } from "@/lib/profile/user-profile";
+import { clearLocalProfile, clearAllUserLocalData } from "@/lib/profile/user-profile";
 import { hydrateProfileFromCloud } from "@/lib/profile/cloud-profile";
+import { repairProfileOnLogin } from "@/lib/social/repair-profile";
+import { migrateLocalDataToCloud } from "@/lib/storage/local-to-cloud-migration";
+import { hydrateHealthReportsFromCloud } from "@/lib/health/report-storage";
 
 interface AuthContextValue {
   user: User | null;
@@ -58,6 +61,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       const snapshot = await hydrateProfileFromCloud();
+      await repairProfileOnLogin();
+      if (nextUser.id) {
+        void migrateLocalDataToCloud(nextUser.id);
+        void hydrateHealthReportsFromCloud(nextUser.id);
+      }
       if (snapshot.status === "error") {
         console.warn("[auth] profile hydration failed:", snapshot.error);
       } else {
@@ -90,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (mock) return;
     const supabase = createClient();
     await supabase.auth.signOut();
-    clearLocalProfile();
+    clearAllUserLocalData();
     hydratedForUser.current = null;
     setUser(null);
   }, [mock]);

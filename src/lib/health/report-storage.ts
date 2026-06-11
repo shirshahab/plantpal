@@ -64,6 +64,58 @@ export function listHealthReports(): ProHealthReport[] {
   );
 }
 
+/**
+ * Pull pro health reports from Supabase into localStorage cache.
+ * Cloud wins when local is empty; merges by id when both exist.
+ */
+export async function hydrateHealthReportsFromCloud(userId: string): Promise<number> {
+  if (!canUseSupabase(userId)) return 0;
+  const db = getDb();
+  const { data, error } = await db
+    .from("pro_health_reports")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(MAX_LOCAL_REPORTS);
+
+  if (error || !data?.length) return 0;
+
+  const local = readJson<ProHealthReport>(REPORTS_KEY);
+  const byId = new Map(local.map((r) => [r.id, r]));
+
+  for (const row of data) {
+    if (byId.has(row.id as string)) continue;
+    const report = {
+      id: row.id as string,
+      plantId: (row.plant_id as string) ?? null,
+      species: (row.species as string) ?? "Unknown plant",
+      growthStage: "vegetative" as const,
+      locationType: "outdoor" as const,
+      zipCode: "",
+      photoSlots: (row.photos as ProHealthReport["photoSlots"]) ?? [],
+      symptoms: (row.symptoms as ProHealthReport["symptoms"]) ?? [],
+      otherSymptom: "",
+      environment: (row.environment as ProHealthReport["environment"]) ?? {},
+      diagnosis: row.diagnosis as ProHealthReport["diagnosis"],
+      remedyPlan: row.remedy_plan as ProHealthReport["remedyPlan"],
+      prognosis: row.prognosis as ProHealthReport["prognosis"],
+      commercialContext: (row.commercial_context as ProHealthReport["commercialContext"]) ?? null,
+      commercialAssessment: null,
+      status: row.status as ProHealthReport["status"],
+      createdAt: row.created_at as string,
+      updatedAt: (row.updated_at as string) ?? (row.created_at as string),
+    } satisfies ProHealthReport;
+    byId.set(report.id, report);
+  }
+
+  const merged = [...byId.values()].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  writeJson(REPORTS_KEY, merged.slice(0, MAX_LOCAL_REPORTS));
+  notifyChanged();
+  return data.length;
+}
+
 export function getHealthReport(id: string): ProHealthReport | null {
   return listHealthReports().find((r) => r.id === id) ?? null;
 }

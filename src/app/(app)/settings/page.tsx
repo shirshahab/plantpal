@@ -256,6 +256,32 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
+          <h2 className="font-semibold text-gray-900">Your data</h2>
+          <p className="text-sm text-gray-500 mt-1">Export or request deletion of your PlantPal data</p>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <a href="/api/settings/export" download>
+            <Button variant="outline" type="button">
+              Export my data
+            </Button>
+          </a>
+          <Button
+            variant="outline"
+            type="button"
+            className="text-red-600 border-red-200 hover:bg-red-50"
+            onClick={async () => {
+              const res = await fetch("/api/settings/delete", { method: "POST" });
+              const json = (await res.json()) as { message?: string };
+              alert(json.message ?? "Deletion request submitted.");
+            }}
+          >
+            Delete my data
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <h2 className="font-semibold text-gray-900">Notifications</h2>
           <p className="text-sm text-gray-500 mt-1">Reminders, alerts, and quiet hours</p>
         </CardHeader>

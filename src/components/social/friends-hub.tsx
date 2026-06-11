@@ -223,15 +223,25 @@ export function FriendsHub() {
             results.map((user) => (
               <Card key={user.id} padding="sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700">
-                    {(user.fullName ?? user.email ?? "?").charAt(0)}
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700 overflow-hidden shrink-0">
+                    {user.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      (user.fullName ?? user.email ?? "?").charAt(0).toUpperCase()
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">{user.fullName ?? "Gardener"}</p>
+                    <p className="font-medium text-gray-900 truncate">
+                      {user.fullName ?? "Gardener"}
+                    </p>
+                    {user.username && (
+                      <p className="text-xs text-gray-500 truncate">@{user.username}</p>
+                    )}
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                   <Button size="sm" className="touch-manipulation" onClick={() => void handleSend(user.id)}>
-                    <UserPlus className="w-4 h-4" /> Add
+                    <UserPlus className="w-4 h-4" /> Add Friend
                   </Button>
                 </div>
               </Card>

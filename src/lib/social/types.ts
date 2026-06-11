@@ -69,6 +69,8 @@ export interface SocialProfile {
   fullName: string | null;
   email: string | null;
   avatarUrl: string | null;
+  /** Derived from email or display name until a dedicated username column exists. */
+  username?: string;
 }
 
 export interface FriendRequest {

@@ -33,6 +33,12 @@ export const PLANTPAL_STORAGE_KEYS = [
   "plantpal-social-requests",
   "plantpal-social-challenges",
   "plantpal-social-notifications",
+  "plantpal-health-reports",
+  "plantpal-expert-review-requests",
+  "plantpal-notification-reads",
+  "plantpal-notification-dismissed",
+  "plantpal-notification-history",
+  "plantpal-notification-prefs",
   PROFILE_STORAGE_KEY,
 ] as const;
 
