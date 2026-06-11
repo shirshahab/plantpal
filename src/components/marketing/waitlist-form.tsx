@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SocialLinks } from "@/components/marketing/social-links";
 import {
   GROW_TYPE_OPTIONS,
   PROBLEM_OPTIONS,
@@ -74,8 +75,8 @@ export function WaitlistForm({ variant = "full", source = "website", className }
         <div className="w-14 h-14 rounded-2xl bg-brand-sage/20 flex items-center justify-center mx-auto mb-4">
           <CheckCircle2 className="w-7 h-7 text-brand-primary" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900">
-          You&apos;re on the PlantPal waitlist.
+        <h3 className="font-heading text-xl font-bold text-gray-900">
+          You&apos;re in. Your plants just got a fighting chance.
         </h3>
         <p className="text-sm text-gray-500 mt-2 leading-relaxed">
           We&apos;ll email you when early access opens. Or start your garden right now.
@@ -83,6 +84,12 @@ export function WaitlistForm({ variant = "full", source = "website", className }
         <Link href="/onboarding" className="inline-block mt-6">
           <Button size="md">Start My Garden</Button>
         </Link>
+        <div className="mt-8 pt-6 border-t border-brand-sage/20">
+          <p className="text-sm text-gray-500 mb-3">
+            Follow us for plant tips, beta updates, and fewer dead leaves.
+          </p>
+          <SocialLinks className="justify-center" />
+        </div>
       </div>
     );
   }

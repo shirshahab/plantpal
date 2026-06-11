@@ -11,16 +11,12 @@ function WaitlistContent() {
   return (
     <div className="max-w-lg mx-auto px-4 sm:px-6 py-12 sm:py-20">
       <div className="text-center mb-10">
-        <p className="text-sm font-medium text-green-600 uppercase tracking-wide mb-3">
-          {source === "beta" ? "Beta access" : "Early access"}
-        </p>
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
-          {source === "beta" ? "Join the PlantPal beta" : "Join the PlantPal waitlist"}
+        <h1 className="font-heading text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight leading-[1.05]">
+          Get in before your plants give up.
         </h1>
-        <p className="text-gray-500 mt-4 leading-relaxed">
-          {source === "beta"
-            ? "You're applying for early beta access. Tell us what you grow so we can tailor your experience."
-            : "Be first to know when we launch. Tell us what you grow so we can tailor your experience."}
+        <p className="text-lg text-gray-500 mt-5 leading-relaxed">
+          Join the PlantPal beta and help shape the app that tells you what your plants
+          need before they turn into expensive compost.
         </p>
       </div>
 

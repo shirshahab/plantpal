@@ -6,13 +6,14 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
 import { BetaBadge } from "@/components/brand/beta-badge";
+import { SocialLinks } from "@/components/marketing/social-links";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/features", label: "Features" },
+  { href: "/blog", label: "Blog" },
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
-  { href: "/dashboard", label: "App" },
 ];
 
 export function MarketingHeader() {
@@ -87,6 +88,9 @@ export function MarketingHeader() {
                 Get Started Free
               </Button>
             </Link>
+          </div>
+          <div className="pt-3 border-t border-brand-sage/20 flex justify-center">
+            <SocialLinks className="gap-6" />
           </div>
         </div>
       </div>

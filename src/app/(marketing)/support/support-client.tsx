@@ -120,7 +120,7 @@ export function SupportClient() {
           <p className="text-sm text-green-700 bg-green-50 rounded-xl px-4 py-3">
             {kind === "data_deletion"
               ? "Deletion request received. We'll confirm by email and complete it within 30 days."
-              : "Message sent — we'll get back to you by email."}
+              : "Message sent. We'll get back to you by email."}
           </p>
         )}
         {status === "failed" && (

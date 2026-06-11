@@ -17,7 +17,7 @@ const SECTIONS = [
     title: "2. Guidance, not professional advice",
     body: [
       "Identification results, diagnoses, care plans, and prognosis estimates are best-effort recommendations generated from photos and the information you provide. They are not professional agricultural, horticultural, veterinary, or medical advice, and no outcome is guaranteed.",
-      "Always use your own judgment — especially with valuable plants, suspected toxic species, food crops, and safety around children and pets. For high-stakes decisions, consult a local professional.",
+      "Always use your own judgment, especially with valuable plants, suspected toxic species, food crops, and safety around children and pets. For high-stakes decisions, consult a local professional.",
     ],
   },
   {
@@ -47,7 +47,7 @@ const SECTIONS = [
   {
     title: "7. Disclaimers and limitation of liability",
     body: [
-      "PlantPal is provided “as is” without warranties of any kind. To the maximum extent permitted by law, PlantPal is not liable for indirect, incidental, or consequential damages — including loss of plants, crops, or data — arising from use of the service.",
+      "PlantPal is provided “as is” without warranties of any kind. To the maximum extent permitted by law, PlantPal is not liable for indirect, incidental, or consequential damages arising from use of the service, including loss of plants, crops, or data.",
     ],
   },
   {

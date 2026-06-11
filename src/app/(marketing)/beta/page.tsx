@@ -27,7 +27,7 @@ export default function BetaPage() {
       </div>
 
       <h1 className="font-heading text-3xl sm:text-4xl font-bold text-brand-text tracking-tight leading-tight">
-        PlantPal Beta — grow with us
+        PlantPal Beta. Grow with us.
       </h1>
       <p className="text-lg text-brand-primary font-heading font-semibold mt-4">{BRAND.tagline}</p>
 
@@ -59,8 +59,8 @@ export default function BetaPage() {
           <ul className="space-y-2">
             {[
               "Early access to the full app before public launch",
-              "Every feature unlocked during the beta",
-              "Direct line for feedback — we read every note",
+              "Every feature free during the beta",
+              "Direct line for feedback. We read every note.",
               "Influence what we ship next",
             ].map((item) => (
               <li key={item} className="flex items-start gap-2">

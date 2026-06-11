@@ -18,15 +18,15 @@ export const BRAND = {
   name: "PlantPal",
   tagline: "Grow with confidence.",
   oneLiner:
-    "PlantPal helps you track every plant, diagnose problems with photos, and get personalized care advice based on where you live.",
+    "PlantPal tells you what your plants are, what's wrong with them, and what to do next.",
   positioning:
     "PlantPal is the smart plant care coach that helps homeowners, gardeners, and plant enthusiasts track, diagnose, and care for every plant they own using local climate intelligence, expert guidance, and personalized growing goals.",
   mission:
     "Help every homeowner, gardener, and plant parent grow healthier plants through simple, local, personalized guidance.",
   vision:
-    "Become the operating system for plant ownership — where every plant has a digital twin, health profile, growth history, personalized care plan, local climate strategy, and goal-based roadmap.",
+    "Become the operating system for plant ownership, where every plant has a digital twin, health profile, growth history, personalized care plan, local climate strategy, and goal-based roadmap.",
   promise:
-    "PlantPal gives plant owners confidence — not more information, not more complexity.",
+    "PlantPal gives plant owners confidence. Not more information, not more complexity.",
   appStoreDescription:
     "PlantPal is your smart plant care coach. Track every plant you own, diagnose problems with photos, get personalized care plans, receive local climate intelligence, and know exactly what to do each day. Whether you're growing houseplants, fruit trees, bonsai, vegetables, or a full backyard garden, PlantPal helps you grow with confidence.",
   colors: {

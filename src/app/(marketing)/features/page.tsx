@@ -1,114 +1,124 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  BookOpen,
   CalendarCheck,
   CloudSun,
   Database,
-  Leaf,
+  GraduationCap,
+  Palette,
   ScanLine,
+  Stethoscope,
   Tag,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BRAND } from "@/lib/brand/tokens";
+import { WaitlistCta } from "@/components/marketing/waitlist-cta";
+import { absoluteUrl } from "@/lib/marketing/site";
 
 export const metadata: Metadata = {
   title: "Features",
-  description: BRAND.oneLiner,
+  description: "Scan plants, fix problems, and grow without guessing.",
+  alternates: { canonical: absoluteUrl("/features") },
+  openGraph: {
+    title: "PlantPal Features",
+    description: "Scan plants, fix problems, and grow without guessing.",
+    url: absoluteUrl("/features"),
+  },
 };
 
 const FEATURES = [
   {
-    icon: Leaf,
-    title: "Plant tracking",
-    copy: "Build a digital garden for every plant — photos, notes, care history, and goals in one place.",
-    gradient: "from-green-100 to-emerald-50",
-  },
-  {
     icon: ScanLine,
-    title: "Plant doctor",
-    copy: "Snap a photo of yellow leaves, pests, or damage. PlantPal suggests what to do today and what to avoid.",
-    gradient: "from-lime-100 to-green-50",
+    title: "Plant Scanner",
+    copy: "Point your camera at a plant. Find out what it is in seconds.",
   },
   {
-    icon: CloudSun,
-    title: "Local climate intelligence",
-    copy: "Care advice adapts to your ZIP code, weather, season, and USDA zone — not generic blog posts.",
-    gradient: "from-sky-100 to-blue-50",
+    icon: Stethoscope,
+    title: "Plant Doctor",
+    copy: "Yellow leaves, bugs, spots, sad stems. Photograph the problem, get a fix.",
   },
   {
     icon: CalendarCheck,
-    title: "Daily care tasks",
-    copy: "Open Today and see watering, fertilizing, pruning, health checks, and weather-aware seasonal tasks.",
-    gradient: "from-amber-100 to-orange-50",
+    title: "Care Plans",
+    copy: "Watering, feeding, pruning. One simple list of what to do today.",
   },
   {
-    icon: Database,
-    title: "Plant database",
-    copy: "Search 180+ species with care guides, soil preferences, pest risks, and hardiness zones.",
-    gradient: "from-teal-100 to-cyan-50",
+    icon: CloudSun,
+    title: "Local Alerts",
+    copy: "Heat waves, frost, wind. Your ZIP code changes the advice.",
+  },
+  {
+    icon: GraduationCap,
+    title: "Academy",
+    copy: "Three-minute lessons. Real skills. Zero lectures.",
+  },
+  {
+    icon: Users,
+    title: "Garden Feed",
+    copy: "Friends and family share plants, wins, and the occasional casualty.",
   },
   {
     icon: Tag,
-    title: "Price checker",
-    copy: "Know fair price ranges before buying at the nursery. Learn red flags and what to inspect.",
-    gradient: "from-violet-100 to-purple-50",
+    title: "Price Checker",
+    copy: "Know what a fair price looks like before the nursery does.",
   },
   {
-    icon: BookOpen,
-    title: "Learning hub",
-    copy: "Short lessons on soil, watering, pruning, pests, fruiting, flowering, and bonsai basics.",
-    gradient: "from-rose-100 to-pink-50",
+    icon: Palette,
+    title: "Garden Designer",
+    copy: "Photo of your yard in. Design, plant list, and budget out.",
+  },
+  {
+    icon: Database,
+    title: "Plant Database",
+    copy: "180+ species with care guides that get to the point.",
   },
   {
     icon: TrendingUp,
-    title: "Growth timeline",
-    copy: "Log progress photos and measurements. Watch your plants grow over weeks and seasons.",
-    gradient: "from-emerald-100 to-green-50",
+    title: "Growth Tracking",
+    copy: "Progress photos and timelines. Watch the comeback story.",
   },
 ];
 
 export default function FeaturesPage() {
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-      <div className="text-center max-w-2xl mx-auto mb-14">
-        <p className="text-sm font-medium text-brand-primary uppercase tracking-wide mb-3 font-heading">
-          Features
-        </p>
-        <h1 className="font-heading text-3xl sm:text-4xl font-bold text-brand-text tracking-tight">
-          Everything you need to grow with confidence
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+      <div className="text-center max-w-2xl mx-auto mb-16">
+        <h1 className="font-heading text-4xl sm:text-6xl font-bold text-brand-text tracking-tight leading-[1.05]">
+          Everything your plants wish you knew.
         </h1>
-        <p className="text-brand-text-secondary mt-4 leading-relaxed">
-          PlantPal combines tracking, diagnosis, local intelligence, and daily guidance in one
-          clean app.
-        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {FEATURES.map((f) => (
           <article
             key={f.title}
-            className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            className="bg-white rounded-2xl border border-brand-sage/25 shadow-sm p-6 hover:shadow-md transition-shadow"
           >
-            <div className={`h-36 bg-gradient-to-br ${f.gradient} flex items-center justify-center`}>
-              <div className="w-16 h-16 rounded-2xl bg-brand-sage/15 backdrop-blur flex items-center justify-center shadow-sm">
-                <f.icon className="w-8 h-8 text-brand-primary" />
-              </div>
+            <div className="w-11 h-11 rounded-xl bg-brand-sage/15 flex items-center justify-center mb-4">
+              <f.icon className="w-5 h-5 text-brand-primary" />
             </div>
-            <div className="p-6 sm:p-8">
-              <h2 className="font-heading text-xl font-semibold text-brand-text">{f.title}</h2>
-              <p className="text-sm text-brand-text-secondary mt-3 leading-relaxed">{f.copy}</p>
-            </div>
+            <h2 className="font-heading text-lg font-bold text-brand-text">{f.title}</h2>
+            <p className="text-sm text-brand-text-secondary mt-2 leading-relaxed">{f.copy}</p>
           </article>
         ))}
       </div>
 
       <div className="mt-16 text-center">
-        <Link href="/waitlist">
-          <Button size="lg">Start Growing</Button>
+        <Link href="/onboarding">
+          <Button size="lg" className="min-w-[200px] h-14 text-base">
+            Get Started Free
+          </Button>
         </Link>
+        <p className="text-sm text-brand-text-secondary mt-4">No green thumb required.</p>
       </div>
+
+      <WaitlistCta
+        heading="Get PlantPal free during beta."
+        subheading="Join the waitlist and we'll send you in."
+        source="features"
+        className="mt-20 px-0 sm:px-0"
+      />
     </div>
   );
 }

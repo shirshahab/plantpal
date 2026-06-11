@@ -22,7 +22,7 @@ const SECTIONS = [
     body: [
       "To provide plant identification, health diagnosis, care plans, reminders, and local growing advice.",
       "To send notifications you have enabled (care reminders, weather alerts, learning streaks). You can pause or disable these at any time in Settings → Notifications.",
-      "To improve PlantPal — aggregate usage data helps us find confusing flows and fix bugs.",
+      "To improve PlantPal. Aggregate usage data helps us find confusing flows and fix bugs.",
       "To respond when you contact support or send feedback.",
     ],
   },
@@ -43,7 +43,7 @@ const SECTIONS = [
   {
     title: "5. Data retention and deletion",
     body: [
-      "Your data is retained while your account is active. You can request deletion of your account and all associated data at any time from our Support page — requests are completed within 30 days.",
+      "Your data is retained while your account is active. You can request deletion of your account and all associated data at any time from our Support page. Requests are completed within 30 days.",
     ],
   },
   {
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
       <p className="text-sm text-gray-400 mt-2">Effective June 1, 2026</p>
       <p className="text-gray-600 mt-6 leading-relaxed">
         PlantPal helps you care for your plants. To do that well, we collect a small
-        amount of information — and we treat it carefully. This policy explains what we
+        amount of information, and we treat it carefully. This policy explains what we
         collect, why, and the choices you have.
       </p>
 

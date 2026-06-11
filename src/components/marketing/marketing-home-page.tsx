@@ -2,108 +2,74 @@
 
 import Link from "next/link";
 import {
-  BookOpen,
-  CalendarCheck,
-  Camera,
-  ChevronRight,
   CloudSun,
-  Database,
   GraduationCap,
-  Leaf,
-  MapPin,
+  Palette,
   ScanLine,
-  Sprout,
+  Stethoscope,
+  CalendarCheck,
   Tag,
-  Target,
-  TrendingUp,
-  TreePine,
-  Home,
-  Flower2,
-  Apple,
-  Check,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PhoneMockup } from "@/components/marketing/phone-mockup";
-import { WaitlistForm } from "@/components/marketing/waitlist-form";
-import { BRAND } from "@/lib/brand/tokens";
+import { WaitlistCta } from "@/components/marketing/waitlist-cta";
 
-const PROBLEMS = [
-  "Forgetting when to water",
-  "Yellow leaves you can't explain",
-  "Pest issues that spread before you notice",
-  "Confusing care instructions on nursery tags",
-  "Wrong plants for your local climate",
-  "Expensive plant mistakes",
+const FEATURES = [
+  { icon: ScanLine, title: "Plant Scanner", copy: "Know what it is." },
+  { icon: Stethoscope, title: "Plant Doctor", copy: "Find out what's wrong." },
+  { icon: CalendarCheck, title: "Care Plans", copy: "Know what to do next." },
+  { icon: CloudSun, title: "Local Alerts", copy: "Weather matters. Your ZIP code matters." },
+  { icon: GraduationCap, title: "Academy", copy: "Learn plants without falling asleep." },
+  { icon: Users, title: "Garden Feed", copy: "See what friends and family are growing." },
+  { icon: Tag, title: "Price Checker", copy: "Don't get ripped off at the nursery." },
+  { icon: Palette, title: "Garden Designer", copy: "Plan the yard before you blow the budget." },
 ];
 
-const SOLUTION_CARDS = [
-  { icon: CalendarCheck, title: "Daily tasks" },
-  { icon: ScanLine, title: "Plant doctor" },
-  { icon: Camera, title: "Photo diagnosis" },
-  { icon: CloudSun, title: "Climate intelligence" },
-  { icon: TrendingUp, title: "Growth tracking" },
-  { icon: Target, title: "Plant goals" },
-  { icon: Database, title: "Plant database" },
-  { icon: Tag, title: "Price checker" },
-];
-
-const CONFIDENCE_PILLARS = [
-  "Plant tracking",
-  "Expert guidance",
-  "Local climate intelligence",
-  "Personalized goals",
-  "Education",
-  "Progress tracking",
-];
-
-const STEPS = [
-  { n: "1", title: "Add your plant", desc: "Name it, pick species, set location and goals." },
-  { n: "2", title: "Choose your goals", desc: "More fruit, low maintenance, or bonsai development." },
-  { n: "3", title: "Get a care plan", desc: "Personalized for your climate and goals." },
-  { n: "4", title: "Track progress", desc: "Photos, growth timeline, and health scans." },
-  { n: "5", title: "Fix problems early", desc: "Catch yellow leaves and pests before they spread." },
-];
-
-const USE_CASES = [
-  { icon: Sprout, title: "Houseplants", desc: "Fiddle leaf figs, pothos, and indoor favorites." },
-  { icon: Apple, title: "Fruit trees", desc: "Citrus, avocado, and backyard harvests." },
-  { icon: TreePine, title: "Bonsai", desc: "Shape, prune, and track slow growth." },
-  { icon: Home, title: "Backyards", desc: "Full-yard care with local weather tasks." },
-  { icon: Flower2, title: "Vegetable gardens", desc: "Seasonal beds and raised planters." },
-  { icon: MapPin, title: "New homeowners", desc: "Learn what you inherited in the yard." },
+const DOES_CARDS = [
+  {
+    title: "Identify it.",
+    copy: "Snap a photo and find out what plant you're dealing with.",
+  },
+  {
+    title: "Fix it.",
+    copy: "Upload sick leaves, bugs, spots, or sad-looking stems. Get a clear action plan.",
+  },
+  {
+    title: "Grow it.",
+    copy: "Track watering, feeding, photos, lessons, and progress.",
+  },
 ];
 
 export function MarketingHomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-16 sm:pt-16 sm:pb-24">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-20 sm:pt-24 sm:pb-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="text-center lg:text-left">
-            <p className="text-sm font-medium text-brand-primary tracking-wide mb-2 font-heading">
-              PlantPal
-            </p>
-            <p className="text-sm text-brand-text-secondary mb-6">{BRAND.tagline}</p>
-            <h1 className="font-heading text-4xl sm:text-5xl lg:text-[3.25rem] font-bold text-brand-text tracking-tight leading-[1.08]">
-              Your Smart Gardening Coach
+            <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-bold text-brand-text tracking-tight leading-[1.02]">
+              Stop killing
+              <br />
+              your plants.
             </h1>
-            <p className="text-lg sm:text-xl text-brand-text-secondary mt-6 leading-relaxed max-w-xl mx-auto lg:mx-0">
-              Grow with confidence. Track every plant, diagnose problems with photos, get local
-              care advice, and know exactly what to do next.
+            <p className="text-lg sm:text-xl text-brand-text-secondary mt-6 leading-relaxed max-w-md mx-auto lg:mx-0">
+              PlantPal tells you what your plants are, what&apos;s wrong with them, and
+              what to do next.
             </p>
             <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 mt-10">
               <Link href="/onboarding">
-                <Button size="lg" className="min-w-[200px] h-14">
+                <Button size="lg" className="min-w-[200px] h-14 text-base">
                   Get Started Free
-                  <ChevronRight className="w-5 h-5" />
                 </Button>
               </Link>
-              <Link href="/onboarding">
-                <Button variant="outline" size="lg" className="min-w-[200px] h-14">
-                  Start My Garden
+              <Link href="/scanner">
+                <Button variant="outline" size="lg" className="min-w-[200px] h-14 text-base">
+                  Scan a Plant
                 </Button>
               </Link>
             </div>
+            <p className="text-sm text-brand-text-secondary mt-5">No green thumb required.</p>
           </div>
           <div className="flex justify-center lg:justify-end">
             <PhoneMockup />
@@ -111,192 +77,107 @@ export function MarketingHomePage() {
         </div>
       </section>
 
-      {/* Problem */}
-      <section className="bg-white border-y border-brand-sage/20 py-16 sm:py-20">
+      {/* Pain */}
+      <section className="bg-white border-y border-brand-sage/20 py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-brand-text tracking-tight">
-            Plants should not feel like guesswork.
+          <h2 className="font-heading text-3xl sm:text-5xl font-bold text-brand-text tracking-tight">
+            Plants are dramatic.
           </h2>
-          <p className="text-brand-text-secondary mt-4 leading-relaxed max-w-lg mx-auto">
-            You buy houseplants, fruit trees, bonsai, and garden plants — then spend months wondering
-            if you&apos;re doing it right. PlantPal removes the uncertainty.
+          <p className="text-lg text-brand-text-secondary mt-6 leading-relaxed max-w-xl mx-auto">
+            Yellow leaves. Weird spots. Crispy edges. Random death. PlantPal helps you
+            figure out what&apos;s going on before your plant becomes compost.
           </p>
-          <ul className="mt-10 space-y-4 text-left max-w-md mx-auto">
-            {PROBLEMS.map((item) => (
-              <li key={item} className="flex items-start gap-3 text-brand-text-secondary">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-growth mt-2 shrink-0" />
-                <span className="leading-relaxed">{item}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 
-      {/* Solution */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-brand-text tracking-tight">
-            PlantPal tells you what to do next.
-          </h2>
-          <p className="text-brand-text-secondary mt-4 leading-relaxed">
-            Not a plant encyclopedia. Not just reminders. The smart plant care coach.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          {SOLUTION_CARDS.map((card) => (
+      {/* What PlantPal does */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+        <h2 className="font-heading text-3xl sm:text-5xl font-bold text-brand-text text-center tracking-tight mb-14">
+          Your plant coach in your pocket.
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {DOES_CARDS.map((card) => (
             <div
               key={card.title}
-              className="bg-white rounded-2xl p-4 sm:p-5 border border-brand-sage/25 shadow-sm text-center hover:border-brand-sage hover:shadow-md transition-all"
+              className="bg-white rounded-3xl p-8 border border-brand-sage/25 shadow-sm"
             >
-              <div className="w-10 h-10 rounded-xl bg-brand-sage/15 flex items-center justify-center mx-auto mb-3">
-                <card.icon className="w-5 h-5 text-brand-primary" />
-              </div>
-              <p className="text-xs sm:text-sm font-semibold text-brand-text">{card.title}</p>
+              <h3 className="font-heading text-2xl font-bold text-brand-text">{card.title}</h3>
+              <p className="text-brand-text-secondary mt-3 leading-relaxed">{card.copy}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Grow with confidence */}
-      <section className="bg-white border-y border-brand-sage/20 py-16 sm:py-24">
+      {/* Core features */}
+      <section className="bg-white border-y border-brand-sage/20 py-20 sm:py-28">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="font-heading text-2xl sm:text-3xl font-bold text-brand-text tracking-tight">
-                Grow with confidence.
-              </h2>
-              <p className="text-brand-text-secondary mt-4 leading-relaxed">
-                PlantPal combines everything you need into one simple experience — so you spend less
-                time guessing and more time enjoying your plants.
-              </p>
-              <ul className="mt-8 space-y-3">
-                {CONFIDENCE_PILLARS.map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-brand-text">
-                    <Check className="w-4 h-4 text-brand-growth shrink-0" />
-                    <span className="text-sm font-medium">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                {
-                  icon: Leaf,
-                  title: "Track every plant",
-                  copy: "Digital garden with schedules, photos, notes, and goals.",
-                },
-                {
-                  icon: Target,
-                  title: "Goal-based plans",
-                  copy: "More fruit, low maintenance, or bonsai — different plans for different goals.",
-                },
-                {
-                  icon: GraduationCap,
-                  title: "Learn as you grow",
-                  copy: "Short lessons on soil, watering, pests, and seasonal care.",
-                },
-                {
-                  icon: MapPin,
-                  title: "Local advice",
-                  copy: "Recommendations based on your ZIP, weather, and growing zone.",
-                },
-              ].map((f) => (
-                <div
-                  key={f.title}
-                  className="rounded-2xl p-5 border border-brand-sage/25 bg-brand-bg"
-                >
-                  <f.icon className="w-5 h-5 text-brand-primary mb-3" />
-                  <h3 className="font-heading font-semibold text-brand-text text-sm">{f.title}</h3>
-                  <p className="text-xs text-brand-text-secondary mt-2 leading-relaxed">{f.copy}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <h2 className="font-heading text-2xl sm:text-3xl font-bold text-brand-text text-center tracking-tight mb-12">
-          How it works
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {STEPS.map((step) => (
-            <div
-              key={step.n}
-              className="relative bg-white rounded-2xl p-5 border border-brand-sage/25 shadow-sm"
-            >
-              <span className="text-3xl font-heading font-bold text-brand-sage/40">{step.n}</span>
-              <h3 className="font-heading font-semibold text-brand-text mt-2">{step.title}</h3>
-              <p className="text-xs text-brand-text-secondary mt-2 leading-relaxed">{step.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Use cases */}
-      <section className="bg-brand-sage/10 py-16 sm:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-brand-text text-center tracking-tight mb-12">
-            Built for every kind of grower
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {USE_CASES.map((uc) => (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {FEATURES.map((f) => (
               <div
-                key={uc.title}
-                className="bg-white rounded-2xl p-6 border border-brand-sage/25 shadow-sm"
+                key={f.title}
+                className="rounded-2xl p-5 sm:p-6 border border-brand-sage/25 bg-brand-bg hover:border-brand-sage transition-colors"
               >
-                <uc.icon className="w-6 h-6 text-brand-primary mb-3" />
-                <h3 className="font-heading font-semibold text-brand-text">{uc.title}</h3>
-                <p className="text-sm text-brand-text-secondary mt-2 leading-relaxed">{uc.desc}</p>
+                <f.icon className="w-6 h-6 text-brand-primary mb-3" />
+                <h3 className="font-heading font-bold text-brand-text">{f.title}</h3>
+                <p className="text-sm text-brand-text-secondary mt-1.5 leading-snug">{f.copy}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Get started CTA */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <div className="bg-brand-primary rounded-3xl p-8 sm:p-12 text-white text-center">
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight">
-            Your garden starts today.
-          </h2>
-          <p className="text-brand-sage mt-4 max-w-xl mx-auto leading-relaxed">
-            Scan your first plant, get a personalized care plan, and grow with confidence.
+      {/* Social proof */}
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center">
+        <h2 className="font-heading text-3xl sm:text-4xl font-bold text-brand-text tracking-tight">
+          People are already losing their minds.
+        </h2>
+        <blockquote className="mt-10">
+          <p className="text-xl sm:text-2xl text-brand-text font-medium leading-relaxed">
+            &ldquo;I shared it with growers and they said they&apos;ve never seen
+            anything like it.&rdquo;
           </p>
-          <div className="mt-8">
+          <footer className="text-sm text-brand-text-secondary mt-4">Early beta tester</footer>
+        </blockquote>
+      </section>
+
+      {/* CTA */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-20 sm:pb-28">
+        <div className="bg-brand-primary rounded-3xl p-10 sm:p-16 text-white text-center">
+          <h2 className="font-heading text-3xl sm:text-5xl font-bold tracking-tight">
+            Your plants are counting on you.
+          </h2>
+          <p className="text-brand-sage text-lg mt-5 max-w-md mx-auto leading-relaxed">
+            Start with one photo. PlantPal handles the rest.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
             <Link href="/onboarding">
               <Button
                 variant="secondary"
                 size="lg"
-                className="min-w-[200px] bg-white text-brand-primary hover:bg-brand-bg"
+                className="min-w-[200px] h-14 bg-white text-brand-primary hover:bg-brand-bg text-base"
               >
-                Start My Garden
+                Get Started Free
+              </Button>
+            </Link>
+            <Link href="/waitlist">
+              <Button
+                variant="outline"
+                size="lg"
+                className="min-w-[200px] h-14 border-white/40 text-white hover:bg-white/10 text-base"
+              >
+                Join Waitlist
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Waitlist CTA */}
-      <section className="max-w-xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <div className="text-center mb-8">
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-brand-text tracking-tight">
-            {BRAND.tagline}
-          </h2>
-          <p className="text-brand-text-secondary mt-3 leading-relaxed">
-            Join the PlantPal waitlist and get early access when we launch.
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl border border-brand-sage/25 shadow-sm p-6 sm:p-8">
-          <WaitlistForm variant="compact" source="homepage" />
-        </div>
-        <p className="text-center mt-4">
-          <Link href="/waitlist" className="text-sm text-brand-primary hover:underline">
-            Full signup form →
-          </Link>
-        </p>
-      </section>
+      {/* Email capture */}
+      <WaitlistCta
+        heading="Join the beta before your fiddle leaf gives up."
+        source="homepage"
+        className="pb-20 sm:pb-28"
+      />
     </>
   );
 }
