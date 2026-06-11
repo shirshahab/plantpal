@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Leaf,
@@ -61,6 +61,10 @@ import { isScannerDebugUI } from "@/lib/dev/dev-tools";
 import { ScannerDebugErrorPanel } from "@/components/scanner/scanner-debug-error";
 import type { IdentifyDebugLog } from "@/lib/ai/identify-errors";
 import { SYMPTOM_CHIPS } from "@/lib/scanner/symptom-chips";
+import {
+  getDiseaseReference,
+  matchSymptomsToIssues,
+} from "@/lib/intelligence/disease-intelligence";
 import { publishActivityEvent } from "@/lib/social/events";
 import { Planty } from "@/components/brand/planty";
 import { RequestExpertReview } from "@/components/health/request-expert-review";
@@ -117,6 +121,25 @@ export function CameraHub() {
   const { toast } = useToast();
   const { canScan, scansRemaining, scanLimit, scansUsed, betaUnlockAll } = useSubscription();
   const { showUpgradeModal } = useUpgradeModal();
+
+  // Live reference hints from the disease library while the user describes
+  // the problem. Hints only; the AI scan makes the actual diagnosis.
+  const symptomHints = useMemo(() => {
+    if (selectedSymptoms.length === 0 && problemDescription.trim().length < 8) return [];
+    return matchSymptomsToIssues(selectedSymptoms, problemDescription, 2);
+  }, [selectedSymptoms, problemDescription]);
+
+  // Reference entry for the diagnosed issue, when our library knows it.
+  const diagnosisReference = useMemo(() => {
+    if (!diagnoseResult) return null;
+    return (
+      getDiseaseReference(diagnoseResult.issue_detected) ??
+      diagnoseResult.likely_causes
+        .map((c) => getDiseaseReference(c))
+        .find((ref) => ref !== null) ??
+      null
+    );
+  }, [diagnoseResult]);
 
   const selectedPlant = plants.find((p) => p.id === selectedPlantId);
   const identifyPreview =
@@ -762,6 +785,22 @@ export function CameraHub() {
               );
             })}
           </div>
+          {symptomHints.length > 0 && (
+            <div className="rounded-xl bg-amber-50/70 border border-amber-100 px-3 py-2.5 space-y-1.5">
+              <p className="text-xs font-medium text-amber-800">
+                Sounds like it could be:
+              </p>
+              {symptomHints.map((hint) => (
+                <p key={hint.reference.issue} className="text-xs text-amber-900">
+                  <span className="font-semibold">{hint.reference.issue}.</span>{" "}
+                  {hint.reference.immediateActions[0]}.
+                </p>
+              ))}
+              <p className="text-[11px] text-amber-700/70">
+                Reference hints only. The photo scan makes the real call.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -885,6 +924,24 @@ export function CameraHub() {
           <p className="text-sm text-gray-500">
             <span className="font-medium">Rescan:</span> {diagnoseResult.when_to_rescan}
           </p>
+          {diagnosisReference && (
+            <div className="rounded-xl bg-sky-50/70 border border-sky-100 px-3 py-2.5 space-y-1">
+              <p className="text-[10px] font-medium text-sky-700 uppercase tracking-wide">
+                From the plant problem library · {diagnosisReference.issue}
+              </p>
+              {diagnosisReference.spreadsFast && (
+                <p className="text-xs font-medium text-sky-900">
+                  This one spreads fast. Isolate or treat soon.
+                </p>
+              )}
+              <p className="text-sm text-gray-700">
+                Prevent next time: {diagnosisReference.prevention[0]}.
+              </p>
+              <p className="text-xs text-gray-500">
+                Typical rescan window: {diagnosisReference.whenToRescan}.
+              </p>
+            </div>
+          )}
           {diagnoseResult.severity !== "serious" && (
             <Planty variant="happy" subtle message="Good news. It's probably fixable." />
           )}

@@ -40,6 +40,43 @@ async function flushToServer(payload: AnalyticsEventPayload): Promise<void> {
   }
 }
 
+/**
+ * Events that also feed the anonymous community intelligence layer
+ * (aggregate counts by ZIP prefix, never tied to a user).
+ */
+const COMMUNITY_SIGNAL_OF_EVENT: Partial<Record<AnalyticsEventName, string>> = {
+  plant_added: "plant_added",
+  scan: "plant_scanned",
+  care_plan_generated: "care_plan_generated",
+  lesson_completed: "lesson_completed",
+};
+
+function forwardCommunitySignal(
+  event: AnalyticsEventName,
+  properties?: Record<string, string | number | boolean | null>
+): void {
+  const signalType = COMMUNITY_SIGNAL_OF_EVENT[event];
+  if (!signalType) return;
+  try {
+    const profileRaw = localStorage.getItem("plantpal-user-profile");
+    const zip = profileRaw ? (JSON.parse(profileRaw).zipCode as string | undefined) : undefined;
+    void fetch("/api/intelligence/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        signal_type: signalType,
+        plant_species:
+          typeof properties?.species === "string" ? properties.species : undefined,
+        issue: typeof properties?.issue === "string" ? properties.issue : undefined,
+        zip_code: zip,
+      }),
+      keepalive: true,
+    });
+  } catch {
+    /* community signals are best-effort */
+  }
+}
+
 export function trackEvent(
   event: AnalyticsEventName,
   properties?: Record<string, string | number | boolean | null>,
@@ -58,6 +95,7 @@ export function trackEvent(
 
   enqueue(payload);
   void flushToServer(payload);
+  forwardCommunitySignal(event, properties);
 }
 
 /** Once per calendar day — used for retention tracking. */

@@ -8,6 +8,8 @@
  * a stable fact for the day and a different one tomorrow.
  */
 
+import { getReferenceFact } from "@/lib/intelligence/plant-reference";
+
 export interface PlantyFactInput {
   species?: string | null;
   commonName?: string | null;
@@ -319,6 +321,12 @@ export function getPlantyFact(input: PlantyFactInput): string {
     if (goals.some((g) => entry.match.includes(g))) {
       pool.push(...entry.facts);
     }
+  }
+
+  // Reference-backed fact from the USDA-style dataset, when we have one.
+  const referenceFact = getReferenceFact(input.species ?? input.commonName);
+  if (referenceFact) {
+    pool.push(referenceFact.fact);
   }
 
   // Care plan as a light signal: pruning advice gets a pruning fact.

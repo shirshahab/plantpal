@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MapPin, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -9,20 +9,62 @@ import {
   getLocalAreaName,
   getLocalGrowerInsights,
 } from "@/lib/dashboard/local-growers";
+import type { LocalPlantInsight } from "@/lib/intelligence/source-types";
 
 interface GrowersNearYouProps {
   zipCode: string;
 }
 
+interface PulseLine {
+  key: string;
+  emoji: string;
+  text: string;
+}
+
 /**
- * Anonymous local grower activity. Aggregate only, no personal data,
- * so it works even when the user has zero friends.
+ * Local Grower Pulse: real intelligence (NOAA weather risks, community
+ * aggregates, trend signals) with the climate model as fallback.
+ * Aggregate only, no personal data, so it works with zero friends.
  */
 export function GrowersNearYou({ zipCode }: GrowersNearYouProps) {
-  const insights = useMemo(() => getLocalGrowerInsights(zipCode), [zipCode]);
-  const area = useMemo(() => getLocalAreaName(zipCode), [zipCode]);
+  const fallback = useMemo(() => getLocalGrowerInsights(zipCode), [zipCode]);
+  const [area, setArea] = useState(() => getLocalAreaName(zipCode));
+  const [lines, setLines] = useState<PulseLine[] | null>(null);
 
-  if (insights.length === 0) return null;
+  useEffect(() => {
+    if (!zipCode?.trim()) return;
+    let cancelled = false;
+
+    fetch("/api/intelligence/insights", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ zip_code: zipCode }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: { ok?: boolean; data?: { area?: string; insights?: LocalPlantInsight[] } } | null) => {
+        if (cancelled || !json?.ok || !json.data?.insights?.length) return;
+        setLines(
+          json.data.insights.slice(0, 4).map((insight) => ({
+            key: insight.id,
+            emoji: insight.emoji ?? "🌱",
+            text: insight.title,
+          }))
+        );
+        if (json.data.area) setArea(json.data.area);
+      })
+      .catch(() => {
+        /* fallback insights already cover this */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [zipCode]);
+
+  const display: PulseLine[] =
+    lines ?? fallback.map((i) => ({ key: i.text, emoji: i.emoji, text: i.text }));
+
+  if (display.length === 0) return null;
 
   return (
     <section>
@@ -36,8 +78,8 @@ export function GrowersNearYou({ zipCode }: GrowersNearYouProps) {
         </div>
       </div>
       <Card padding="md" className="space-y-2.5">
-        {insights.map((insight) => (
-          <p key={insight.text} className="text-sm text-gray-700 flex gap-2">
+        {display.map((insight) => (
+          <p key={insight.key} className="text-sm text-gray-700 flex gap-2">
             <span aria-hidden>{insight.emoji}</span>
             <span>{insight.text}</span>
           </p>

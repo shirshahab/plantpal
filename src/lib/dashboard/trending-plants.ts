@@ -16,7 +16,7 @@ export interface TrendingPlant {
   speciesId: string | null;
   imageUrl: string | null;
   plantType: string;
-  /** Why this plant is trending locally, e.g. "27% increase in local scans this month." */
+  /** Why this plant is trending locally, e.g. "Gaining interest with growers near Pasadena." */
   reason: string;
 }
 
@@ -109,13 +109,9 @@ function currentSeason(date = new Date()): Season {
   return "winter";
 }
 
-/** Deterministic 12–38% "scan increase" per plant per month (mock trend data). */
-function mockScanIncrease(name: string, date = new Date()): number {
-  const key = `${name}-${date.getFullYear()}-${date.getMonth()}`;
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0;
-  return 12 + (Math.abs(hash) % 27);
-}
+// Note: never show exact percent stats here. These reasons are estimated
+// (climate-modeled), and estimated data must use soft language like
+// "gaining interest", never fabricated numbers.
 
 /**
  * Curated trend reasons. `{area}` is replaced with the city name.
@@ -167,10 +163,10 @@ const SEASONAL_REASONS: Record<Season, Record<string, string>> = {
 /** Modeled fallback reasons, rotated deterministically per plant. */
 function modeledReason(name: string, record: ZipRecord, index: number): string {
   const patterns = [
-    `${mockScanIncrease(name)}% increase in local scans this month.`,
-    `Frequently added by gardeners in zone ${record.usdaZone}.`,
+    `Gaining interest with growers near {area}.`,
+    `A natural fit for zone ${record.usdaZone} gardens.`,
     `A great match for your ${record.climateType.toLowerCase()} climate.`,
-    `Trending in community gardens near {area}.`,
+    `A popular pick for {area} this season.`,
   ];
   return patterns[index % patterns.length];
 }
@@ -318,7 +314,7 @@ export function getTrendInsight(plant: TrendingPlant, zipCode: string): Trending
     : `You're in USDA Zone ${record.usdaZone}.`;
 
   return {
-    trendStat: `${mockScanIncrease(plant.name)}% increase in local scans this month.`,
+    trendStat: `Gaining interest with growers near ${city}.`,
     climateNote: `Popular in ${city} thanks to the ${record.climateType.toLowerCase()} climate.`,
     zoneNote,
     plantingSeason: `${SEASON_LABELS[currentSeason()]} tip: ${plantingSeasonFor(plant.plantType)}`,
