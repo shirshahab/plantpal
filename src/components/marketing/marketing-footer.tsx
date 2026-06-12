@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
 import { BetaBadge } from "@/components/brand/beta-badge";
+import { Button } from "@/components/ui/button";
 import { SocialLinks } from "@/components/marketing/social-links";
 import { BRAND } from "@/lib/brand/tokens";
 
@@ -17,6 +18,7 @@ const FOOTER_COLUMNS = [
     heading: "Company",
     links: [
       { href: "/about", label: "About" },
+      { href: "/brand", label: "Brand Kit" },
       { href: "/contact", label: "Contact" },
       { href: "/partners", label: "Partners" },
     ],
@@ -46,6 +48,11 @@ export function MarketingFooter() {
             <p className="text-sm text-brand-text-secondary mt-2 max-w-xs leading-relaxed">
               The app that helps you not kill your plants.
             </p>
+            <Link href="/brand" className="inline-block mt-4">
+              <Button variant="outline" size="sm">
+                Brand Kit
+              </Button>
+            </Link>
             <SocialLinks className="mt-5" />
           </div>
 

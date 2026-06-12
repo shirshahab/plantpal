@@ -1,5 +1,7 @@
 # PlantPal — Official Brand Foundation
 
+> **Full brand book:** See [`BRAND_BOOK.md`](./BRAND_BOOK.md) for the complete source of truth (identity, Planty, app features, website, pricing, and checklists). This file is the quick reference.
+
 ## Brand Name
 
 **PlantPal** — simple, friendly, memorable, easy to spell and recommend.
