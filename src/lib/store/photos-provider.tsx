@@ -22,6 +22,7 @@ import {
   type StoredPlantPhoto,
 } from "@/lib/db";
 import { appendGenomeEvent } from "@/lib/genome/storage";
+import { dispatchPhotoUploaded } from "@/lib/tasks/task-events";
 
 export type { StoredPlantPhoto } from "@/lib/db/photos";
 export type PhotoFilter = "all" | PhotoType;
@@ -133,6 +134,7 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
               input.photoType === "health_scan" ? "health_scan" : "photo_added",
               { photoType: input.photoType }
             );
+            dispatchPhotoUploaded(input.plantId, input.photoType);
           }
           markSynced();
           return photo;
@@ -158,6 +160,7 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
           input.photoType === "health_scan" ? "health_scan" : "photo_added",
           { photoType: input.photoType }
         );
+        dispatchPhotoUploaded(input.plantId, input.photoType);
       }
       return record;
     },

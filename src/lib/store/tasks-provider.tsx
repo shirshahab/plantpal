@@ -28,6 +28,17 @@ import { useWeather } from "@/lib/hooks/use-weather";
 import { getLocationProfile } from "@/lib/location/location-service";
 import { useToast } from "@/lib/store/toast-provider";
 import { emitAwardXp } from "@/lib/academy/xp-events";
+import { xpForEvent } from "@/lib/academy/xp";
+import { queueCompletionBurst } from "@/components/gamification/xp-toast-queue";
+import {
+  validateTaskCompletion,
+  type CompletionSource,
+} from "@/lib/tasks/task-validation";
+import {
+  LESSON_COMPLETED_EVENT,
+  PHOTO_UPLOADED_EVENT,
+  HEALTH_SCAN_EVENT,
+} from "@/lib/tasks/task-events";
 import { recordNotificationEvent } from "@/lib/notifications/notification-analytics";
 import {
   canUseSupabase,
@@ -51,12 +62,18 @@ import type { ProHealthReport } from "@/lib/types/health";
 const STATES_KEY = "plantpal-task-states";
 const LOGS_KEY = "plantpal-care-logs";
 
+interface CompleteTaskOptions {
+  validated?: boolean;
+  source?: CompletionSource;
+  silentToast?: boolean;
+}
+
 interface TasksContextValue {
   ready: boolean;
   groups: TaskGroups;
   topTasks: PlantTask[];
   careLogs: PlantCareLog[];
-  completeTask: (task: PlantTask) => Promise<void>;
+  completeTask: (task: PlantTask, options?: CompleteTaskOptions) => Promise<void>;
   skipTask: (task: PlantTask) => void;
   snoozeTask: (task: PlantTask, days?: number) => void;
   getTasksForDay: (day: Date) => PlantTask[];
@@ -220,7 +237,18 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   }, [groups]);
 
   const completeTask = useCallback(
-    async (task: PlantTask) => {
+    async (task: PlantTask, options?: CompleteTaskOptions) => {
+      const validation = validateTaskCompletion(task, {
+        validated: options?.validated,
+        source: options?.source,
+      });
+      if (!validation.ok) {
+        toast(validation.reason ?? "Complete the action first.");
+        return;
+      }
+
+      if (taskStates[task.id]?.status === "completed") return;
+
       const now = new Date().toISOString();
       const nextStates = {
         ...taskStates,
@@ -228,7 +256,6 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       };
       persistStatesLocal(nextStates);
 
-      // Retention analytics: reminder-driven task completed.
       recordNotificationEvent("completed", task.id, task.taskType);
 
       if (canUseSupabase(user?.id) && !isMockMode) {
@@ -252,7 +279,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
           await markCareAction(task.plantId, "lastPrunedAt");
         } else if (task.taskType === "repot") {
           await markCareAction(task.plantId, "lastRepottedAt");
-        } else if (task.taskType === "scan") {
+        } else if (task.taskType === "scan" || task.taskType === "inspect") {
           await markCareAction(task.plantId, "lastHealthScanAt");
         } else if (task.taskType === "take_growth_photo") {
           await markCareAction(task.plantId, "lastGrowthPhotoAt");
@@ -289,8 +316,16 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       const missionId = task.metadata?.missionId as string | undefined;
       if (missionId) completeMission(missionId);
 
-      emitAwardXp("task_completed");
-      toast(`Done: ${task.title}`);
+      const skipTaskXp = options?.source === "lesson_quiz_passed";
+      let xpAmount = 0;
+      if (!skipTaskXp) {
+        emitAwardXp("task_completed", { silent: true });
+        xpAmount = xpForEvent("task_completed");
+      }
+
+      if (!options?.silentToast) {
+        queueCompletionBurst(xpAmount, [task.title]);
+      }
     },
     [
       taskStates,
@@ -308,6 +343,72 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       toast,
     ]
   );
+
+  const completeTasksForLesson = useCallback(
+    async (lessonId: string) => {
+      const pending = [
+        ...groups.overdue,
+        ...groups.dueToday,
+        ...groups.upcoming,
+      ].filter(
+        (t) =>
+          t.taskType === "complete_lesson" &&
+          t.metadata?.lessonId === lessonId &&
+          t.status === "pending"
+      );
+      for (const task of pending) {
+        await completeTask(task, {
+          validated: true,
+          source: "lesson_quiz_passed",
+          silentToast: true,
+        });
+      }
+    },
+    [groups, completeTask]
+  );
+
+  useEffect(() => {
+    const onLesson = (event: Event) => {
+      const lessonId = (event as CustomEvent<{ lessonId: string }>).detail?.lessonId;
+      if (lessonId) void completeTasksForLesson(lessonId);
+    };
+    const onPhoto = (event: Event) => {
+      const { plantId, photoType } = (
+        event as CustomEvent<{ plantId: string; photoType: string }>
+      ).detail;
+      if (!plantId || photoType === "health_scan") return;
+      const pending = [...groups.overdue, ...groups.dueToday, ...groups.upcoming].filter(
+        (t) =>
+          t.plantId === plantId &&
+          t.taskType === "take_growth_photo" &&
+          t.status === "pending"
+      );
+      for (const task of pending) {
+        void completeTask(task, { validated: true, source: "photo_uploaded" });
+      }
+    };
+    const onScan = (event: Event) => {
+      const plantId = (event as CustomEvent<{ plantId: string | null }>).detail?.plantId;
+      const pending = [...groups.overdue, ...groups.dueToday, ...groups.upcoming].filter(
+        (t) =>
+          (t.taskType === "scan" || t.taskType === "inspect") &&
+          t.status === "pending" &&
+          (!plantId || t.plantId === plantId || !t.plantId)
+      );
+      for (const task of pending.slice(0, 1)) {
+        void completeTask(task, { validated: true, source: "health_scan" });
+      }
+    };
+
+    window.addEventListener(LESSON_COMPLETED_EVENT, onLesson);
+    window.addEventListener(PHOTO_UPLOADED_EVENT, onPhoto);
+    window.addEventListener(HEALTH_SCAN_EVENT, onScan);
+    return () => {
+      window.removeEventListener(LESSON_COMPLETED_EVENT, onLesson);
+      window.removeEventListener(PHOTO_UPLOADED_EVENT, onPhoto);
+      window.removeEventListener(HEALTH_SCAN_EVENT, onScan);
+    };
+  }, [completeTasksForLesson, completeTask, groups]);
 
   const skipTask = useCallback(
     async (task: PlantTask) => {

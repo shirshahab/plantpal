@@ -407,7 +407,10 @@ export function generatePlantTasks(input: GeneratePlantTasksInput): TaskGroups {
         dueDate: todayStr,
         source: "manual",
         whyItMatters: "Small daily learning builds confident plant care habits.",
-        metadata: { lessonId: nextLesson.id, href: `/learn/${nextLesson.id}` },
+        metadata: {
+          lessonId: nextLesson.id,
+          href: `/academy/lesson/${nextLesson.id}`,
+        },
       })
     );
   }

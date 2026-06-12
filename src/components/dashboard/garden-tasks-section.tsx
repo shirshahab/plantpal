@@ -23,6 +23,7 @@ import {
   type TaskGroupKey,
   type TaskGroupSummary,
 } from "@/lib/tasks/task-summary";
+import { canManuallyCompleteTask } from "@/lib/tasks/task-validation";
 import type { PlantTask, TaskGroups } from "@/lib/types/tasks";
 
 const GROUP_ICONS: Record<TaskGroupKey, React.ElementType> = {
@@ -77,7 +78,7 @@ function GroupRow({
           <span className="block text-xs text-gray-500 mt-0.5">{group.subtitle}</span>
         </span>
       </Link>
-      {single ? (
+      {single && canManuallyCompleteTask(group.tasks[0]) ? (
         <button
           type="button"
           onClick={() => onComplete(group.tasks[0])}
@@ -86,6 +87,14 @@ function GroupRow({
         >
           <Check className="w-4 h-4" />
         </button>
+      ) : single ? (
+        <Link
+          href="/today"
+          className="shrink-0 text-gray-300 hover:text-gray-400"
+          aria-label={`Open ${group.title} on Today`}
+        >
+          <ArrowRight className="w-4 h-4" />
+        </Link>
       ) : (
         <Link
           href="/today"

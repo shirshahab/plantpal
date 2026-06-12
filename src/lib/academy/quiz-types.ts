@@ -38,7 +38,9 @@ export interface ScenarioQuiz extends QuizBase {
 
 export interface ImageIdentifyQuiz extends QuizBase {
   type: "image_identify";
-  placeholderLabel: string;
+  /** When set, the quiz shows the plant photo. Otherwise falls back to text-only. */
+  imageUrl?: string;
+  placeholderLabel?: string;
   options: string[];
   correctIndex: number;
 }
@@ -80,9 +82,21 @@ export function normalizeQuiz(
     };
   }
   if (type === "image_identify") {
+    const imageUrl =
+      "imageUrl" in quiz && typeof quiz.imageUrl === "string" ? quiz.imageUrl : undefined;
+    if (!imageUrl) {
+      return {
+        type: "multiple_choice",
+        question: quiz.question,
+        options: quiz.options,
+        correctIndex: quiz.correctIndex,
+        explanation: quiz.explanation,
+      };
+    }
     return {
       type: "image_identify",
       question: quiz.question,
+      imageUrl,
       placeholderLabel: "Plant photo",
       options: quiz.options,
       correctIndex: quiz.correctIndex,

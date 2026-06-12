@@ -21,6 +21,7 @@ import { DashboardActiveChallenge } from "@/components/social/dashboard-active-c
 import { GrowersNearYou } from "@/components/dashboard/growers-near-you";
 import { InviteFriendsCard } from "@/components/dashboard/invite-friends-card";
 import { DashboardEmptyState } from "@/components/dashboard/empty-state";
+import { PlantyGreetingCard } from "@/components/dashboard/planty-greeting-card";
 import { FounderModeBadge } from "@/components/settings/founder-mode-badge";
 import { SendFeedbackButton } from "@/components/feedback/send-feedback-button";
 import { NotificationCenter } from "@/components/notifications/notification-center";
@@ -95,6 +96,8 @@ export function DashboardHome() {
       <InstallPrompt />
 
       <div className="flex flex-col gap-5">
+        <PlantyGreetingCard />
+
         {/* Beta welcome — one-time pointer to the tester guide */}
         <BetaWelcomeBanner />
 

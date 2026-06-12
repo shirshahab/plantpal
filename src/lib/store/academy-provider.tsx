@@ -24,6 +24,8 @@ import {
 import { usePlants } from "./plants-provider";
 import { useEngagement } from "./engagement-provider";
 import { subscribeAwardXp } from "@/lib/academy/xp-events";
+import { queueToast, queueCompletionBurst } from "@/components/gamification/xp-toast-queue";
+import { dispatchLessonCompleted } from "@/lib/tasks/task-events";
 import { getAcademyLessonById } from "@/lib/academy/lessons";
 import { publishActivityEvent } from "@/lib/social/events";
 import { useToast } from "./toast-provider";
@@ -202,7 +204,7 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
       if (!meta?.silent) {
-        toast(`+${amount} XP`);
+        queueToast({ lines: [`+${amount} XP earned`] });
       }
       return amount;
     },
@@ -358,6 +360,8 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
         const result: LessonCompleteResult = completion;
         setLastCompletion(result);
         trackEvent("lesson_completed", { lessonId, isFirst: isFirstLesson });
+        dispatchLessonCompleted(lessonId);
+        queueCompletionBurst(result.xpEarned, [`Lesson complete`]);
         const lesson = getAcademyLessonById(lessonId);
         void publishActivityEvent({
           userId: "local-user",
@@ -414,8 +418,8 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
   }, [toast]);
 
   useEffect(() => {
-    return subscribeAwardXp((type) => {
-      awardXp(type);
+    return subscribeAwardXp((type, options) => {
+      awardXp(type, { silent: options?.silent });
     });
   }, [awardXp]);
 

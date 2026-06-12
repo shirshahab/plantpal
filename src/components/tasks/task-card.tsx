@@ -1,27 +1,32 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
-  Check,
   Clock,
+  ChevronRight,
   Droplets,
   Leaf,
   ScanLine,
   SkipForward,
   Camera,
   BookOpen,
-  ChevronRight,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { PlantTask, TaskPriority, TaskType } from "@/lib/types/tasks";
 import { parseDateKey } from "@/lib/tasks/task-engine";
+import {
+  getTaskActionConfig,
+  type CompletionSource,
+} from "@/lib/tasks/task-validation";
 import { cn } from "@/lib/utils";
 
 const TYPE_ICONS: Partial<Record<TaskType, React.ElementType>> = {
   water: Droplets,
   fertilize: Leaf,
   scan: ScanLine,
+  inspect: ScanLine,
   take_growth_photo: Camera,
   complete_lesson: BookOpen,
 };
@@ -34,8 +39,6 @@ const PRIORITY_STYLES: Record<TaskPriority, string> = {
 };
 
 function formatDue(dueDate: string) {
-  // Parse YYYY-MM-DD as local midnight — new Date(str) would treat it as UTC
-  // and label "today" tasks as overdue for users west of Greenwich.
   const due = parseDateKey(dueDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -44,21 +47,14 @@ function formatDue(dueDate: string) {
   return due.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function quickActionHref(task: PlantTask): string | null {
-  if (task.taskType === "scan") return "/scanner";
-  if (task.taskType === "take_growth_photo" && task.plantId) {
-    return `/plants/${task.plantId}#growth`;
-  }
-  if (task.taskType === "complete_lesson") {
-    const href = task.metadata?.href as string | undefined;
-    return href ?? "/learn";
-  }
-  return null;
+export interface CompleteTaskOptions {
+  validated?: boolean;
+  source?: CompletionSource;
 }
 
 interface TaskCardProps {
   task: PlantTask;
-  onComplete: (task: PlantTask) => void;
+  onComplete: (task: PlantTask, options?: CompleteTaskOptions) => void;
   onSkip: (task: PlantTask) => void;
   onSnooze: (task: PlantTask) => void;
   compact?: boolean;
@@ -71,9 +67,24 @@ export function TaskCard({
   onSnooze,
   compact = false,
 }: TaskCardProps) {
+  const [confirming, setConfirming] = useState(false);
+  const config = getTaskActionConfig(task);
   const Icon = TYPE_ICONS[task.taskType] ?? Leaf;
-  const linkHref = quickActionHref(task);
   const isDone = task.status === "completed";
+
+  function handlePrimaryAction() {
+    if (config.confirmMessage) {
+      if (confirming) return;
+      setConfirming(true);
+      const ok = window.confirm(config.confirmMessage);
+      setConfirming(false);
+      if (!ok) return;
+      onComplete(task, { validated: true, source: "manual_confirm" });
+      return;
+    }
+    if (config.href) return;
+    onComplete(task, { validated: true, source: "manual_confirm" });
+  }
 
   return (
     <Card
@@ -102,7 +113,9 @@ export function TaskCard({
             >
               {task.priority}
             </span>
-            <span className="text-[10px] text-gray-400 capitalize">{task.taskType.replace(/_/g, " ")}</span>
+            <span className="text-[10px] text-gray-400 capitalize">
+              {task.taskType.replace(/_/g, " ")}
+            </span>
           </div>
           <p className="font-medium text-gray-900 leading-snug">{task.title}</p>
           {!compact && (
@@ -120,31 +133,37 @@ export function TaskCard({
 
       {!isDone && (
         <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-gray-50">
-          <Button size="sm" onClick={() => onComplete(task)}>
-            <Check className="w-3.5 h-3.5" />
-            Done
-          </Button>
-          {linkHref ? (
-            <Link href={linkHref}>
-              <Button size="sm" variant="secondary">
-                Open
+          {config.href ? (
+            <Link href={config.href}>
+              <Button size="sm">
+                {config.primaryLabel}
                 <ChevronRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
-          ) : task.plantId ? (
+          ) : config.confirmMessage ? (
+            <Button size="sm" onClick={handlePrimaryAction} disabled={confirming}>
+              {config.primaryLabel}
+            </Button>
+          ) : null}
+
+          {!config.href && task.plantId && (
             <Link href={`/plants/${task.plantId}`}>
               <Button size="sm" variant="secondary">
                 View plant
               </Button>
             </Link>
-          ) : null}
+          )}
+
           <Button size="sm" variant="ghost" onClick={() => onSnooze(task)}>
             Snooze
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => onSkip(task)}>
-            <SkipForward className="w-3.5 h-3.5" />
-            Skip
-          </Button>
+
+          {config.allowSkip && (
+            <Button size="sm" variant="ghost" onClick={() => onSkip(task)}>
+              <SkipForward className="w-3.5 h-3.5" />
+              Skip
+            </Button>
+          )}
         </div>
       )}
     </Card>
@@ -155,7 +174,7 @@ interface TaskSectionProps {
   title: string;
   tasks: PlantTask[];
   emptyMessage?: string;
-  onComplete: (task: PlantTask) => void;
+  onComplete: (task: PlantTask, options?: CompleteTaskOptions) => void;
   onSkip: (task: PlantTask) => void;
   onSnooze: (task: PlantTask) => void;
 }

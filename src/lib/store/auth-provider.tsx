@@ -12,7 +12,7 @@ import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { isMockMode } from "@/lib/supabase/config";
 import { clearLocalProfile, clearAllUserLocalData } from "@/lib/profile/user-profile";
-import { hydrateProfileFromCloud } from "@/lib/profile/cloud-profile";
+import { hydrateProfileFromCloud, type CloudProfileSnapshot } from "@/lib/profile/cloud-profile";
 import { repairProfileOnLogin } from "@/lib/social/repair-profile";
 import { migrateLocalDataToCloud } from "@/lib/storage/local-to-cloud-migration";
 import { hydrateHealthReportsFromCloud } from "@/lib/health/report-storage";
@@ -27,6 +27,9 @@ interface AuthContextValue {
    * empty localStorage gets bounced to onboarding before hydration lands.
    */
   profileReady: boolean;
+  /** Cloud onboarding flag after hydration. Logged-in users: cloud always wins. */
+  cloudOnboardingComplete: boolean | null;
+  profileSnapshot: CloudProfileSnapshot | null;
   isMockMode: boolean;
   signOut: () => Promise<void>;
 }
@@ -38,6 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(!mock);
   const [profileReady, setProfileReady] = useState(mock);
+  const [profileSnapshot, setProfileSnapshot] = useState<CloudProfileSnapshot | null>(
+    mock ? { status: "local", onboardingComplete: false } : null
+  );
   // Avoid re-hydrating on every TOKEN_REFRESHED event for the same user.
   const hydratedForUser = useRef<string | null>(null);
 
@@ -53,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function syncFor(nextUser: User | null) {
       if (!nextUser) {
         hydratedForUser.current = null;
+        setProfileSnapshot(null);
         setProfileReady(true);
         return;
       }
@@ -61,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       const snapshot = await hydrateProfileFromCloud();
+      setProfileSnapshot(snapshot);
       await repairProfileOnLogin();
       if (nextUser.id) {
         void migrateLocalDataToCloud(nextUser.id);
@@ -103,9 +111,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, [mock]);
 
+  const cloudOnboardingComplete =
+    profileSnapshot?.onboardingComplete ??
+    (profileSnapshot?.status === "local" ? null : null);
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, profileReady, isMockMode: mock, signOut }}
+      value={{
+        user,
+        loading,
+        profileReady,
+        cloudOnboardingComplete,
+        profileSnapshot,
+        isMockMode: mock,
+        signOut,
+      }}
     >
       {children}
     </AuthContext.Provider>

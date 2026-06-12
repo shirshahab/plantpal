@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { deriveUsername, repairProfileByUserId } from "@/lib/social/repair-profile";
@@ -33,6 +33,32 @@ function getAdminClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!url || !key) return null;
   return createSupabaseClient(url, key, { auth: { persistSession: false } });
+}
+
+/** Paginate auth.users until an exact email match is found (service role). */
+async function findAuthUserByEmail(
+  admin: SupabaseClient,
+  email: string,
+  excludeUserId: string
+) {
+  const normalized = email.toLowerCase();
+  let page = 1;
+  const perPage = 200;
+
+  for (let i = 0; i < 10; i++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
+    if (error) {
+      console.warn("[users/search] listUsers failed:", error.message);
+      return null;
+    }
+    const match = data.users.find(
+      (u) => u.email?.toLowerCase() === normalized && u.id !== excludeUserId
+    );
+    if (match) return match;
+    if (data.users.length < perPage) break;
+    page += 1;
+  }
+  return null;
 }
 
 export async function GET(request: Request) {
@@ -79,12 +105,11 @@ export async function GET(request: Request) {
 
     for (const row of data ?? []) results.set(row.id, row);
 
-    // If no profile row, try auth.users and repair.
+    // If no profile row, try auth.users by exact email and repair.
     if (results.size === 0 && admin) {
-      const { data: authData } = await admin.auth.admin.listUsers({ perPage: 50 });
-      const match = authData.users.find(
-        (u) => u.email?.toLowerCase() === q.toLowerCase() && u.id !== user.id
-      );
+      const email = q.toLowerCase();
+      const match = await findAuthUserByEmail(admin, email, user.id);
+
       if (match) {
         await repairProfileByUserId(match.id);
         const { data: repaired } = await db

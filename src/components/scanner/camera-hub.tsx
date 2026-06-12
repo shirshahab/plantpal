@@ -54,6 +54,7 @@ import { friendlyAiError, friendlySaveError } from "@/lib/errors/user-messages";
 import { reportFeatureFailure } from "@/lib/errors/report-error";
 import { trackEvent } from "@/lib/analytics/track";
 import { recordScanUsage } from "@/lib/billing/usage-tracking";
+import { dispatchHealthScan } from "@/lib/tasks/task-events";
 import { useSubscription } from "@/lib/store/subscription-provider";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal-provider";
 import { UPGRADE_COPY } from "@/lib/subscription/types";
@@ -313,6 +314,7 @@ export function CameraHub() {
       if (!res.ok) throw new Error(res.error);
       setDiagnoseResult(res.data);
       recordScan();
+      dispatchHealthScan(selectedPlant?.id);
       void publishActivityEvent({
         userId: "local-user",
         eventType: "diagnosis_completed",

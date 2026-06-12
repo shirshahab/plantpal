@@ -3,21 +3,26 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { loadUserProfile } from "@/lib/profile/user-profile";
+import { loadUserProfile, isOnboardingComplete } from "@/lib/profile/user-profile";
+import { useAuth } from "@/lib/store/auth-provider";
 
 interface DebugState {
   session: boolean;
   userId: string | null;
+  profileLoaded: boolean;
   profileRow: "yes" | "no" | "error" | "n/a";
-  onboardingComplete: boolean;
+  cloudOnboarding: boolean | null;
+  localOnboarding: boolean;
+  onboardingSource: string;
+  redirectDecision: string;
   mode: "cloud" | "local";
 }
 
 /**
  * Development-only auth state readout. Renders nothing in production.
- * Shows: session detected, user id, cloud profile row, onboarding flag, mode.
  */
 export function AuthDebug() {
+  const { profileSnapshot, cloudOnboardingComplete, profileReady } = useAuth();
   const [state, setState] = useState<DebugState | null>(null);
   const [open, setOpen] = useState(true);
 
@@ -35,8 +40,12 @@ export function AuthDebug() {
           setState({
             session: false,
             userId: null,
+            profileLoaded: true,
             profileRow: "n/a",
-            onboardingComplete: local.onboardingComplete,
+            cloudOnboarding: null,
+            localOnboarding: local.onboardingComplete,
+            onboardingSource: "local",
+            redirectDecision: local.onboardingComplete ? "app" : "onboarding",
             mode: "local",
           });
         }
@@ -49,21 +58,41 @@ export function AuthDebug() {
       } = await supabase.auth.getUser();
 
       let profileRow: DebugState["profileRow"] = "n/a";
+      let cloudOnboarding: boolean | null = null;
       if (user) {
         const { data, error } = await supabase
           .from("profiles")
-          .select("id")
+          .select("onboarding_complete")
           .eq("id", user.id)
           .single();
         profileRow = error ? (error.code === "PGRST116" ? "no" : "error") : data ? "yes" : "no";
+        cloudOnboarding =
+          data && typeof data.onboarding_complete === "boolean"
+            ? data.onboarding_complete
+            : null;
       }
+
+      const source = profileSnapshot?.onboardingSource ?? "unknown";
+      const onboarded =
+        user && cloudOnboardingComplete === true
+          ? true
+          : isOnboardingComplete();
+      const redirect = !profileReady
+        ? "wait_hydration"
+        : onboarded
+          ? "app"
+          : "onboarding";
 
       if (!cancelled) {
         setState({
           session: !!user,
           userId: user?.id ?? null,
+          profileLoaded: profileReady,
           profileRow,
-          onboardingComplete: loadUserProfile().onboardingComplete,
+          cloudOnboarding: cloudOnboardingComplete ?? cloudOnboarding,
+          localOnboarding: loadUserProfile().onboardingComplete,
+          onboardingSource: source,
+          redirectDecision: redirect,
           mode: "cloud",
         });
       }
@@ -75,7 +104,7 @@ export function AuthDebug() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, []);
+  }, [profileSnapshot, cloudOnboardingComplete, profileReady]);
 
   if (process.env.NODE_ENV !== "development" || !state) return null;
 
@@ -101,7 +130,7 @@ export function AuthDebug() {
   );
 
   return (
-    <div className="fixed bottom-32 left-2 z-[90] rounded-xl bg-gray-900/90 text-white text-[10px] font-mono px-3 py-2 space-y-1 w-48 shadow-lg">
+    <div className="fixed bottom-32 left-2 z-[90] rounded-xl bg-gray-900/90 text-white text-[10px] font-mono px-3 py-2 space-y-1 w-52 shadow-lg">
       <div className="flex items-center justify-between">
         <span className="font-semibold text-gray-300">AUTH DEBUG (dev)</span>
         <button type="button" onClick={() => setOpen(false)} className="text-gray-400">
@@ -110,13 +139,18 @@ export function AuthDebug() {
       </div>
       <Row label="session" ok={state.session} />
       <Row label="user id" ok={!!state.userId} value={state.userId ? state.userId.slice(0, 8) : "none"} />
+      <Row label="profile loaded" ok={state.profileLoaded} />
+      <Row label="profile row" ok={state.profileRow === "yes"} value={state.profileRow} />
       <Row
-        label="profile row"
-        ok={state.profileRow === "yes"}
-        value={state.profileRow}
+        label="cloud onboard"
+        ok={state.cloudOnboarding === true}
+        value={
+          state.cloudOnboarding === null ? "n/a" : state.cloudOnboarding ? "true" : "false"
+        }
       />
-      <Row label="onboarded" ok={state.onboardingComplete} />
-      <Row label="mode" ok={state.mode === "cloud"} value={state.mode} />
+      <Row label="local onboard" ok={state.localOnboarding} />
+      <Row label="source" ok={state.onboardingSource === "cloud"} value={state.onboardingSource} />
+      <Row label="redirect" ok={state.redirectDecision === "app"} value={state.redirectDecision} />
     </div>
   );
 }

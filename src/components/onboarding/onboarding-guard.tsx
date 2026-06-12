@@ -8,6 +8,7 @@ import {
   hasFirstPlant,
   isOnboardingComplete,
   loadUserProfile,
+  saveUserProfile,
 } from "@/lib/profile/user-profile";
 
 const BYPASS_PREFIXES = [
@@ -23,7 +24,6 @@ const BYPASS_PREFIXES = [
 ];
 
 function isBypassPath(pathname: string): boolean {
-  // Both ways of adding a first plant must stay reachable.
   if (pathname === "/plants/new") return true;
   if (pathname === "/scanner" || pathname.startsWith("/scanner/")) return true;
   return BYPASS_PREFIXES.some(
@@ -35,17 +35,21 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { plants, loading } = usePlants();
-  const { loading: authLoading, profileReady } = useAuth();
+  const { loading: authLoading, profileReady, user, cloudOnboardingComplete, profileSnapshot } =
+    useAuth();
 
   useEffect(() => {
     if (isBypassPath(pathname)) return;
-
-    // Don't decide anything until the cloud profile has been hydrated for
-    // this session. Redirecting earlier bounces signed-in users (with a
-    // fresh localStorage) into onboarding they already finished.
     if (authLoading || !profileReady) return;
 
-    if (!isOnboardingComplete()) {
+    // Logged-in: Supabase profile is source of truth. Cloud completion
+    // overrides a stale local incomplete flag on a new device.
+    if (user && cloudOnboardingComplete === true) {
+      if (!isOnboardingComplete()) {
+        saveUserProfile({ onboardingComplete: true });
+      }
+      // fall through to first-plant check
+    } else if (!isOnboardingComplete()) {
       router.replace("/onboarding");
       return;
     }
@@ -60,7 +64,17 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     if (needsFirstPlant && pathname !== "/plants/new") {
       router.replace("/plants/new?first=1");
     }
-  }, [pathname, router, plants.length, loading, authLoading, profileReady]);
+  }, [
+    pathname,
+    router,
+    plants.length,
+    loading,
+    authLoading,
+    profileReady,
+    user,
+    cloudOnboardingComplete,
+    profileSnapshot,
+  ]);
 
   return <>{children}</>;
 }

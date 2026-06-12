@@ -207,7 +207,7 @@ export function FriendsHub() {
                 <>
                   <p className="text-sm font-medium text-gray-900">No user found.</p>
                   <p className="text-sm text-gray-500">
-                    Make sure they signed up with that email.
+                    Make sure they signed up with this exact email.
                   </p>
                   <Link href="/invite" className="inline-block pt-1">
                     <Button size="sm" variant="secondary" className="touch-manipulation">

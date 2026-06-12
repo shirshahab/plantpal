@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -21,6 +21,7 @@ import { Planty } from "@/components/academy/planty";
 import { getAcademyLessonById } from "@/lib/academy/lessons";
 import { getPathForLesson } from "@/lib/academy/paths";
 import { useAcademy } from "@/lib/store/academy-provider";
+import { markLessonStarted } from "@/lib/tasks/task-validation";
 
 export default function AcademyLessonPage({
   params,
@@ -36,6 +37,10 @@ export default function AcademyLessonPage({
   >(null);
   const path = lesson ? getPathForLesson(lesson.id) : null;
   const complete = lesson ? isLessonComplete(lesson.id) : false;
+
+  useEffect(() => {
+    if (lesson) markLessonStarted(lesson.id);
+  }, [lesson]);
 
   if (!lesson) {
     return (

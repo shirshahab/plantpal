@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, RotateCcw, ImageIcon } from "lucide-react";
+import Image from "next/image";
+import { CheckCircle2, XCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { AcademyQuiz } from "@/lib/academy/quiz-types";
@@ -20,6 +21,13 @@ const QUIZ_LABELS: Record<AcademyQuiz["type"], string> = {
   scenario: "Scenario Challenge",
   image_identify: "Identify the Issue",
 };
+
+function quizPrompt(quiz: AcademyQuiz): string {
+  if (quiz.type === "image_identify" && quiz.imageUrl) {
+    return "Look at the plant photo and choose the best answer.";
+  }
+  return "Pick the best answer.";
+}
 
 export function AcademyQuizBlock({
   quiz,
@@ -83,13 +91,18 @@ export function AcademyQuizBlock({
       {quiz.type === "scenario" && (
         <p className="text-xs text-gray-500 mb-3 italic">{quiz.context}</p>
       )}
-      <p className="text-sm text-gray-700 mb-4">{quiz.question}</p>
+      <p className="text-sm text-gray-700 mb-1">{quiz.question}</p>
+      <p className="text-xs text-gray-500 mb-4">{quizPrompt(quiz)}</p>
 
-      {quiz.type === "image_identify" && (
-        <div className="mb-4 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 aspect-video flex flex-col items-center justify-center text-gray-400">
-          <ImageIcon className="w-10 h-10 mb-2" />
-          <p className="text-sm font-medium">{quiz.placeholderLabel}</p>
-          <p className="text-xs mt-1">Image quiz coming soon. Use the options below</p>
+      {quiz.type === "image_identify" && quiz.imageUrl && (
+        <div className="mb-4 relative rounded-xl overflow-hidden border border-gray-200 aspect-video bg-gray-50">
+          <Image
+            src={quiz.imageUrl}
+            alt="Plant photo for quiz"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 640px"
+          />
         </div>
       )}
 

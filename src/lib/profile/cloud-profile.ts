@@ -24,6 +24,8 @@ export interface CloudProfileSnapshot {
   /** True when a profiles row exists for this user. */
   profileExists?: boolean;
   onboardingComplete?: boolean;
+  /** Where the onboarding flag came from after hydration. */
+  onboardingSource?: "cloud" | "local" | "none";
   error?: string;
 }
 
@@ -110,11 +112,12 @@ export async function hydrateProfileFromCloud(): Promise<CloudProfileSnapshot> {
         userId: user.id,
         profileExists: true,
         onboardingComplete: true,
+        onboardingSource: "cloud",
       };
     }
 
     if (local.onboardingComplete) {
-      // Local wins: an earlier cloud sync failed. Push it up now.
+      // Local wins only when cloud has not recorded completion yet.
       await syncProfileToCloud({
         zipCode: local.zipCode,
         experienceLevel: local.experienceLevel,
@@ -126,6 +129,7 @@ export async function hydrateProfileFromCloud(): Promise<CloudProfileSnapshot> {
         userId: user.id,
         profileExists: data !== null,
         onboardingComplete: true,
+        onboardingSource: "local",
       };
     }
 
@@ -134,6 +138,7 @@ export async function hydrateProfileFromCloud(): Promise<CloudProfileSnapshot> {
       userId: user.id,
       profileExists: data !== null,
       onboardingComplete: false,
+      onboardingSource: "none",
     };
   } catch (err) {
     return {
