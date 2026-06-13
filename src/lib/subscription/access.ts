@@ -4,6 +4,8 @@ export {
   loadMockSubscription,
   saveMockSubscription,
   setMockTier,
+  applyVerifiedSubscription,
+  isMockPurchaseAllowed,
   loadSubscriptionTier,
   saveSubscriptionTier,
   SUBSCRIPTION_STORAGE_KEY,

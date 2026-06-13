@@ -13,6 +13,8 @@
     "test:f5bot": "npx tsx scripts/test-f5bot-sync.ts",
     "debug:plantpal": "npx tsx scripts/debug-plantpal.ts",
     "audit:copy": "npx tsx scripts/audit-plantpal-copy.ts",
+    "test:billing": "npx tsx scripts/test-billing-trial.ts",
+    "test:purchases": "npx tsx scripts/test-purchase-config.ts",
     "icons:generate": "node scripts/generate-app-icons.mjs && node scripts/generate-splash.mjs"
   },
   "dependencies": {

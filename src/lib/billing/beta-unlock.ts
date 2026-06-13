@@ -6,6 +6,7 @@
  */
 
 import { loadUserProfile, saveUserProfile } from "@/lib/profile/user-profile";
+import { isDevUnlockAllFeatures } from "@/lib/billing/dev-unlock";
 
 export const FOUNDER_MODE_STORAGE_KEY = "plantpal-founder-mode";
 export const FOUNDER_MODE_COOKIE = "plantpal-founder-mode";
@@ -19,12 +20,9 @@ function parseEnvFlag(value: string | undefined): boolean {
   return normalized === "true" || normalized === "1" || normalized === "yes";
 }
 
-/** Env-based beta flag (works on server; client needs NEXT_PUBLIC_ prefix). */
+/** Env-based dev unlock (development only unless ALLOW_PROD_BETA_UNLOCK). */
 export function isBetaUnlockAll(): boolean {
-  return (
-    parseEnvFlag(process.env.NEXT_PUBLIC_BETA_UNLOCK_ALL) ||
-    parseEnvFlag(process.env.BETA_UNLOCK_ALL)
-  );
+  return isDevUnlockAllFeatures();
 }
 
 function readProfileFounderFlag(): boolean {
@@ -84,7 +82,7 @@ export function isFounderModeFromRequest(request: Request): boolean {
  * Pass `request` on server routes for cookie-based founder bypass.
  */
 export function isBetaUnlocked(request?: Request): boolean {
-  if (isBetaUnlockAll()) return true;
+  if (isDevUnlockAllFeatures()) return true;
   if (request && isFounderModeFromRequest(request)) return true;
   if (typeof window !== "undefined") return isFounderModeEnabled();
   return false;
@@ -99,15 +97,17 @@ export function getAccessLevel(request?: Request): AccessLevel {
   return isBetaUnlocked(request) ? "full" : "restricted";
 }
 
-export const BETA_TESTER_PLAN_LABEL = "Beta Tester";
+export { isDevUnlockAllFeatures } from "./dev-unlock";
+export const DEV_UNLOCK_PLAN_LABEL = "Dev unlock";
 export const FOUNDER_PLAN_LABEL = "Founder Mode";
 
 export function getEffectivePlanLabel(
   tierLabel: string,
-  options: { unrestricted?: boolean; founderMode?: boolean } = {}
+  options: { unrestricted?: boolean; founderMode?: boolean; trialActive?: boolean } = {}
 ): string {
   if (options.founderMode) return FOUNDER_PLAN_LABEL;
-  if (options.unrestricted) return BETA_TESTER_PLAN_LABEL;
+  if (options.unrestricted) return DEV_UNLOCK_PLAN_LABEL;
+  if (options.trialActive) return "Free trial";
   return tierLabel;
 }
 

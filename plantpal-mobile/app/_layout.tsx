@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { PurchasesProvider } from "@/providers/PurchasesProvider";
 import { Brand } from "@/lib/theme";
 import { registerForPushNotifications } from "@/lib/notifications";
 
@@ -35,17 +36,20 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: Brand.background },
-          headerTintColor: Brand.primary,
-          contentStyle: { backgroundColor: Brand.background },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ title: "Sign in", presentation: "modal" }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+      <PurchasesProvider>
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: Brand.background },
+            headerTintColor: Brand.primary,
+            contentStyle: { backgroundColor: Brand.background },
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="web" options={{ title: "PlantPal" }} />
+          <Stack.Screen name="login" options={{ title: "Sign in", presentation: "modal" }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </PurchasesProvider>
     </AuthProvider>
   );
 }

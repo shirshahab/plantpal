@@ -27,7 +27,7 @@ import { FounderModeBadge } from "@/components/settings/founder-mode-badge";
 import { SendFeedbackButton } from "@/components/feedback/send-feedback-button";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { TasksDebug } from "@/components/dev/tasks-debug";
-import { BetaWelcomeBanner } from "@/components/dashboard/beta-welcome-banner";
+import { TrialBanner } from "@/components/billing/trial-banner";
 import { usePlants } from "@/lib/store/plants-provider";
 import { useTasks } from "@/lib/store/tasks-provider";
 import { useMoat } from "@/lib/store/moat-provider";
@@ -100,8 +100,7 @@ export function DashboardHome() {
       <div className="flex flex-col gap-5">
         <PlantyGreetingCard />
 
-        {/* Beta welcome — one-time pointer to the tester guide */}
-        <BetaWelcomeBanner />
+        <TrialBanner />
 
         {/* 0. Plant health alert — active diagnosis reports come first */}
         <DashboardHealthAlert />

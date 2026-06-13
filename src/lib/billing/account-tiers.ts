@@ -6,19 +6,25 @@ import {
 } from "./tier-config";
 import {
   FREE_PLANT_LIMIT,
-  PUBLIC_BETA_UNLOCK_ALL,
   canAccessAcademyPath,
   isProTier,
 } from "./limits";
+import { isDevUnlockAllFeatures } from "./dev-unlock";
+import { hasLaunchTrialAccess } from "./trial";
+import type { UserSubscription } from "@/lib/types/billing";
 
 export interface AccessOptions {
   betaUnlockAll?: boolean;
   bypassLimits?: boolean;
   founderMode?: boolean;
+  trialFullAccess?: boolean;
+  subscription?: UserSubscription;
 }
 
 export function isAccessUnrestricted(options: AccessOptions = {}): boolean {
-  if (PUBLIC_BETA_UNLOCK_ALL) return true;
+  if (isDevUnlockAllFeatures()) return true;
+  if (options.trialFullAccess) return true;
+  if (options.subscription && hasLaunchTrialAccess(options.subscription)) return true;
   return !!(options.betaUnlockAll || options.bypassLimits || options.founderMode);
 }
 
@@ -46,15 +52,20 @@ export function canAccessFeature(
 ): boolean {
   if (isAccessUnrestricted(options)) return true;
 
+  const gateTier =
+    options.subscription && hasLaunchTrialAccess(options.subscription)
+      ? AccountTier.FAMILY
+      : tier;
+
   const normalized = normalizeFeature(feature);
   if (!normalized) return false;
 
   if (normalized === "unlimited_plants") {
-    return isProTier(tier);
+    return isProTier(gateTier);
   }
 
   if (normalized === "unlimited_scans") {
-    return isProTier(tier);
+    return isProTier(gateTier);
   }
 
   if (normalized === "academy_basics") {
@@ -62,7 +73,7 @@ export function canAccessFeature(
   }
 
   const required = FEATURE_REQUIRED_TIER[normalized];
-  return TIER_RANK[tier] >= TIER_RANK[required];
+  return TIER_RANK[gateTier] >= TIER_RANK[required];
 }
 
 export function canAccessAcademyPathForTier(
@@ -71,12 +82,20 @@ export function canAccessAcademyPathForTier(
   options: AccessOptions = {}
 ): boolean {
   if (isAccessUnrestricted(options)) return true;
-  return canAccessAcademyPath(tier, pathId);
+  const gateTier =
+    options.subscription && hasLaunchTrialAccess(options.subscription)
+      ? AccountTier.FAMILY
+      : tier;
+  return canAccessAcademyPath(gateTier, pathId);
 }
 
 export function getPlantLimit(tier: Tier, options: AccessOptions = {}): number | null {
   if (isAccessUnrestricted(options)) return null;
-  return isFree(tier) ? FREE_PLANT_LIMIT : null;
+  const gateTier =
+    options.subscription && hasLaunchTrialAccess(options.subscription)
+      ? AccountTier.FAMILY
+      : tier;
+  return isFree(gateTier) ? FREE_PLANT_LIMIT : null;
 }
 
 export function canAddPlantCount(

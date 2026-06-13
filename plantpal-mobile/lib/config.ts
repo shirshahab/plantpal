@@ -34,4 +34,9 @@ export function isSupabaseConfigured(): boolean {
   return url.startsWith("https://") && anonKey.length > 20;
 }
 
-export const APP_SCHEME = "plantpal";
+export function getRevenueCatConfig() {
+  return {
+    iosKey: read("EXPO_PUBLIC_REVENUECAT_IOS_API_KEY"),
+    androidKey: read("EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY"),
+  };
+}

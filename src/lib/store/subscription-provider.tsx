@@ -25,10 +25,15 @@ import {
   isFounderMode,
 } from "@/lib/billing/beta-unlock";
 import {
+  getEffectiveTier,
+  isTrialActive,
   loadMockSubscription,
+  loadSubscriptionWithTrial,
   setMockTier,
+  expireTrialIfNeeded,
+  isMockPurchaseAllowed,
 } from "@/lib/billing/subscription-state";
-import { PUBLIC_BETA_UNLOCK_ALL } from "@/lib/billing/limits";
+import { trialDaysRemaining } from "@/lib/billing/trial";
 import { usePlants } from "@/lib/store/plants-provider";
 import {
   buildUsageSummary,
@@ -40,10 +45,13 @@ import {
 
 interface SubscriptionContextValue {
   tier: AccountTier;
+  effectiveTier: AccountTier;
   subscription: UserSubscription;
+  trialActive: boolean;
+  trialDaysLeft: number | null;
   setTier: (tier: AccountTier, billingCycle?: UserSubscription["billingCycle"]) => void;
+  refreshSubscription: () => void;
   bypassLimits: boolean;
-  /** True when beta env or founder mode grants full access */
   betaUnlockAll: boolean;
   founderMode: boolean;
   canUse: (feature: BillingFeature | string) => boolean;
@@ -63,21 +71,21 @@ const SubscriptionContext = createContext<SubscriptionContextValue | null>(null)
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [subscription, setSubscription] = useState<UserSubscription>(() => loadMockSubscription());
-  // Public beta: everything unlocked — no paywalls (Phase 37.5)
-  const [bypassLimits, setBypassLimits] = useState(PUBLIC_BETA_UNLOCK_ALL);
   const [accessRevision, setAccessRevision] = useState(0);
   const [scanRevision, setScanRevision] = useState(0);
   const { plants } = usePlants();
 
   useEffect(() => {
     hydrateFounderModeFromStorage();
-    const sub = loadMockSubscription();
-    setSubscription(sub);
-    setBypassLimits(PUBLIC_BETA_UNLOCK_ALL);
+    expireTrialIfNeeded();
+    setSubscription(loadSubscriptionWithTrial());
   }, []);
 
   useEffect(() => {
-    const refreshSub = () => setSubscription(loadMockSubscription());
+    const refreshSub = () => {
+      expireTrialIfNeeded();
+      setSubscription(loadSubscriptionWithTrial());
+    };
     window.addEventListener("plantpal-subscription-updated", refreshSub);
     return () => window.removeEventListener("plantpal-subscription-updated", refreshSub);
   }, []);
@@ -97,20 +105,32 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const betaUnlockAll = useMemo(() => isBetaUnlocked(), [accessRevision]);
   const founderMode = useMemo(() => isFounderMode(), [accessRevision]);
-
-  const tier = subscription.tier;
+  const trialActive = isTrialActive(subscription);
+  const effectiveTier = getEffectiveTier(subscription);
+  const tier = effectiveTier;
 
   const accessOptions = useMemo(
     () => ({
-      betaUnlockAll: betaUnlockAll || bypassLimits,
-      bypassLimits: bypassLimits || betaUnlockAll,
+      betaUnlockAll,
+      bypassLimits: betaUnlockAll,
       founderMode,
+      trialFullAccess: trialActive,
+      subscription,
     }),
-    [betaUnlockAll, bypassLimits, founderMode]
+    [betaUnlockAll, founderMode, trialActive, subscription]
   );
+
+  const refreshSubscription = useCallback(() => {
+    expireTrialIfNeeded();
+    setSubscription(loadSubscriptionWithTrial());
+  }, []);
 
   const setTier = useCallback(
     (next: AccountTier, billingCycle: UserSubscription["billingCycle"] = "monthly") => {
+      if (!isMockPurchaseAllowed()) {
+        console.warn("[billing] setTier is disabled in production; use store purchase flow");
+        return;
+      }
       const updated = setMockTier(next, billingCycle);
       setSubscription(updated);
     },
@@ -118,20 +138,21 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   );
 
   const canUse = useCallback(
-    (feature: BillingFeature | string) => canAccessFeature(tier, feature, accessOptions),
-    [tier, accessOptions]
+    (feature: BillingFeature | string) =>
+      canAccessFeature(effectiveTier, feature, accessOptions),
+    [effectiveTier, accessOptions]
   );
 
   const canAddPlant = useCallback(
-    () => canAddPlantCount(tier, plants.length, accessOptions),
-    [tier, plants.length, accessOptions]
+    () => canAddPlantCount(effectiveTier, plants.length, accessOptions),
+    [effectiveTier, plants.length, accessOptions]
   );
 
-  const unrestricted = betaUnlockAll || bypassLimits;
+  const unrestricted = betaUnlockAll || trialActive;
 
   const canScan = useCallback(
-    () => canUseScan(tier, unrestricted),
-    [tier, unrestricted, scanRevision]
+    () => canUseScan(effectiveTier, unrestricted),
+    [effectiveTier, unrestricted, scanRevision]
   );
 
   const scanUsage = useMemo(() => getMonthlyScanUsage(), [scanRevision]);
@@ -139,44 +160,51 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const usage = useMemo(
     () =>
       buildUsageSummary(
-        tier,
+        effectiveTier,
         plants.length,
-        getPlantLimit(tier, accessOptions),
+        getPlantLimit(effectiveTier, accessOptions),
         unrestricted
       ),
-    [tier, plants.length, accessOptions, unrestricted, scanRevision]
+    [effectiveTier, plants.length, accessOptions, unrestricted, scanRevision]
   );
 
   const canAccessAcademyPathFn = useCallback(
-    (pathId: string) => canAccessAcademyPathForTier(tier, pathId, accessOptions),
-    [tier, accessOptions]
+    (pathId: string) => canAccessAcademyPathForTier(effectiveTier, pathId, accessOptions),
+    [effectiveTier, accessOptions]
   );
 
   const value = useMemo(
     () => ({
       tier,
+      effectiveTier,
       subscription,
+      trialActive,
+      trialDaysLeft: trialDaysRemaining(subscription),
       setTier,
-      bypassLimits,
+      refreshSubscription,
+      bypassLimits: unrestricted,
       betaUnlockAll,
       founderMode,
       canUse,
       canAddPlant,
       canScan,
-      plantLimit: getPlantLimit(tier, accessOptions),
-      plantsRemaining: calcPlantsRemaining(tier, plants.length, accessOptions),
+      plantLimit: getPlantLimit(effectiveTier, accessOptions),
+      plantsRemaining: calcPlantsRemaining(effectiveTier, plants.length, accessOptions),
       plantCount: plants.length,
       scansUsed: scanUsage.scans,
       scanLimit: usage.scanLimit,
-      scansRemaining: calcScansRemaining(tier, unrestricted),
+      scansRemaining: calcScansRemaining(effectiveTier, unrestricted),
       usage,
       canAccessAcademyPath: canAccessAcademyPathFn,
     }),
     [
       tier,
+      effectiveTier,
       subscription,
+      trialActive,
       setTier,
-      bypassLimits,
+      refreshSubscription,
+      unrestricted,
       betaUnlockAll,
       founderMode,
       canUse,
@@ -191,9 +219,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   );
 
   return (
-    <SubscriptionContext.Provider value={value}>
-      {children}
-    </SubscriptionContext.Provider>
+    <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>
   );
 }
 

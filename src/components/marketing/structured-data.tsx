@@ -40,7 +40,7 @@ export function SiteStructuredData() {
         "@type": "Offer",
         price: "0",
         priceCurrency: "USD",
-        description: "Free during public beta.",
+        description: "Free to start with a 14-day full access trial.",
       },
     },
   ];

@@ -9,9 +9,15 @@ export type SubscriptionStatus =
   | "expired"
   | "mock";
 
-export type TrialStatus = "none" | "active" | "expired";
+export type TrialStatus = "none" | "active" | "expired" | "converted";
 
-export type TrialSource = "referral_invitee" | "referral_referrer" | "promo";
+export type TrialSource =
+  | "launch"
+  | "referral_invitee"
+  | "referral_referrer"
+  | "promo";
+
+export type StorePlatform = "ios" | "android" | "web";
 
 export interface UserSubscription {
   tier: AccountTier;
@@ -21,6 +27,12 @@ export interface UserSubscription {
   planStartDate: string | null;
   planEndDate: string | null;
   trialSource?: TrialSource;
+  trialStartedAt?: string | null;
+  trialEndsAt?: string | null;
+  storePlatform?: StorePlatform | null;
+  storeProductId?: string | null;
+  storeOriginalTransactionId?: string | null;
+  storePurchaseToken?: string | null;
 }
 
 export interface PlanPricing {

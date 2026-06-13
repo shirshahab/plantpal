@@ -5,13 +5,13 @@ import { Sparkles, Crown, Check } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BetaAccessBanner } from "@/components/billing/beta-access-banner";
+import { TrialBanner } from "@/components/billing/trial-banner";
 import { FeatureLockLabel } from "@/components/billing/feature-lock-label";
 import { UsageMeters } from "@/components/billing/billing-dashboard";
 import { useSubscription } from "@/lib/store/subscription-provider";
 import { buildSubscriptionPlans } from "@/lib/subscription/plans";
 import { TIER_LABELS } from "@/lib/subscription/types";
-import { getEffectivePlanLabel, isBetaUnlockAll } from "@/lib/billing/beta-unlock";
+import { getEffectivePlanLabel, isDevUnlockAllFeatures } from "@/lib/billing/beta-unlock";
 import type { BillingFeature } from "@/lib/billing/feature-gates";
 
 const FEATURE_STATUS_ROWS: { feature: BillingFeature; label: string }[] = [
@@ -37,16 +37,20 @@ export function SubscriptionSettingsPanel() {
     betaUnlockAll,
     founderMode,
     usage,
+    trialActive,
   } = useSubscription();
 
+  const devUnlock = isDevUnlockAllFeatures();
   const plan = buildSubscriptionPlans(subscription.billingCycle).find((p) => p.id === tier);
   const planLabel = getEffectivePlanLabel(TIER_LABELS[tier], {
     founderMode,
-    unrestricted: betaUnlockAll && !founderMode,
+    unrestricted: devUnlock && !founderMode,
+    trialActive,
   });
 
   return (
     <div className="space-y-6 max-w-2xl">
+      <TrialBanner />
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -56,27 +60,26 @@ export function SubscriptionSettingsPanel() {
             <div>
               <h2 className="font-semibold text-gray-900">Subscription</h2>
               <p className="text-sm text-gray-500">
-                {founderMode
-                  ? "Founder Mode Active: all features enabled"
-                  : betaUnlockAll
-                    ? "Beta Access Enabled: all features available"
-                    : "Preview mode: no billing yet"}
+                {trialActive
+                  ? "Free trial: all features unlocked"
+                  : tier === "free"
+                    ? "Free plan with limits on scans and plants"
+                    : "Active paid plan"}
               </p>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
-          {betaUnlockAll && <BetaAccessBanner />}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="rounded-xl bg-gray-50 px-4 py-3">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Plan</p>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant={betaUnlockAll || tier !== "free" ? "success" : "outline"}>
+                <Badge variant={trialActive || tier !== "free" ? "success" : "outline"}>
                   {planLabel}
                 </Badge>
               </div>
-              {!betaUnlockAll && plan && plan.price !== "$0" && (
+              {!devUnlock && plan && plan.price !== "$0" && (
                 <p className="text-sm text-gray-600 mt-2">
                   {plan.price}
                   {plan.period}
@@ -90,15 +93,15 @@ export function SubscriptionSettingsPanel() {
               <p className="text-xs text-gray-500 uppercase tracking-wide">Plants used</p>
               <p className="text-lg font-semibold text-gray-900 mt-1">
                 {plantCount}
-                {plantLimit !== null && !betaUnlockAll ? ` / ${plantLimit}` : " · Unlimited"}
+                {plantLimit !== null && !trialActive && !devUnlock ? ` / ${plantLimit}` : " · Unlimited"}
               </p>
-              {plantsRemaining !== null && plantsRemaining > 0 && !betaUnlockAll && (
+              {plantsRemaining !== null && plantsRemaining > 0 && !trialActive && !devUnlock && (
                 <p className="text-xs text-gray-500 mt-1">{plantsRemaining} remaining on Free</p>
               )}
             </div>
           </div>
 
-          {!betaUnlockAll && (
+          {!trialActive && !devUnlock && (
             <div>
               <p className="text-sm font-semibold text-gray-900 mb-3">Monthly usage</p>
               <UsageMeters usage={usage} />
@@ -133,12 +136,12 @@ export function SubscriptionSettingsPanel() {
             </ul>
           </div>
 
-          {!betaUnlockAll && tier === "free" && (
+          {!devUnlock && tier === "free" && !trialActive && (
             <div className="flex flex-col sm:flex-row gap-2">
               <Link href="/upgrade">
                 <Button className="w-full sm:w-auto touch-manipulation">
                   <Sparkles className="w-4 h-4" />
-                  Upgrade to Pro
+                  Start 14-day free trial
                 </Button>
               </Link>
               <Link href="/billing">
@@ -149,7 +152,7 @@ export function SubscriptionSettingsPanel() {
             </div>
           )}
 
-          {!betaUnlockAll && tier !== "free" && (
+          {!devUnlock && tier !== "free" && (
             <Link href="/upgrade">
               <Button variant="outline" size="sm">
                 Change plan
@@ -157,11 +160,9 @@ export function SubscriptionSettingsPanel() {
             </Link>
           )}
 
-          {betaUnlockAll && (
+          {devUnlock && (
             <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 leading-relaxed">
-              {founderMode && !isBetaUnlockAll()
-                ? "Founder Mode is enabled. Full access stored locally for testing."
-                : "BETA_UNLOCK_ALL is enabled. Upgrade prompts are hidden for testers."}
+              Dev unlock is enabled. All features open for local testing.
             </p>
           )}
         </CardContent>

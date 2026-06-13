@@ -164,11 +164,9 @@ export function PlanCards({
       </div>
       {showNote && (
         <p className="text-center text-sm text-gray-400 mt-10">
-          {hideCta
-            ? "Beta access. All features enabled for testing."
-            : ctaMode === "upgrade"
-              ? "Preview mode. No charges until billing launches."
-              : "Pricing may change during early access."}
+          {ctaMode === "upgrade"
+            ? "14-day free trial for new subscribers. Cancel anytime."
+            : "Start your 14-day free trial when you sign up."}
         </p>
       )}
     </>

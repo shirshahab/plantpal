@@ -1,63 +1,45 @@
 import { AccountTier } from "@/lib/billing/tier-config";
-import type { UserSubscription } from "@/lib/types/billing";
+import type { TrialSource, UserSubscription } from "@/lib/types/billing";
 import {
+  grantLaunchTrial,
+  isTrialActive,
+  isTrialExpired,
+  LAUNCH_TRIAL_DAYS,
+} from "@/lib/billing/trial";
+import {
+  expireTrialIfNeeded as expireStoredTrial,
   loadMockSubscription,
   saveMockSubscription,
 } from "@/lib/billing/subscription-state";
 
-export type TrialSource = "referral_invitee" | "referral_referrer" | "promo";
-
-const TRIAL_DAYS = 7;
+export type { TrialSource };
 
 export function grantReferralTrial(
-  days = TRIAL_DAYS,
+  days = LAUNCH_TRIAL_DAYS,
   source: TrialSource = "referral_invitee"
 ): UserSubscription {
   const current = loadMockSubscription();
-  if (current.trialStatus === "active" && current.tier !== AccountTier.FREE) {
-    return current;
-  }
+  if (isTrialActive(current)) return current;
 
   const end = new Date();
   end.setDate(end.getDate() + days);
 
-  const next: UserSubscription = {
-    ...current,
-    tier: AccountTier.PLUS,
-    trialStatus: "active",
-    subscriptionStatus: "trialing",
-    planStartDate: new Date().toISOString(),
+  const next = grantLaunchTrial(current, source);
+  const extended: UserSubscription = {
+    ...next,
+    trialEndsAt: end.toISOString(),
     planEndDate: end.toISOString(),
-    trialSource: source,
   };
 
-  saveMockSubscription(next);
+  saveMockSubscription(extended);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("plantpal-subscription-updated"));
   }
-  return next;
+  return extended;
 }
 
-export function isTrialExpired(sub: UserSubscription): boolean {
-  if (sub.trialStatus !== "active" || !sub.planEndDate) return false;
-  return new Date(sub.planEndDate).getTime() < Date.now();
-}
+export { isTrialExpired, isTrialActive };
 
 export function expireTrialIfNeeded(): UserSubscription {
-  const sub = loadMockSubscription();
-  if (sub.trialStatus !== "active") return sub;
-  if (!isTrialExpired(sub)) return sub;
-
-  const next: UserSubscription = {
-    ...sub,
-    tier: AccountTier.FREE,
-    trialStatus: "expired",
-    subscriptionStatus: sub.subscriptionStatus === "trialing" ? "expired" : sub.subscriptionStatus,
-    planEndDate: sub.planEndDate,
-  };
-  saveMockSubscription(next);
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event("plantpal-subscription-updated"));
-  }
-  return next;
+  return expireStoredTrial();
 }

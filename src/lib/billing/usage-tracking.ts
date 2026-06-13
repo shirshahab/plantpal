@@ -1,10 +1,10 @@
 import { AccountTier } from "./tier-config";
 import {
   FREE_SCAN_LIMIT_MONTHLY,
-  PUBLIC_BETA_UNLOCK_ALL,
   getScanLimitForTier,
   isProTier,
 } from "./limits";
+import { isDevUnlockAllFeatures } from "./dev-unlock";
 import { setScanUsageCookie } from "./subscription-cookie";
 
 export const USAGE_STORAGE_KEY = "plantpal-usage";
@@ -67,13 +67,13 @@ export function recordScanUsage(): MonthlyUsage {
 }
 
 export function canUseScan(tier: AccountTier, unrestricted = false): boolean {
-  if (PUBLIC_BETA_UNLOCK_ALL || unrestricted || isProTier(tier)) return true;
+  if (isDevUnlockAllFeatures() || unrestricted || isProTier(tier)) return true;
   const usage = getMonthlyScanUsage();
   return usage.scans < FREE_SCAN_LIMIT_MONTHLY;
 }
 
 export function scansRemaining(tier: AccountTier, unrestricted = false): number | null {
-  if (PUBLIC_BETA_UNLOCK_ALL || unrestricted || isProTier(tier)) return null;
+  if (isDevUnlockAllFeatures() || unrestricted || isProTier(tier)) return null;
   const usage = getMonthlyScanUsage();
   return Math.max(0, FREE_SCAN_LIMIT_MONTHLY - usage.scans);
 }
@@ -109,7 +109,7 @@ export function serverCanScan(
   usage: { month: string; scans: number } | null,
   unrestricted = false
 ): { allowed: boolean; remaining: number | null } {
-  if (PUBLIC_BETA_UNLOCK_ALL || unrestricted || isProTier(tier)) {
+  if (isDevUnlockAllFeatures() || unrestricted || isProTier(tier)) {
     return { allowed: true, remaining: null };
   }
 

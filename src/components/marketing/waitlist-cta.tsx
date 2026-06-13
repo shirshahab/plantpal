@@ -11,7 +11,7 @@ interface WaitlistCtaProps {
 /** Lightweight email capture block for marketing pages. */
 export function WaitlistCta({
   heading = "Stop guessing. Start growing.",
-  subheading = "Get PlantPal free during beta.",
+  subheading = "Try every feature free for 14 days.",
   source = "cta-block",
   className,
 }: WaitlistCtaProps) {

@@ -19,7 +19,11 @@ Scan QR with **Expo Go**. Camera works best in an EAS dev build.
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_ANON_KEY=
 EXPO_PUBLIC_API_BASE_URL=https://getplantpal.com
+EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=appl_...
+EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=goog_...
 ```
+
+In-app subscriptions: **More → Upgrade (in-app paywall)** opens `/upgrade` in a WebView with the RevenueCat bridge.
 
 **Never** put OpenAI, PlantNet, SerpAPI, OpenWeather, or Perenual keys in the mobile app.
 
