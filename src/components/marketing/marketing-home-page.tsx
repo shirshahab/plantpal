@@ -64,9 +64,9 @@ export function MarketingHomePage() {
                   Get Started Free
                 </Button>
               </Link>
-              <Link href="/scanner">
+              <Link href="/features">
                 <Button variant="outline" size="lg" className="min-w-[200px] h-14 text-base">
-                  Scan a Plant
+                  See How It Works
                 </Button>
               </Link>
             </div>

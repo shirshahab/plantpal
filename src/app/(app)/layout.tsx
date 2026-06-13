@@ -18,6 +18,7 @@ import { AnalyticsProvider } from "@/lib/store/analytics-provider";
 import { UpgradeModalProvider } from "@/components/billing/upgrade-modal-provider";
 import { FounderHydrator } from "@/components/billing/founder-hydrator";
 import { MoatProvider } from "@/lib/store/moat-provider";
+import { AuthSessionGate } from "@/components/auth/auth-session-gate";
 import { BackHandler } from "@/components/navigation/back-handler";
 import { OnboardingGuard } from "@/components/onboarding/onboarding-guard";
 import { GlobalErrorHandler } from "@/components/errors/global-error-handler";
@@ -27,46 +28,48 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <GlobalErrorHandler>
-      <SyncProvider>
-        <PlantsProvider>
-        <SubscriptionProvider>
-        <AnalyticsProvider>
-        <FounderHydrator />
-        <UpgradeModalProvider>
-        <JourneyProvider>
-          <AiProvider>
-            <EngagementProvider>
-              <EducationProvider>
-                <RemindersProvider>
-                  <PhotosProvider>
-                    <ToastProvider>
-                      <AcademyProvider>
-                        <TasksProvider>
-                          <NotificationsProvider>
-                          <MoatProvider>
-                          <GenomeProvider>
-                            <OnboardingGuard>
-                              <BackHandler />
-                              <AppShell>{children}</AppShell>
-                              <AuthDebug />
-                            </OnboardingGuard>
-                          </GenomeProvider>
-                          </MoatProvider>
-                          </NotificationsProvider>
-                        </TasksProvider>
-                      </AcademyProvider>
-                    </ToastProvider>
-                  </PhotosProvider>
-                </RemindersProvider>
-              </EducationProvider>
-            </EngagementProvider>
-          </AiProvider>
-        </JourneyProvider>
-        </UpgradeModalProvider>
-        </AnalyticsProvider>
-        </SubscriptionProvider>
-      </PlantsProvider>
-      </SyncProvider>
+        <AuthSessionGate>
+          <SyncProvider>
+            <PlantsProvider>
+              <SubscriptionProvider>
+                <AnalyticsProvider>
+                  <FounderHydrator />
+                  <UpgradeModalProvider>
+                    <JourneyProvider>
+                      <AiProvider>
+                        <EngagementProvider>
+                          <EducationProvider>
+                            <RemindersProvider>
+                              <PhotosProvider>
+                                <ToastProvider>
+                                  <AcademyProvider>
+                                    <TasksProvider>
+                                      <NotificationsProvider>
+                                        <MoatProvider>
+                                          <GenomeProvider>
+                                            <OnboardingGuard>
+                                              <BackHandler />
+                                              <AppShell>{children}</AppShell>
+                                              <AuthDebug />
+                                            </OnboardingGuard>
+                                          </GenomeProvider>
+                                        </MoatProvider>
+                                      </NotificationsProvider>
+                                    </TasksProvider>
+                                  </AcademyProvider>
+                                </ToastProvider>
+                              </PhotosProvider>
+                            </RemindersProvider>
+                          </EducationProvider>
+                        </EngagementProvider>
+                      </AiProvider>
+                    </JourneyProvider>
+                  </UpgradeModalProvider>
+                </AnalyticsProvider>
+              </SubscriptionProvider>
+            </PlantsProvider>
+          </SyncProvider>
+        </AuthSessionGate>
       </GlobalErrorHandler>
     </AuthProvider>
   );

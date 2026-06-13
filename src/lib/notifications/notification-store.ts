@@ -10,6 +10,7 @@ import {
   type NotificationHistoryEntry,
   type NotificationPrefs,
 } from "@/lib/types/notifications";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 
 const READS_KEY = "plantpal-notification-reads";
 const DISMISSED_KEY = "plantpal-notification-dismissed";
@@ -28,12 +29,7 @@ const isBrowser = () => typeof window !== "undefined";
 /** Map of notification id -> ISO timestamp it was read. */
 export function getReadMap(): Record<string, string> {
   if (!isBrowser()) return {};
-  try {
-    const raw = localStorage.getItem(READS_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
-  } catch {
-    return {};
-  }
+  return readLocalJson(READS_KEY, {} as Record<string, string>);
 }
 
 export function markNotificationsRead(ids: string[]): void {
@@ -55,12 +51,7 @@ export function markNotificationsRead(ids: string[]): void {
 /** Map of dismissed (deleted) notification id -> ISO timestamp. */
 export function getDismissedMap(): Record<string, string> {
   if (!isBrowser()) return {};
-  try {
-    const raw = localStorage.getItem(DISMISSED_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
-  } catch {
-    return {};
-  }
+  return readLocalJson(DISMISSED_KEY, {} as Record<string, string>);
 }
 
 export function dismissNotifications(ids: string[]): void {
@@ -82,12 +73,7 @@ export function dismissNotifications(ids: string[]): void {
 /** Rolling 30-day local history of every notification the user has seen. */
 export function getNotificationHistory(): NotificationHistoryEntry[] {
   if (!isBrowser()) return [];
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    return raw ? (JSON.parse(raw) as NotificationHistoryEntry[]) : [];
-  } catch {
-    return [];
-  }
+  return readLocalJson(HISTORY_KEY, [] as NotificationHistoryEntry[]);
 }
 
 export function appendNotificationHistory(notifications: AppNotification[]): void {
@@ -115,14 +101,8 @@ export function appendNotificationHistory(notifications: AppNotification[]): voi
 
 export function getNotificationPrefs(): NotificationPrefs {
   if (!isBrowser()) return DEFAULT_NOTIFICATION_PREFS;
-  try {
-    const raw = localStorage.getItem(PREFS_KEY);
-    return raw
-      ? { ...DEFAULT_NOTIFICATION_PREFS, ...(JSON.parse(raw) as Partial<NotificationPrefs>) }
-      : DEFAULT_NOTIFICATION_PREFS;
-  } catch {
-    return DEFAULT_NOTIFICATION_PREFS;
-  }
+  const parsed = readLocalJson(PREFS_KEY, null as Partial<NotificationPrefs> | null);
+  return parsed ? { ...DEFAULT_NOTIFICATION_PREFS, ...parsed } : DEFAULT_NOTIFICATION_PREFS;
 }
 
 export function saveNotificationPrefs(patch: Partial<NotificationPrefs>): NotificationPrefs {

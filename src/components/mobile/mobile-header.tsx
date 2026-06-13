@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
-import { BetaBadge } from "@/components/brand/beta-badge";
 
 export function MobileHeader({ title }: { title?: string }) {
   return (
@@ -15,7 +14,6 @@ export function MobileHeader({ title }: { title?: string }) {
           <span className="font-heading font-semibold text-brand-text truncate">
             {title ?? "PlantPal"}
           </span>
-          <BetaBadge />
         </div>
         <Link
           href="/"

@@ -2,6 +2,7 @@ import type { UserSubscription } from "@/lib/types/billing";
 import { AccountTier, type AccountTier as Tier } from "./tier-config";
 import { isProTier } from "./limits";
 import { setSubscriptionTierCookie } from "./subscription-cookie";
+import { removeLocalKey } from "@/lib/storage/safe-local-storage";
 import {
   expireLaunchTrial,
   getEffectiveTier,
@@ -84,7 +85,8 @@ export function loadMockSubscription(): UserSubscription {
       return normalizeSubscription({ ...DEFAULT_SUBSCRIPTION, tier: legacy });
     }
   } catch {
-    /* ignore */
+    removeLocalKey(SUBSCRIPTION_STORAGE_KEY);
+    removeLocalKey(LEGACY_TIER_STORAGE_KEY);
   }
 
   return DEFAULT_SUBSCRIPTION;

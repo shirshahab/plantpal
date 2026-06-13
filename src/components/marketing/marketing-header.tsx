@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
-import { BetaBadge } from "@/components/brand/beta-badge";
 import { SocialLinks } from "@/components/marketing/social-links";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +23,6 @@ export function MarketingHeader() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
         <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2">
           <PlantPalLogo size="md" priority />
-          <BetaBadge className="hidden sm:inline-flex" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">

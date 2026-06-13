@@ -32,6 +32,7 @@ import { emitAwardXp } from "@/lib/academy/xp-events";
 import { publishActivityEvent } from "@/lib/social/events";
 import { useAuth } from "@/lib/store/auth-provider";
 import type { DbPlant } from "@/lib/types";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 
 const STORAGE_KEY = "plantpal-plants";
 
@@ -60,17 +61,8 @@ export function PlantsProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadMockPlants = useCallback(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as Partial<Plant>[];
-        setPlants(parsed.map((p) => withPlantDefaults(p as Plant)));
-      } else {
-        setPlants([]);
-      }
-    } catch {
-      setPlants([]);
-    }
+    const parsed = readLocalJson(STORAGE_KEY, [] as Partial<Plant>[]);
+    setPlants(parsed.map((p) => withPlantDefaults(p as Plant)));
   }, []);
 
   const persistMock = useCallback((next: Plant[]) => {

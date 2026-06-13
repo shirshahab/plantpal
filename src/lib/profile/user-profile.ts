@@ -29,6 +29,11 @@ export function loadUserProfile(): UserProfile {
     }
     return { ...DEFAULT_PROFILE, ...parsed };
   } catch {
+    try {
+      localStorage.removeItem(PROFILE_STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
     return DEFAULT_PROFILE;
   }
 }

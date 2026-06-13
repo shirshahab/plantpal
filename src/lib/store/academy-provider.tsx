@@ -29,6 +29,7 @@ import { dispatchLessonCompleted } from "@/lib/tasks/task-events";
 import { getAcademyLessonById } from "@/lib/academy/lessons";
 import { publishActivityEvent } from "@/lib/social/events";
 import { useToast } from "./toast-provider";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 
 const STORAGE_KEY = "plantpal-academy";
 
@@ -98,29 +99,24 @@ export function AcademyProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setProgress({ ...defaultProgress, ...JSON.parse(stored) });
-      }
-      const edu = localStorage.getItem("plantpal-education");
-      if (edu) {
-        const parsed = JSON.parse(edu) as {
-          completedLessons?: string[];
-          passedQuizzes?: string[];
-        };
-        setProgress((prev) => ({
-          ...prev,
-          completedLessons: [
-            ...new Set([...prev.completedLessons, ...(parsed.completedLessons ?? [])]),
-          ],
-          passedQuizzes: [
-            ...new Set([...prev.passedQuizzes, ...(parsed.passedQuizzes ?? [])]),
-          ],
-        }));
-      }
-    } catch {
-      /* default */
+    const stored = readLocalJson(STORAGE_KEY, null as AcademyProgress | null);
+    if (stored) {
+      setProgress({ ...defaultProgress, ...stored });
+    }
+    const parsed = readLocalJson("plantpal-education", null as {
+      completedLessons?: string[];
+      passedQuizzes?: string[];
+    } | null);
+    if (parsed) {
+      setProgress((prev) => ({
+        ...prev,
+        completedLessons: [
+          ...new Set([...prev.completedLessons, ...(parsed.completedLessons ?? [])]),
+        ],
+        passedQuizzes: [
+          ...new Set([...prev.passedQuizzes, ...(parsed.passedQuizzes ?? [])]),
+        ],
+      }));
     }
     setLoading(false);
   }, []);

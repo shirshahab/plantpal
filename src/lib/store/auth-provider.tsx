@@ -16,6 +16,7 @@ import { hydrateProfileFromCloud, type CloudProfileSnapshot } from "@/lib/profil
 import { repairProfileOnLogin } from "@/lib/social/repair-profile";
 import { migrateLocalDataToCloud } from "@/lib/storage/local-to-cloud-migration";
 import { hydrateHealthReportsFromCloud } from "@/lib/health/report-storage";
+import { purgeCorruptPlantPalStorage } from "@/lib/storage/safe-local-storage";
 
 interface AuthContextValue {
   user: User | null;
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const supabase = createClient();
+    purgeCorruptPlantPalStorage();
 
     async function syncFor(nextUser: User | null) {
       if (!nextUser) {
@@ -82,11 +84,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfileReady(true);
     }
 
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
-      void syncFor(data.user);
-    });
+    async function resolveSession() {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) {
+          console.warn("[auth] session check failed:", error.message);
+          purgeCorruptPlantPalStorage();
+          await supabase.auth.signOut({ scope: "local" });
+          setUser(null);
+          setProfileReady(true);
+          setLoading(false);
+          return;
+        }
+        setUser(data.user);
+        setLoading(false);
+        await syncFor(data.user);
+      } catch (err) {
+        console.warn("[auth] session recovery:", err);
+        purgeCorruptPlantPalStorage();
+        setUser(null);
+        setProfileReady(true);
+        setLoading(false);
+      }
+    }
+
+    void resolveSession();
 
     const {
       data: { subscription },

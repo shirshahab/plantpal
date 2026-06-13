@@ -8,7 +8,6 @@ import { PlantyAvatar } from "@/components/brand/planty";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { BetaBadge } from "@/components/brand/beta-badge";
 import { AuthDebug } from "@/components/dev/auth-debug";
 import { cn } from "@/lib/utils";
 import { loadUserProfile, saveUserProfile } from "@/lib/profile/user-profile";
@@ -218,7 +217,6 @@ export default function OnboardingPageClient() {
             <Leaf className="w-4 h-4 text-white" />
           </div>
           <span className="font-semibold text-gray-900">PlantPal</span>
-          <BetaBadge />
         </div>
       </header>
 

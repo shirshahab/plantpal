@@ -35,12 +35,17 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { plants, loading } = usePlants();
-  const { loading: authLoading, profileReady, user, cloudOnboardingComplete, profileSnapshot } =
+  const { loading: authLoading, profileReady, user, cloudOnboardingComplete, profileSnapshot, isMockMode } =
     useAuth();
 
   useEffect(() => {
     if (isBypassPath(pathname)) return;
     if (authLoading || !profileReady) return;
+
+    if (!user && !isMockMode) {
+      router.replace("/login");
+      return;
+    }
 
     // Logged-in: Supabase profile is source of truth. Cloud completion
     // overrides a stale local incomplete flag on a new device.
@@ -74,6 +79,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     user,
     cloudOnboardingComplete,
     profileSnapshot,
+    isMockMode,
   ]);
 
   return <>{children}</>;

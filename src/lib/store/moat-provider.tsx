@@ -37,6 +37,7 @@ import {
 } from "@/lib/moat/seasonal-engine";
 import { getRecommendedProducts, type MarketplaceProduct } from "@/lib/moat/marketplace-catalog";
 import { usePlants } from "@/lib/store/plants-provider";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 
 interface MoatContextValue {
   ready: boolean;
@@ -64,13 +65,7 @@ const MoatContext = createContext<MoatContextValue | null>(null);
 const SEASONAL_DONE_KEY = "plantpal-seasonal-completed";
 
 function loadCompletedSeasonal(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(SEASONAL_DONE_KEY);
-    return raw ? (JSON.parse(raw) as string[]) : [];
-  } catch {
-    return [];
-  }
+  return readLocalJson(SEASONAL_DONE_KEY, [] as string[]);
 }
 
 function saveCompletedSeasonal(ids: string[]): void {

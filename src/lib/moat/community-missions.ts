@@ -1,3 +1,5 @@
+import { readLocalJson, removeLocalKey } from "@/lib/storage/safe-local-storage";
+
 export type MissionCadence = "daily" | "weekly";
 export type MissionStatus = "pending" | "completed" | "claimed";
 
@@ -153,6 +155,7 @@ export function loadMissionState(): MissionState {
     }
     return state;
   } catch {
+    removeLocalKey(STORAGE_KEY);
     return {
       daily: buildDailyMissions(),
       weekly: buildWeeklyMissions(),

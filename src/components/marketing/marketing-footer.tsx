@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
-import { BetaBadge } from "@/components/brand/beta-badge";
 import { Button } from "@/components/ui/button";
 import { SocialLinks } from "@/components/marketing/social-links";
 import { BRAND } from "@/lib/brand/tokens";
@@ -40,7 +39,6 @@ export function MarketingFooter() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2">
               <PlantPalLogo size="sm" />
-              <BetaBadge />
             </div>
             <p className="text-sm font-heading font-semibold text-brand-primary mt-3">
               {BRAND.tagline}

@@ -1,3 +1,7 @@
+/**
+ * Safe localStorage helpers — never throw; remove corrupt JSON keys on parse failure.
+ */
+
 const QUOTA_ERROR_NAMES = new Set(["QuotaExceededError"]);
 
 export function isStorageQuotaError(error: unknown): boolean {
@@ -34,12 +38,7 @@ export function safeSetLocalStorageItem(key: string, value: string): SafeSetItem
 }
 
 export function safeRemoveLocalStorageItem(key: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    /* ignore */
-  }
+  removeLocalKey(key);
 }
 
 export function safeGetLocalStorageItem(key: string): string | null {
@@ -49,4 +48,57 @@ export function safeGetLocalStorageItem(key: string): string | null {
   } catch {
     return null;
   }
+}
+
+export function removeLocalKey(key: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function readLocalJson<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    removeLocalKey(key);
+    return fallback;
+  }
+}
+
+export function writeLocalJson(key: string, value: unknown): void {
+  if (typeof window === "undefined") return;
+  safeSetLocalStorageItem(key, JSON.stringify(value));
+}
+
+/** Best-effort purge of unreadable plantpal-* keys after auth/storage failures. */
+export function purgeCorruptPlantPalStorage(): number {
+  if (typeof window === "undefined") return 0;
+  let removed = 0;
+  try {
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("plantpal-")) keys.push(key);
+    }
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      if (key.endsWith("-tier") || key === "plantpal-founder-mode") continue;
+      try {
+        JSON.parse(raw);
+      } catch {
+        localStorage.removeItem(key);
+        removed++;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return removed;
 }

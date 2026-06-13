@@ -16,7 +16,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/store/auth-provider";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
-import { BetaBadge } from "@/components/brand/beta-badge";
 import { BRAND } from "@/lib/brand/tokens";
 
 const navItems = [
@@ -83,7 +82,6 @@ export function Sidebar() {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-[10px] font-medium text-brand-primary leading-none">{BRAND.tagline}</p>
-            <BetaBadge />
           </div>
           <p className="text-xs text-brand-text-secondary mt-1 truncate">Smart plant care coach</p>
         </div>

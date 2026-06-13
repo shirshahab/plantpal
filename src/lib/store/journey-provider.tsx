@@ -28,6 +28,7 @@ import {
   getNextMilestone,
 } from "@/lib/plants/goal-care";
 import { useAuth } from "@/lib/store/auth-provider";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 
 const GOALS_KEY = "plantpal-user-plant-goals";
 const MILESTONES_KEY = "plantpal-plant-milestones";
@@ -61,12 +62,7 @@ interface JourneyContextValue {
 const JourneyContext = createContext<JourneyContextValue | null>(null);
 
 function loadJson<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
+  return readLocalJson(key, fallback);
 }
 
 export function JourneyProvider({ children }: { children: React.ReactNode }) {

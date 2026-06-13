@@ -23,6 +23,7 @@ import {
 } from "@/lib/db";
 import { appendGenomeEvent } from "@/lib/genome/storage";
 import { dispatchPhotoUploaded } from "@/lib/tasks/task-events";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 
 export type { StoredPlantPhoto } from "@/lib/db/photos";
 export type PhotoFilter = "all" | PhotoType;
@@ -60,12 +61,7 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const loadLocal = useCallback(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setPhotos(JSON.parse(raw) as StoredPlantPhoto[]);
-    } catch {
-      /* empty */
-    }
+    setPhotos(readLocalJson(STORAGE_KEY, [] as StoredPlantPhoto[]));
   }, []);
 
   const refreshPhotos = useCallback(async () => {

@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { ReminderSettings } from "@/lib/types/tasks";
 import { DEFAULT_REMINDER_SETTINGS as DEFAULTS } from "@/lib/types/tasks";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 import { useAuth } from "@/lib/store/auth-provider";
 import { useSync } from "@/lib/store/sync-provider";
 import {
@@ -58,31 +59,23 @@ export function RemindersProvider({ children }: { children: React.ReactNode }) {
         if (remote) {
           persistLocal({ ...remote, notificationPermission: permission });
         } else {
-          try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            const merged = raw
-              ? { ...DEFAULTS, ...(JSON.parse(raw) as Partial<ReminderSettings>) }
-              : getDefaultReminders();
-            persistLocal({ ...merged, notificationPermission: permission });
-            await updateReminderSettings(getDb(), user.id, merged);
-          } catch {
-            persistLocal({ ...DEFAULTS, notificationPermission: permission });
-          }
+          const merged = readLocalJson(STORAGE_KEY, null as Partial<ReminderSettings> | null);
+          const settings = merged
+            ? { ...DEFAULTS, ...merged }
+            : getDefaultReminders();
+          persistLocal({ ...settings, notificationPermission: permission });
+          await updateReminderSettings(getDb(), user.id, settings);
         }
         markSynced();
       } else {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (raw) {
-            setSettings({
-              ...DEFAULTS,
-              ...(JSON.parse(raw) as Partial<ReminderSettings>),
-              notificationPermission: permission,
-            });
-          } else {
-            setSettings((s) => ({ ...s, notificationPermission: permission }));
-          }
-        } catch {
+        const stored = readLocalJson(STORAGE_KEY, null as Partial<ReminderSettings> | null);
+        if (stored) {
+          setSettings({
+            ...DEFAULTS,
+            ...stored,
+            notificationPermission: permission,
+          });
+        } else {
           setSettings((s) => ({ ...s, notificationPermission: permission }));
         }
       }

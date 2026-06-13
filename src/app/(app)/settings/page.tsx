@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, RotateCcw, Globe, LifeBuoy, Bug, Lightbulb, Mail, LogOut } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
-import { BetaBadge } from "@/components/brand/beta-badge";
 import { InviteFriendsPanel } from "@/components/referrals/invite-friends-panel";
 import { FeedbackPanel } from "@/components/feedback/feedback-panel";
 import { AccountTierCard } from "@/components/subscription/account-tier-card";
@@ -119,7 +118,6 @@ export default function SettingsPage() {
         action={
           <div className="flex items-center gap-2">
             <FounderModeBadge />
-            <BetaBadge />
             <SyncStatusBadge />
           </div>
         }

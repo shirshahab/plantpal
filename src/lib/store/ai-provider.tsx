@@ -14,6 +14,7 @@ import type {
   AIGoalPlanResponse,
   AIPriceCheckResponse,
 } from "@/lib/types/ai";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 
 const STORAGE_KEY = "plantpal-ai-results";
 
@@ -50,12 +51,7 @@ export function AiProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setStore({ ...EMPTY, ...JSON.parse(raw) });
-    } catch {
-      /* ignore */
-    }
+    setStore(readLocalJson(STORAGE_KEY, EMPTY));
     setReady(true);
   }, []);
 

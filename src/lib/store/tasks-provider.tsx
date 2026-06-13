@@ -64,6 +64,7 @@ import {
 } from "@/lib/health/report-storage";
 import { buildRecoveryTasks } from "@/lib/health/recovery-tasks";
 import type { ProHealthReport } from "@/lib/types/health";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 
 const STATES_KEY = "plantpal-task-states";
 const LOGS_KEY = "plantpal-care-logs";
@@ -109,14 +110,8 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   const syncGenRef = useRef<string>("");
 
   const loadLocal = useCallback(() => {
-    try {
-      const states = localStorage.getItem(STATES_KEY);
-      const logs = localStorage.getItem(LOGS_KEY);
-      if (states) setTaskStates(JSON.parse(states) as Record<string, TaskStateRecord>);
-      if (logs) setCareLogs(JSON.parse(logs) as PlantCareLog[]);
-    } catch {
-      /* defaults */
-    }
+    setTaskStates(readLocalJson(STATES_KEY, {} as Record<string, TaskStateRecord>));
+    setCareLogs(readLocalJson(LOGS_KEY, [] as PlantCareLog[]));
   }, []);
 
   const refreshTasks = useCallback(async () => {

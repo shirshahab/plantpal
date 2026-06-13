@@ -18,6 +18,7 @@ import type { Plant } from "@/lib/types";
 import { emitAwardXp } from "@/lib/academy/xp-events";
 import { calculateGardenScore } from "@/lib/scoring";
 import { usePlants } from "./plants-provider";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 
 const KEYS = {
   growth: "plantpal-growth",
@@ -55,13 +56,7 @@ interface EngagementContextValue {
 const EngagementContext = createContext<EngagementContextValue | null>(null);
 
 function loadJson<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
+  return readLocalJson(key, fallback);
 }
 
 export function EngagementProvider({ children }: { children: React.ReactNode }) {

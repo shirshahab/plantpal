@@ -31,7 +31,10 @@ export default function ErrorPage({
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
           <Button onClick={reset}>Try again</Button>
-          <Button variant="outline" onClick={() => (window.location.href = "/dashboard")}>
+          <Button variant="outline" onClick={() => (window.location.href = "/login")}>
+            Go to login
+          </Button>
+          <Button variant="ghost" onClick={() => (window.location.href = "/dashboard")}>
             Go to dashboard
           </Button>
         </div>

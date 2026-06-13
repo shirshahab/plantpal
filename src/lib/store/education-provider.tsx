@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { EducationProgress } from "@/lib/education/types";
 import { getNextLevelInfo } from "@/lib/education/utils";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 
 const STORAGE_KEY = "plantpal-education";
 
@@ -32,12 +33,7 @@ export function EducationProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setProgress(JSON.parse(stored) as EducationProgress);
-    } catch {
-      /* use default */
-    }
+    setProgress(readLocalJson(STORAGE_KEY, defaultProgress));
     setLoading(false);
   }, []);
 
