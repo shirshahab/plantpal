@@ -169,7 +169,7 @@ export default function NotificationsSettingsPage() {
           />
           <ToggleRow
             label="Growth photos"
-            description="Track progress every 2–4 weeks"
+            description="Track progress every 2 to 4 weeks"
             checked={settings.growthPhoto}
             disabled={paused}
             onChange={(v) => updateSettings({ growthPhoto: v })}

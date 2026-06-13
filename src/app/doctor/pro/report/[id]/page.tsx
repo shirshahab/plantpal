@@ -206,7 +206,7 @@ export default function HealthReportExportPage() {
             <SectionTitle>Remedy Plan</SectionTitle>
             <div className="space-y-4">
               {[
-                { title: "Immediate — today", items: report.remedyPlan.immediate },
+                { title: "Immediate: today", items: report.remedyPlan.immediate },
                 { title: "Next 72 hours", items: report.remedyPlan.next72Hours },
                 { title: "7-day plan", items: report.remedyPlan.day7Plan },
                 { title: "14-day plan", items: report.remedyPlan.day14Plan },
@@ -262,7 +262,7 @@ export default function HealthReportExportPage() {
               <SectionTitle>Follow-up Tasks (Recovery Plan)</SectionTitle>
               <BulletList
                 items={recoveryTasks.map(
-                  (t) => `${t.title} — due ${new Date(t.dueDate).toLocaleDateString()}`
+                  (t) => `${t.title}, due ${new Date(t.dueDate).toLocaleDateString()}`
                 )}
               />
             </section>

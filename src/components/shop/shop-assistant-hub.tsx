@@ -38,7 +38,7 @@ function getRecommendations(input: {
     {
       name: "Olive Tree",
       whyItFits: `Thrives in ${input.zip || "your area"} with ${input.sun} and handles heat well.`,
-      watering: "Deep water every 10–14 days once established",
+      watering: "Deep water every 10 to 14 days once established",
       soil: "Well-draining loam or raised bed mix",
       difficulty: "Easy",
       buyChecklist: ["Look for healthy silvery leaves", "Avoid root-bound pots", "Choose dwarf if space is limited"],

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { importF5BotFeed } from "@/lib/intelligence/f5bot";
+import { importF5BotFeed, isF5BotEnabled } from "@/lib/intelligence/f5bot";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +18,10 @@ function isAuthorized(request: Request): boolean {
 export async function GET(request: Request) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!isF5BotEnabled()) {
+    return NextResponse.json({ ok: false, error: "F5Bot disabled" }, { status: 503 });
   }
 
   const result = await importF5BotFeed();

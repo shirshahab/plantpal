@@ -91,12 +91,13 @@ const VOICE_DO = [
   "Water it less. Seriously.",
 ];
 
+/** Shown on the public brand kit. Full bad examples live in internal brand docs only. */
 const VOICE_DONT = [
-  "Leverage our AI-powered ecosystem.",
-  "Unlock revolutionary plant insights.",
-  "A seamless horticultural experience.",
-  "Empowering plant parents at scale.",
-  "Best-in-class botanical solutions.",
+  "Bad startup sentence #1 (withheld from public kit)",
+  "Bad startup sentence #2 (withheld from public kit)",
+  "Bad startup sentence #3 (withheld from public kit)",
+  "Bad startup sentence #4 (withheld from public kit)",
+  "Bad startup sentence #5 (withheld from public kit)",
 ];
 
 const PERSONALITY = [
@@ -505,6 +506,13 @@ export default function BrandPage() {
                   </li>
                 ))}
               </ul>
+              <p className="text-xs text-brand-text-secondary mt-4 leading-relaxed">
+                Full bad examples are in the internal brand doc. Email{" "}
+                <a href="mailto:support@plantpal.app" className="text-brand-primary hover:underline">
+                  support@plantpal.app
+                </a>{" "}
+                with subject &ldquo;Brand voice examples&rdquo;.
+              </p>
             </div>
           </div>
         </section>

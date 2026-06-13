@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { plantyMoodToVariant, type PlantyMood } from "@/lib/copy/planty-messages-system";
 
 /**
  * Planty: the official PlantPal mascot.
@@ -143,15 +144,19 @@ export function PlantyMood({
   subtle,
   className,
 }: {
-  mood: PlantyMoodName;
+  mood: PlantyMoodName | PlantyMood;
   size?: PlantySize;
   message?: string;
   subtle?: boolean;
   className?: string;
 }) {
+  const variant =
+    mood in MOOD_TO_VARIANT
+      ? MOOD_TO_VARIANT[mood as PlantyMoodName]
+      : plantyMoodToVariant(mood as PlantyMood);
   return (
     <Planty
-      variant={MOOD_TO_VARIANT[mood]}
+      variant={variant}
       size={size}
       message={message}
       subtle={subtle}

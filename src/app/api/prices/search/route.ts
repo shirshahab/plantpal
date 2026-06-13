@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   );
   if (!burst.allowed) {
     return NextResponse.json(
-      { ok: false, error: "Too many price checks — wait a minute and try again." },
+      { ok: false, error: "Too many price checks. Wait a minute and try again." },
       { status: 429 }
     );
   }

@@ -4,7 +4,7 @@ import { APP_ICON_PATHS, BRAND } from "@/lib/brand/tokens";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "PlantPal — Grow with confidence.",
+    name: "PlantPal. Grow with confidence.",
     short_name: "PlantPal",
     description: BRAND.appStoreDescription,
     start_url: "/dashboard",

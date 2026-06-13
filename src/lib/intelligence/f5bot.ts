@@ -95,6 +95,43 @@ export interface F5BotImportResult {
   feedConnected: boolean;
 }
 
+export type IntelligenceSourceType = "reddit" | "hackernews" | "web" | "unknown";
+
+export interface NormalizedIntelligenceMention {
+  id: string;
+  source: "f5bot";
+  sourceType: IntelligenceSourceType;
+  title: string;
+  url: string;
+  author: string | null;
+  publishedAt: string;
+  contentSnippet: string;
+  matchedKeyword: string;
+  raw: F5BotFeedItem;
+  createdAt: string;
+  topic: string;
+  problemType: string;
+  plantType: string | null;
+  sentiment: F5BotSentiment;
+}
+
+export interface PlantIntelligenceMentionRow {
+  source: string;
+  source_type: IntelligenceSourceType;
+  external_id: string;
+  title: string;
+  url: string;
+  author: string | null;
+  content_snippet: string;
+  matched_keyword: string;
+  published_at: string | null;
+  raw_json: F5BotFeedItem;
+  sentiment: string | null;
+  topic: string | null;
+  plant_type: string | null;
+  problem_type: string | null;
+}
+
 export interface F5BotDashboardStats {
   feedConfigured: boolean;
   feedConnected: boolean;
@@ -114,18 +151,51 @@ export interface F5BotDashboardStats {
 // ── Detection dictionaries ────────────────────────────────────────────────────
 
 const PLANT_PATTERNS: { pattern: RegExp; label: string; category?: F5BotCategory }[] = [
+  { pattern: /\bfiddle leaf fig\b/i, label: "fiddle leaf fig", category: "Houseplants" },
+  { pattern: /\bmonstera\b/i, label: "monstera", category: "Houseplants" },
+  { pattern: /\bpothos\b/i, label: "pothos", category: "Houseplants" },
+  { pattern: /\borchid\b/i, label: "orchid", category: "Houseplants" },
+  { pattern: /\bsucculent\b/i, label: "succulent", category: "Houseplants" },
+  { pattern: /\bcactus\b/i, label: "cactus", category: "Houseplants" },
+  { pattern: /\bsnake plant\b/i, label: "snake plant", category: "Houseplants" },
   { pattern: /\bmeyer lemon\b/i, label: "meyer lemon", category: "Fruit Trees" },
   { pattern: /\blemon tree\b/i, label: "lemon tree", category: "Fruit Trees" },
-  { pattern: /\bavocado tree\b/i, label: "avocado tree", category: "Fruit Trees" },
+  { pattern: /\bcitrus\b/i, label: "citrus", category: "Fruit Trees" },
+  { pattern: /\bavocado\b/i, label: "avocado", category: "Fruit Trees" },
+  { pattern: /\btomato\b/i, label: "tomato", category: "Vegetables" },
+  { pattern: /\bbasil\b/i, label: "basil", category: "Vegetables" },
+  { pattern: /\brose\b/i, label: "rose", category: "Flowers" },
   { pattern: /\bbougainvillea\b/i, label: "bougainvillea", category: "Flowers" },
   { pattern: /\blavender\b/i, label: "lavender", category: "Flowers" },
   { pattern: /\brosemary\b/i, label: "rosemary", category: "Vegetables" },
-  { pattern: /\btomato\b/i, label: "tomato", category: "Vegetables" },
-  { pattern: /\bbasil\b/i, label: "basil", category: "Vegetables" },
-  { pattern: /\bmonstera\b/i, label: "monstera", category: "Houseplants" },
-  { pattern: /\bpothos\b/i, label: "pothos", category: "Houseplants" },
-  { pattern: /\bsnake plant\b/i, label: "snake plant", category: "Houseplants" },
   { pattern: /\bjapanese maple\b/i, label: "japanese maple", category: "Flowers" },
+];
+
+const TOPIC_PATTERNS: { pattern: RegExp; label: string }[] = [
+  { pattern: /\byellow leaves?\b/i, label: "yellow leaves" },
+  { pattern: /\boverwater(?:ing|ed)?\b/i, label: "watering" },
+  { pattern: /\bunderwater(?:ing|ed)?\b/i, label: "watering" },
+  { pattern: /\bhow (?:often|much) (?:to )?water\b/i, label: "watering" },
+  { pattern: /\bspider mites?|aphids?|thrips?|pests?\b/i, label: "pests" },
+  { pattern: /\bpowdery mildew|fungus|mildew\b/i, label: "fungus" },
+  { pattern: /\broot rot\b/i, label: "root rot" },
+  { pattern: /\bfertiliz(?:e|er|ing)\b/i, label: "fertilizer" },
+  { pattern: /\bprun(?:e|ing)\b/i, label: "pruning" },
+  { pattern: /\bheat (?:wave|stress)|too hot\b/i, label: "heat stress" },
+  { pattern: /\bfrost|freezing|cold snap\b/i, label: "frost" },
+  { pattern: /\bindoor plant|houseplant\b/i, label: "houseplants" },
+  { pattern: /\bfruit tree|lemon tree|citrus tree|avocado tree\b/i, label: "fruit trees" },
+  { pattern: /\bvegetable garden|tomato|pepper plant\b/i, label: "vegetables" },
+];
+
+const PROBLEM_TYPE_PATTERNS: { pattern: RegExp; label: string }[] = [
+  { pattern: /\bunderwater(?:ing|ed)?\b/i, label: "underwatering" },
+  { pattern: /\boverwater(?:ing|ed)?\b/i, label: "overwatering" },
+  { pattern: /\bspider mites?|aphids?|thrips?|pests?|infested\b/i, label: "pests" },
+  { pattern: /\bpowdery mildew|fungus|mildew|blight|disease\b/i, label: "disease" },
+  { pattern: /\bnutrient|deficien|nitrogen|yellowing\b/i, label: "nutrient deficiency" },
+  { pattern: /\bheat (?:wave|stress)|frost|freezing|cold snap|drought\b/i, label: "weather stress" },
+  { pattern: /\bhow do i|help me|what should i|advice\b/i, label: "general question" },
 ];
 
 const ISSUE_PATTERNS: { pattern: RegExp; label: string; category: F5BotCategory }[] = [
@@ -193,6 +263,18 @@ export function getF5BotWebhookSecret(): string | null {
 
 export function isF5BotConfigured(): boolean {
   return Boolean(getF5BotFeedUrl() || getF5BotRssFeedUrl());
+}
+
+/** True when F5BOT_ENABLED is not explicitly off and feed/webhook config exists. */
+export function isF5BotEnabled(): boolean {
+  const flag = process.env.F5BOT_ENABLED?.trim().toLowerCase();
+  if (flag === "false" || flag === "0" || flag === "no") return false;
+  return isF5BotConfigured();
+}
+
+function logF5Bot(event: string, meta?: Record<string, unknown>): void {
+  if (meta) console.info("[f5bot]", event, meta);
+  else console.info("[f5bot]", event);
 }
 
 function getServiceClient(): SupabaseClient | null {
@@ -266,6 +348,40 @@ export function extractSubreddit(url: string, title?: string): string | null {
   if (urlMatch?.[1]) return urlMatch[1].toLowerCase();
   const titleMatch = title?.match(/\br\/([A-Za-z0-9_]+)/i);
   return titleMatch?.[1]?.toLowerCase() ?? null;
+}
+
+export function mapSourceType(platform: string): IntelligenceSourceType {
+  if (platform === "reddit") return "reddit";
+  if (platform === "hackernews") return "hackernews";
+  if (platform === "unknown") return "unknown";
+  return "web";
+}
+
+function externalIdFromItem(item: F5BotFeedItem): string {
+  if (item.id?.trim()) return item.id.trim();
+  return Buffer.from(item.url.trim()).toString("base64url").slice(0, 64);
+}
+
+function classifyTopic(text: string): string {
+  for (const p of TOPIC_PATTERNS) {
+    if (p.pattern.test(text)) return p.label;
+  }
+  if (/\bindoor\b/i.test(text)) return "indoor plants";
+  return "unknown";
+}
+
+function classifyProblemType(text: string): string {
+  for (const p of PROBLEM_TYPE_PATTERNS) {
+    if (p.pattern.test(text)) return p.label;
+  }
+  return "unknown";
+}
+
+function detectPlantType(text: string): string | null {
+  for (const p of PLANT_PATTERNS) {
+    if (p.pattern.test(text)) return p.label;
+  }
+  return null;
 }
 
 function detectSentiment(text: string): F5BotSentiment {
@@ -362,47 +478,105 @@ export function classifyF5BotMention(input: {
   };
 }
 
-export function feedItemToMentionRow(item: F5BotFeedItem): F5BotMentionRow | null {
+/** Normalize a raw F5Bot feed/webhook item into PlantPal intelligence format. */
+export function normalizeF5BotItem(item: F5BotFeedItem): NormalizedIntelligenceMention | null {
   if (!item.url?.trim()) return null;
 
   const fullHtml = item.content_html ?? item.content_text ?? "";
-  const full_text = item.content_text ?? stripHtml(fullHtml);
-  const excerpt = full_text.slice(0, 500);
-  const keyword = extractKeyword(item);
+  const fullText = item.content_text ?? stripHtml(fullHtml);
+  const contentSnippet = fullText.slice(0, 500);
+  const matchedKeyword = extractKeyword(item);
   const platform = extractPlatform(item, item.url);
-  const subreddit = extractSubreddit(item.url, item.title);
-  const title = item.title?.trim() || keyword || "F5Bot alert";
-
-  const classification = classifyF5BotMention({
-    title,
-    excerpt,
-    full_text,
-    keyword,
-    subreddit,
-    platform,
-  });
+  const sourceType = mapSourceType(platform);
+  const title = item.title?.trim() || matchedKeyword || "Plant mention";
+  const text = `${title} ${contentSnippet} ${fullText} ${matchedKeyword}`.toLowerCase();
+  const now = new Date().toISOString();
 
   return {
+    id: externalIdFromItem(item),
     source: "f5bot",
-    platform,
-    keyword,
+    sourceType,
     title,
     url: item.url.trim(),
-    excerpt,
-    full_text,
-    subreddit,
-    detected_plant: classification.detected_plant,
-    detected_issue: classification.detected_issue,
-    detected_category: classification.detected_category,
-    sentiment: classification.sentiment,
-    opportunity_type: classification.opportunity_type,
-    summary: classification.summary,
-    processed: false,
-    created_at: item.date_published ?? new Date().toISOString(),
+    author: item.username?.trim() || null,
+    publishedAt: item.date_published ?? now,
+    contentSnippet,
+    matchedKeyword,
+    raw: item,
+    createdAt: now,
+    topic: classifyTopic(text),
+    problemType: classifyProblemType(text),
+    plantType: detectPlantType(text),
+    sentiment: detectSentiment(text),
   };
 }
 
+function normalizedToDbRow(n: NormalizedIntelligenceMention): PlantIntelligenceMentionRow {
+  return {
+    source: n.source,
+    source_type: n.sourceType,
+    external_id: n.id,
+    title: n.title,
+    url: n.url,
+    author: n.author,
+    content_snippet: n.contentSnippet,
+    matched_keyword: n.matchedKeyword,
+    published_at: n.publishedAt,
+    raw_json: n.raw,
+    sentiment: n.sentiment,
+    topic: n.topic,
+    plant_type: n.plantType,
+    problem_type: n.problemType,
+  };
+}
+
+function dbRowToLegacyMention(row: PlantIntelligenceMentionRow & { id?: string; created_at?: string }): F5BotMentionRow {
+  return {
+    id: row.id,
+    source: row.source,
+    platform: row.source_type,
+    keyword: row.matched_keyword,
+    title: row.title,
+    url: row.url,
+    excerpt: row.content_snippet,
+    full_text: row.content_snippet,
+    subreddit: extractSubreddit(row.url, row.title),
+    detected_plant: row.plant_type,
+    detected_issue: row.problem_type,
+    detected_category: row.topic,
+    sentiment: row.sentiment,
+    opportunity_type: row.problem_type === "general question" ? "content_opportunity" : "community_engagement",
+    summary: [row.plant_type, row.topic, row.problem_type].filter(Boolean).join(" · "),
+    processed: false,
+    created_at: row.published_at ?? row.created_at,
+    imported_at: row.created_at,
+  };
+}
+
+export function feedItemToMentionRow(item: F5BotFeedItem): F5BotMentionRow | null {
+  const normalized = normalizeF5BotItem(item);
+  if (!normalized) return null;
+  return dbRowToLegacyMention(normalizedToDbRow(normalized));
+}
+
 // ── Feed fetch ────────────────────────────────────────────────────────────────
+
+/** Fetch JSON feed and return normalized intelligence mentions. */
+export async function fetchF5BotFeed(feedUrl?: string): Promise<{
+  items: NormalizedIntelligenceMention[];
+  connected: boolean;
+  error?: string;
+}> {
+  const { items: rawItems, connected, error } = await fetchF5BotFeedItems(feedUrl);
+  if (!connected) {
+    logF5Bot("sync_failed", { error });
+    return { items: [], connected: false, error };
+  }
+  const items = rawItems
+    .map(normalizeF5BotItem)
+    .filter((n): n is NormalizedIntelligenceMention => n !== null);
+  return { items, connected: true };
+}
 
 export async function fetchF5BotFeedItems(feedUrl?: string): Promise<{
   items: F5BotFeedItem[];
@@ -437,44 +611,98 @@ export async function fetchF5BotFeedItems(feedUrl?: string): Promise<{
 
 // ── Database ──────────────────────────────────────────────────────────────────
 
+export async function ingestF5BotItems(
+  items: NormalizedIntelligenceMention[],
+  client?: SupabaseClient | null
+): Promise<{ ingested: number; skipped: number }> {
+  const db = client ?? getServiceClient();
+  if (!db || items.length === 0) return { ingested: 0, skipped: items.length };
+
+  const externalIds = items.map((n) => n.id);
+  const urls = items.map((n) => n.url);
+
+  const [{ data: byId }, { data: byUrl }] = await Promise.all([
+    db.from("plant_intelligence_mentions").select("external_id, url").eq("source", "f5bot").in("external_id", externalIds),
+    db.from("plant_intelligence_mentions").select("external_id, url").eq("source", "f5bot").in("url", urls),
+  ]);
+
+  const skipIds = new Set([
+    ...(byId ?? []).map((r: { external_id: string }) => r.external_id),
+    ...(byUrl ?? []).map((r: { external_id: string }) => r.external_id),
+  ]);
+  const skipUrls = new Set([
+    ...(byId ?? []).map((r: { url: string }) => r.url),
+    ...(byUrl ?? []).map((r: { url: string }) => r.url),
+  ]);
+
+  const fresh = items.filter((n) => !skipIds.has(n.id) && !skipUrls.has(n.url));
+  const skipped = items.length - fresh.length;
+
+  if (fresh.length === 0) {
+    logF5Bot("items_ingested", { ingested: 0, skipped });
+    return { ingested: 0, skipped };
+  }
+
+  const rows = fresh.map(normalizedToDbRow);
+  const { error } = await db.from("plant_intelligence_mentions").insert(rows);
+  if (error) {
+    logF5Bot("sync_failed", { error: error.message });
+    throw new Error(error.message);
+  }
+
+  logF5Bot("items_ingested", { ingested: fresh.length, skipped });
+  return { ingested: fresh.length, skipped };
+}
+
+/** @deprecated Use ingestF5BotItems — kept for debug page compatibility. */
 export async function insertF5BotMentions(
   rows: F5BotMentionRow[],
   client?: SupabaseClient | null
 ): Promise<{ imported: number; skipped: number }> {
-  const db = client ?? getServiceClient();
-  if (!db || rows.length === 0) return { imported: 0, skipped: rows.length };
-
-  const urls = rows.map((r) => r.url);
-  const { data: existing } = await db.from("f5bot_mentions").select("url").in("url", urls);
-  const existingSet = new Set((existing ?? []).map((r: { url: string }) => r.url));
-
-  const fresh = rows.filter((r) => !existingSet.has(r.url));
-  if (fresh.length === 0) return { imported: 0, skipped: rows.length };
-
-  const { error } = await db.from("f5bot_mentions").insert(fresh);
-  if (error) throw new Error(error.message);
-
-  return { imported: fresh.length, skipped: rows.length - fresh.length };
+  const normalized = rows
+    .map((r) =>
+      normalizeF5BotItem({
+        url: r.url,
+        title: r.title,
+        content_text: r.full_text,
+        date_published: r.created_at,
+        username: r.subreddit ? `r/${r.subreddit}` : undefined,
+        tags: r.keyword ? [r.keyword] : undefined,
+      })
+    )
+    .filter((n): n is NormalizedIntelligenceMention => n !== null);
+  const { ingested, skipped } = await ingestF5BotItems(normalized, client);
+  return { imported: ingested, skipped };
 }
 
 export async function importF5BotFeed(options?: {
   feedUrl?: string;
   client?: SupabaseClient | null;
 }): Promise<F5BotImportResult> {
+  if (!isF5BotEnabled()) {
+    return {
+      ok: false,
+      imported: 0,
+      skipped: 0,
+      total: 0,
+      feedConnected: false,
+      error: "F5Bot is disabled (F5BOT_ENABLED=false)",
+    };
+  }
+
   const client = options?.client ?? getServiceClient();
   if (!client) {
     return { ok: false, imported: 0, skipped: 0, total: 0, feedConnected: false, error: "Supabase service role not configured" };
   }
 
-  const { items, connected, error: fetchError } = await fetchF5BotFeedItems(options?.feedUrl);
+  const { items, connected, error: fetchError } = await fetchF5BotFeed(options?.feedUrl);
   if (!connected) {
     return { ok: false, imported: 0, skipped: 0, total: 0, feedConnected: false, error: fetchError };
   }
 
-  const rows = items.map(feedItemToMentionRow).filter((r): r is F5BotMentionRow => r !== null);
   try {
-    const { imported, skipped } = await insertF5BotMentions(rows, client);
-    return { ok: true, imported, skipped, total: items.length, feedConnected: true };
+    const { ingested, skipped } = await ingestF5BotItems(items, client);
+    return { ok: true, imported: ingested, skipped, total: items.length, feedConnected: true };
   } catch (err) {
     return {
       ok: false,
@@ -491,14 +719,17 @@ export async function ingestF5BotWebhookPayload(
   payload: unknown,
   client?: SupabaseClient | null
 ): Promise<{ imported: number; skipped: number }> {
-  const items = Array.isArray(payload)
+  const rawItems = Array.isArray(payload)
     ? payload.filter(isFeedItem)
     : isFeedItem(payload)
       ? [payload]
       : parseF5BotFeedPayload(payload);
 
-  const rows = items.map(feedItemToMentionRow).filter((r): r is F5BotMentionRow => r !== null);
-  return insertF5BotMentions(rows, client);
+  const items = rawItems
+    .map(normalizeF5BotItem)
+    .filter((n): n is NormalizedIntelligenceMention => n !== null);
+  const { ingested, skipped } = await ingestF5BotItems(items, client);
+  return { imported: ingested, skipped };
 }
 
 function countByField(
@@ -545,17 +776,17 @@ export async function getF5BotDashboardStats(
 
   const [{ count: totalMentions }, { data: all, error }, { count: mentionsToday }] =
     await Promise.all([
-      db.from("f5bot_mentions").select("id", { count: "exact", head: true }),
-      db.from("f5bot_mentions").select("*").order("imported_at", { ascending: false }).limit(500),
+      db.from("plant_intelligence_mentions").select("id", { count: "exact", head: true }),
+      db.from("plant_intelligence_mentions").select("*").order("created_at", { ascending: false }).limit(500),
       db
-        .from("f5bot_mentions")
+        .from("plant_intelligence_mentions")
         .select("id", { count: "exact", head: true })
-        .gte("imported_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+        .gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
     ]);
 
   if (error || !all) return { ...empty, totalMentions: totalMentions ?? 0 };
 
-  const rows = all as F5BotMentionRow[];
+  const rows = (all as PlantIntelligenceMentionRow[]).map(dbRowToLegacyMention);
   const now = Date.now();
   const dayMs = 86_400_000;
 
@@ -585,7 +816,7 @@ export async function getF5BotDashboardStats(
 
   let feedConnected = feedConfigured;
   if (feedConfigured) {
-    const probe = await fetchF5BotFeedItems();
+    const probe = await fetchF5BotFeed();
     feedConnected = probe.connected;
   }
 
@@ -603,21 +834,22 @@ export async function getF5BotDashboardStats(
       count,
     })),
     fastestGrowingTopics,
-    competitorMentions: rows.filter((r) => r.detected_category === "Competitors").slice(0, 10),
+    competitorMentions: [],
     contentOpportunities: rows
-      .filter(
-        (r) =>
-          r.opportunity_type === "content_opportunity" ||
-          r.detected_category === "Beginner Questions" ||
-          r.detected_category === "Feature Requests"
-      )
+      .filter((r) => r.opportunity_type === "content_opportunity" || r.detected_category === "unknown")
       .slice(0, 10),
     latestMentions: rows.slice(0, 20),
   };
 }
 
-export function validateF5BotWebhookSecret(headerSecret: string | null): boolean {
+export function verifyF5BotWebhookSignature(headerSecret: string | null): boolean {
   const expected = getF5BotWebhookSecret();
   if (!expected) return true;
-  return headerSecret === expected;
+  const valid = headerSecret === expected;
+  if (!valid) logF5Bot("invalid_secret");
+  return valid;
+}
+
+export function validateF5BotWebhookSecret(headerSecret: string | null): boolean {
+  return verifyF5BotWebhookSignature(headerSecret);
 }

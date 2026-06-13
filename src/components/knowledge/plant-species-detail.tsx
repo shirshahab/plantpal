@@ -65,7 +65,7 @@ export function PlantSpeciesDetailView({ plant }: { plant: PlantSpeciesDetail })
       <Section title="Quick facts">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <InfoCard label="Scientific name" value={plant.scientific_name} />
-          <InfoCard label="USDA zones" value={`${plant.hardiness_zone_min}–${plant.hardiness_zone_max}`} />
+          <InfoCard label="USDA zones" value={`${plant.hardiness_zone_min} to ${plant.hardiness_zone_max}`} />
           <InfoCard label="Growth rate" value={plant.growth_rate} />
           <InfoCard label="Mature height" value={plant.mature_height} />
           <InfoCard label="Mature width" value={plant.mature_width} />

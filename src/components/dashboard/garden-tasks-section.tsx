@@ -130,13 +130,13 @@ export function DashboardGardenTasks({
     <Card padding="md">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-base font-semibold text-gray-900">
-          Today&apos;s Garden Tasks
+          What matters today
         </h2>
         <Link
           href="/today"
           className="text-sm text-green-600 font-medium inline-flex items-center gap-0.5"
         >
-          View all <ArrowRight className="w-3.5 h-3.5" />
+          Open Today <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
 
@@ -171,7 +171,7 @@ export function DashboardGardenTasks({
               view.upcoming.length > 0
                 ? `Upcoming: ${view.upcoming.map((u) => u.label).join(" ")}`
                 : null,
-              view.hiddenCount > 0 ? `+${view.hiddenCount} more on Today.` : null,
+              view.hiddenCount > 0 ? `${view.hiddenCount} more on Calendar.` : null,
             ]
               .filter(Boolean)
               .join(" · ")}

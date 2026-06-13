@@ -1,94 +1,59 @@
-export type PlantyGreetingCta =
-  | "today_task"
-  | "scan"
-  | "growth_photo"
-  | "lesson";
+import {
+  pickPlantyMessage,
+  type PlantyMessage,
+  type PlantyMood,
+} from "@/lib/copy/planty-messages-system";
+import { getDailySeed, seedIndex } from "@/lib/local/daily-seed";
 
-export interface PlantyGreeting {
-  text: string;
+export type PlantyGreetingCta = "today_task" | "scan" | "growth_photo" | "lesson";
+
+export interface PlantyGreeting extends PlantyMessage {
   cta?: PlantyGreetingCta;
 }
 
-export const PLANTY_GREETINGS: PlantyGreeting[] = [
-  { text: "Planty clocked in. Let's keep something alive.", cta: "today_task" },
-  { text: "Your plants are dramatic. We brought notes.", cta: "today_task" },
+/** Legacy flat list — moods assigned from CTA/context. */
+const LEGACY_GREETINGS: Omit<PlantyGreeting, "mood" | "context">[] = [
+  { text: "Planty clocked in. Let's keep something alive.", cta: "today_task", target: "/today" },
+  { text: "Your plants are dramatic. We brought notes.", cta: "today_task", target: "/today" },
   { text: "Good news. Your garden still has a chance." },
-  { text: "Water first. Panic later.", cta: "today_task" },
-  { text: "Today's goal: fewer crispy leaves.", cta: "today_task" },
+  { text: "Water first. Panic later.", cta: "today_task", target: "/today" },
+  { text: "Today's goal: fewer crispy leaves.", cta: "today_task", target: "/today" },
   { text: "Your plants can't text for help. That's why we're here." },
-  { text: "One small task for you. One giant win for your basil.", cta: "today_task" },
-  { text: "Plant murder rate: hopefully zero." },
-  { text: "Your garden command center is online." },
-  { text: "The tomatoes are watching." },
-  { text: "Compost is not the goal." },
-  { text: "Nice. You opened the app before the plant died." },
-  { text: "Your plants like consistency. Annoying, but true.", cta: "today_task" },
-  { text: "Check the soil. Save the drama.", cta: "scan" },
-  { text: "Growth is happening. Slowly. Plants are not impressed by hustle culture." },
-  { text: "Your plant has needs. Unfortunately, you are the adult here.", cta: "today_task" },
-  { text: "Let's make the neighbors jealous." },
-  { text: "Tiny leaves. Big expectations." },
-  { text: "Planty believes in second chances." },
-  { text: "Some heroes wear capes. You checked the soil.", cta: "today_task" },
-  { text: "Morning sun. Afternoon shade. Same drama, new day." },
-  { text: "If the leaves look sad, they probably are.", cta: "scan" },
-  { text: "Your basil is not being passive aggressive. Probably." },
-  { text: "Thumb status: green enough for government work." },
-  { text: "Today's vibe: hydrated and slightly smug.", cta: "growth_photo" },
-  { text: "We see you showing up for the ficus again." },
-  { text: "No wilting on Planty's watch. Well, we'll try.", cta: "today_task" },
-  { text: "The pothos is thriving. The rest is a group project." },
-  { text: "Sunlight is free. Overwatering is expensive." },
-  { text: "Your garden called. It wants five minutes.", cta: "today_task" },
-  { text: "Planty ran the numbers. You can do one task.", cta: "today_task" },
-  { text: "Leaves don't lie. Neither do we.", cta: "scan" },
-  { text: "Fresh app open. Fresh chance to not kill the mint." },
-  { text: "Roots down. Vibes up. Maybe." },
-  { text: "Every expert gardener killed a plant once. Or twelve." },
-  { text: "Snap a growth pic. Future you will flex.", cta: "growth_photo" },
-  { text: "Today's lesson beats guessing. Trust Planty.", cta: "lesson" },
-  { text: "The spider plant is judging your calendar. Fair.", cta: "today_task" },
-  { text: "Yellow leaf? Could be drama. Could be science.", cta: "lesson" },
-  { text: "You + one task = garden that looks intentional.", cta: "today_task" },
-  { text: "Planty is optimistic. Your succulent is not." },
-  { text: "Water, wait, observe. Repeat until harvest.", cta: "today_task" },
-  { text: "Big leaves. Small ego. Good combo." },
-  { text: "Your neighbors' lawn is not your problem. Your pots are.", cta: "today_task" },
-  { text: "Scan first. Panic never.", cta: "scan" },
-  { text: "Planty likes your commitment. The fern is still thinking about it." },
+  { text: "One small task for you. One giant win for your basil.", cta: "today_task", target: "/today" },
+  { text: "Your garden called. It wants five minutes.", cta: "today_task", target: "/today" },
+  { text: "Check the soil. Save the drama.", cta: "scan", target: "/scanner" },
+  { text: "Today's lesson beats guessing. Trust Planty.", cta: "lesson", target: "/academy" },
+  { text: "Snap a growth pic. Future you will flex.", cta: "growth_photo", target: "/scanner?tab=progress" },
 ];
 
-const LAST_KEY = "plantpal-planty-greeting-last";
-const INDEX_KEY = "plantpal-planty-greeting-index";
-
-function daySeed(): number {
-  const d = new Date();
-  return d.getFullYear() * 1000 + d.getMonth() * 50 + d.getDate();
+function moodForCta(cta?: PlantyGreetingCta, text?: string): PlantyMood {
+  if (text?.includes("evidence")) return "diagnosing";
+  if (cta === "scan") return "diagnosing";
+  if (cta === "growth_photo") return "niceWork";
+  if (cta === "lesson") return "thinking";
+  if (cta === "today_task") return "happy";
+  return "happy";
 }
 
-/** Pick a greeting that rotates daily and never repeats twice in a row. */
-export function pickPlantyGreeting(): PlantyGreeting {
-  if (typeof window === "undefined") return PLANTY_GREETINGS[0]!;
+const PLANTY_GREETINGS: PlantyGreeting[] = LEGACY_GREETINGS.map((g) => ({
+  ...g,
+  mood: moodForCta(g.cta, g.text),
+  context: "dashboard_greeting" as const,
+}));
 
-  try {
-    const lastIdx = Number(sessionStorage.getItem(LAST_KEY) ?? "-1");
-    const storedDay = sessionStorage.getItem(INDEX_KEY);
-    const seed = daySeed();
-    let idx = storedDay === String(seed)
-      ? Number(sessionStorage.getItem(LAST_KEY) ?? "0")
-      : (seed + performance.now()) % PLANTY_GREETINGS.length;
+export { PLANTY_GREETINGS };
 
-    idx = Math.floor(Math.abs(idx)) % PLANTY_GREETINGS.length;
-    if (idx === lastIdx && PLANTY_GREETINGS.length > 1) {
-      idx = (idx + 1) % PLANTY_GREETINGS.length;
-    }
-
-    sessionStorage.setItem(LAST_KEY, String(idx));
-    sessionStorage.setItem(INDEX_KEY, String(seed));
-    return PLANTY_GREETINGS[idx]!;
-  } catch {
-    return PLANTY_GREETINGS[Math.floor(Math.random() * PLANTY_GREETINGS.length)]!;
-  }
+/** Daily greeting with matched mood (never random emote vs caption). */
+export function pickPlantyGreeting(city = "local", zone = "10a"): PlantyGreeting {
+  const seed = getDailySeed(city, zone);
+  const fromSystem = pickPlantyMessage("dashboard_greeting", { city, zone });
+  const idx = seedIndex(`${seed}|greet`, PLANTY_GREETINGS.length);
+  const legacy = PLANTY_GREETINGS[idx]!;
+  const merged: PlantyGreeting = {
+    ...fromSystem,
+    cta: legacy.cta ?? (fromSystem.target === "/today" ? "today_task" : undefined),
+  };
+  return merged;
 }
 
 export function ctaForGreeting(cta?: PlantyGreetingCta): { label: string; href: string } | null {

@@ -5,6 +5,7 @@ export type TaskType =
   | "repot"
   | "inspect"
   | "scan"
+  | "weekly_check"
   | "harvest"
   | "take_growth_photo"
   | "complete_lesson";

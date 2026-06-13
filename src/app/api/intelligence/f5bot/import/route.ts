@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { importF5BotFeed, isF5BotConfigured } from "@/lib/intelligence/f5bot";
+import { importF5BotFeed, isF5BotConfigured, isF5BotEnabled } from "@/lib/intelligence/f5bot";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +13,17 @@ export async function GET() {
     return NextResponse.json({
       ok: false,
       error: "Supabase not configured",
+      imported: 0,
+      skipped: 0,
+      total: 0,
+      feedConnected: false,
+    });
+  }
+
+  if (!isF5BotEnabled()) {
+    return NextResponse.json({
+      ok: false,
+      error: "F5Bot is disabled",
       imported: 0,
       skipped: 0,
       total: 0,

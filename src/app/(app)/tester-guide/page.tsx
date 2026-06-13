@@ -45,7 +45,7 @@ const STEPS = [
     step: 4,
     icon: GraduationCap,
     title: "Try one lesson",
-    body: "Open Academy, pick any lesson, and finish it. Lessons are short, about 2–3 minutes.",
+    body: "Open Academy, pick any lesson, and finish it. Lessons are short, about 2 to 3 minutes.",
     href: "/academy",
     cta: "Open Academy",
   },

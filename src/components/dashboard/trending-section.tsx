@@ -1,43 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { MapPin, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { TrendingInsightModal } from "@/components/dashboard/trending-insight-modal";
 import {
-  getTrendingPlantsForZip,
-  getAreaLabel,
-  type TrendingPlant,
-} from "@/lib/dashboard/trending-plants";
+  getTrendingPlants,
+  getTrendingCityName,
+  type TrendingPlantItem,
+} from "@/lib/local/trending-plants";
+import type { DashboardIntelligenceContext } from "@/lib/intelligence/dashboard-insights";
 import type { Plant } from "@/lib/types";
 
 export function DashboardTrending({
   zipCode,
   plants,
+  intelligence,
 }: {
   zipCode: string;
   plants: Plant[];
+  intelligence?: DashboardIntelligenceContext;
 }) {
-  const [selected, setSelected] = useState<TrendingPlant | null>(null);
+  const [selected, setSelected] = useState<TrendingPlantItem | null>(null);
 
-  if (!zipCode?.trim()) return null;
-  const trending = getTrendingPlantsForZip(zipCode, plants);
-  if (trending.length === 0) return null;
+  const trending = useMemo(
+    () =>
+      zipCode?.trim()
+        ? getTrendingPlants({
+            zipCode,
+            ownedPlants: plants,
+            limit: 5,
+            mentionedPlants: intelligence?.mentionedPlants,
+          })
+        : [],
+    [zipCode, plants, intelligence?.mentionedPlants]
+  );
 
-  const area = getAreaLabel(zipCode);
-  const city = area.split(",")[0];
+  if (!zipCode?.trim() || trending.length === 0) return null;
+
+  const city = getTrendingCityName(zipCode);
 
   return (
     <Card padding="md">
       <div className="flex items-center gap-2 mb-1">
         <MapPin className="w-4 h-4 text-green-600" />
         <h2 className="text-base font-semibold text-gray-900">
-          Trending in {city}
+          Trending plants in {city}
         </h2>
       </div>
       <p className="text-xs text-gray-500 mb-3">
-        Tap a plant to see why it&apos;s trending near you.
+        Plants people near you keep asking about.
       </p>
       <div className="space-y-2">
         {trending.map((plant) => (
@@ -64,6 +77,9 @@ export function DashboardTrending({
               </p>
               <p className="text-xs text-gray-500 leading-snug mt-0.5">
                 {plant.reason}
+              </p>
+              <p className="text-[10px] text-green-700 mt-0.5">
+                {plant.freshnessLabel} · {plant.sourceLabel}
               </p>
             </div>
             <span

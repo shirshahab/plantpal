@@ -490,7 +490,7 @@ export function ProDoctorClient() {
         <div className="grid grid-cols-2 gap-3">
           <Input
             label="Temperature"
-            placeholder="e.g. 75–85°F days"
+            placeholder="e.g. 75 to 85°F days"
             value={env.temperature}
             onChange={(e) => setEnvField("temperature", e.target.value)}
           />

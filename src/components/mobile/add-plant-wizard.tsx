@@ -911,7 +911,7 @@ function SelectedSpeciesCard({
   if (selection.hardinessZoneMin != null && selection.hardinessZoneMax != null) {
     facts.push({
       label: "Zones",
-      value: `${selection.hardinessZoneMin}–${selection.hardinessZoneMax}`,
+      value: `${selection.hardinessZoneMin} to ${selection.hardinessZoneMax}`,
     });
   }
   if (selection.toxicity) facts.push({ label: "Toxicity", value: selection.toxicity });

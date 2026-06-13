@@ -20,7 +20,7 @@ export function SoilDetailView({ soil }: { soil: SoilType }) {
 
       <div className="flex flex-wrap gap-2">
         <Badge variant="info">{soil.texture}</Badge>
-        <Badge variant="outline">pH {soil.ph_min}–{soil.ph_max}</Badge>
+        <Badge variant="outline">pH {soil.ph_min} to {soil.ph_max}</Badge>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">

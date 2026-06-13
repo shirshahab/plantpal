@@ -1,22 +1,44 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { CalendarDays } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { TaskSection } from "@/components/tasks/task-card";
+import { TaskCard } from "@/components/tasks/task-card";
+import { PlantyLine } from "@/components/planty/planty-line";
 import { useTasks } from "@/lib/store/tasks-provider";
 import { usePlants } from "@/lib/store/plants-provider";
-import { isRecoveryTask } from "@/lib/health/recovery-tasks";
+import { getTodayFocusTasks, todayFocusCopy } from "@/lib/tasks/dedupe-tasks";
+import { pickPlantyMessage } from "@/lib/copy/planty-messages-system";
+import { loadUserProfile } from "@/lib/profile/user-profile";
+import { lookupZipRecord } from "@/lib/location/usda-zones";
 import { InstallPrompt } from "@/components/mobile/install-prompt";
 import { SyncStatusBadge } from "@/components/sync/sync-status-badge";
 
 export default function TodayPage() {
   const { plants, loading: plantsLoading } = usePlants();
-  const { groups, ready, completeTask, skipTask, snoozeTask } = useTasks();
+  const { groups, ready, completeTask, snoozeTask } = useTasks();
 
+  const focusTasks =
+    ready && plants.length > 0 ? getTodayFocusTasks(groups, plants) : [];
+  const completedToday = groups.completed.filter((t) => {
+    if (!t.completedAt) return false;
+    const d = new Date(t.completedAt);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  });
+
+  const plantyMessage = useMemo(() => {
+    const zip = loadUserProfile().zipCode || "91107";
+    const record = lookupZipRecord(zip);
+    return pickPlantyMessage("today_tasks", {
+      taskCount: focusTasks.length,
+      city: record.city,
+      zone: record.usdaZone,
+    });
+  }, [focusTasks.length]);
   if (plantsLoading || !ready) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -27,18 +49,11 @@ export default function TodayPage() {
     );
   }
 
-  const totalPending =
-    groups.dueToday.length + groups.overdue.length + groups.upcoming.length;
-
   return (
     <div className="space-y-6 max-w-lg mx-auto">
       <PageHeader
         title="Today"
-        description={
-          totalPending > 0
-            ? `${groups.overdue.length + groups.dueToday.length} tasks need attention`
-            : "You're all caught up. Nice work!"
-        }
+        description={todayFocusCopy(focusTasks.length)}
         action={
           <div className="flex items-center gap-2">
             <SyncStatusBadge />
@@ -52,6 +67,9 @@ export default function TodayPage() {
         }
       />
 
+      {plants.length > 0 && (
+        <PlantyLine message={plantyMessage} className="-mt-2" linkable={Boolean(plantyMessage.target)} />
+      )}
       <InstallPrompt />
 
       {plants.length === 0 ? (
@@ -64,68 +82,52 @@ export default function TodayPage() {
           secondaryLabel="Add Plant Manually"
           secondaryHref="/plants/new"
         />
+      ) : focusTasks.length === 0 ? (
+        <EmptyState
+          icon="✨"
+          compact
+          title="Nothing urgent today."
+          description="Your plants have not filed any new complaints."
+          actionLabel="View Calendar"
+          actionHref="/calendar"
+        />
       ) : (
         <>
-          {groups.overdue.length > 0 && (
-            <Card padding="md" className="bg-amber-50 border-amber-100">
-              <p className="text-sm font-medium text-amber-800">
-                {groups.overdue.length} task{groups.overdue.length !== 1 ? "s" : ""} waiting from earlier. A quick catch-up and you&apos;re set.
+          <section>
+            <h2 className="text-base font-semibold text-gray-900 mb-3 px-0.5">
+              What matters today
+            </h2>
+            <div className="space-y-3">
+              {focusTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onComplete={completeTask}
+                  onSnooze={snoozeTask}
+                  compact
+                />
+              ))}
+            </div>
+          </section>
+
+          {completedToday.length > 0 && (
+            <section className="pt-2 border-t border-gray-100">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
+                Done today
               </p>
-            </Card>
-          )}
-
-          {/* Recovery Plan check-ins from active health reports, grouped. */}
-          <TaskSection
-            title="Recovery Plan"
-            tasks={[...groups.overdue, ...groups.dueToday].filter(isRecoveryTask)}
-            onComplete={completeTask}
-            onSkip={skipTask}
-            onSnooze={snoozeTask}
-          />
-
-          {/* Each task appears exactly once — no duplicate sections. */}
-          <TaskSection
-            title="Needs you now"
-            tasks={[...groups.overdue, ...groups.dueToday].filter(
-              (t) => !isRecoveryTask(t)
-            )}
-            emptyMessage="Nothing needs you right now."
-            onComplete={completeTask}
-            onSkip={skipTask}
-            onSnooze={snoozeTask}
-          />
-
-          <TaskSection
-            title="Coming up"
-            tasks={groups.upcoming.filter((t) => !isRecoveryTask(t)).slice(0, 5)}
-            onComplete={completeTask}
-            onSkip={skipTask}
-            onSnooze={snoozeTask}
-          />
-
-          <TaskSection
-            title="Completed today"
-            tasks={groups.completed.filter((t) => {
-              if (!t.completedAt) return false;
-              const d = new Date(t.completedAt);
-              const now = new Date();
-              return d.toDateString() === now.toDateString();
-            })}
-            emptyMessage="Complete a task to see it here."
-            onComplete={completeTask}
-            onSkip={skipTask}
-            onSnooze={snoozeTask}
-          />
-
-          {totalPending === 0 && groups.completed.length === 0 && (
-            <EmptyState
-              icon="✨"
-              compact
-              title="You're clear today"
-              description="No tasks due. Enjoy your garden or check the calendar for what's coming up."
-              actionLabel="View Calendar"
-              actionHref="/calendar"
-            />
+              <ul className="space-y-1">
+                {completedToday.slice(0, 2).map((t) => (
+                  <li key={t.id} className="text-sm text-gray-500 line-through decoration-gray-300">
+                    {t.title}
+                  </li>
+                ))}
+              </ul>
+              {completedToday.length > 2 && (
+                <Link href="/calendar" className="text-xs text-green-600 mt-1 inline-block">
+                  +{completedToday.length - 2} more on Calendar
+                </Link>
+              )}
+            </section>
           )}
         </>
       )}

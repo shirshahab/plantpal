@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
       setError(
         updateError.message.toLowerCase().includes("different from the old")
           ? "New password must be different from your old one."
-          : "Couldn't update your password. The reset link may have expired — request a new one from the sign-in page."
+          : "Couldn't update your password. The reset link may have expired. Request a new one from the sign-in page."
       );
       setLoading(false);
       return;

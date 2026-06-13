@@ -108,7 +108,7 @@ export async function POST(request: Request) {
 
   const burst = checkRateLimit(`ai-scan-burst:${clientKey}`, 5, 60_000, { request });
   if (!burst.allowed) {
-    return aiError("Too many scans — wait a minute and try again.", 429);
+    return aiError("Too many scans. Wait a minute and try again.", 429);
   }
 
   const parsed = await parseJsonBody(request, ROUTE);

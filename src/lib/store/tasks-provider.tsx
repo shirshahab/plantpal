@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { generatePlantTasks, getTasksForDate } from "@/lib/tasks/task-engine";
+import { getTodayFocusTasks } from "@/lib/tasks/dedupe-tasks";
 import type {
   PlantCareLog,
   PlantTask,
@@ -33,6 +34,11 @@ import { queueCompletionBurst } from "@/components/gamification/xp-toast-queue";
 import {
   validateTaskCompletion,
   type CompletionSource,
+  pickRandomCopy,
+  WATER_COMPLETE_COPY,
+  FERTILIZE_COMPLETE_COPY,
+  WEEKLY_CHECK_COMPLETE_COPY,
+  LESSON_COMPLETE_COPY,
 } from "@/lib/tasks/task-validation";
 import {
   LESSON_COMPLETED_EVENT,
@@ -198,6 +204,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       taskStates,
       reminders,
       completedLessonIds: progress.completedLessons,
+      passedQuizIds: progress.passedQuizzes,
       extraTasks: recoveryTasks,
     });
   }, [
@@ -209,6 +216,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     reminders,
     locationProfile,
     progress.completedLessons,
+    progress.passedQuizzes,
     remindersReady,
     recoveryTasks,
   ]);
@@ -233,8 +241,8 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   }, [groups, ready, user?.id, isMockMode, markPending, markSynced, markFailed]);
 
   const topTasks = useMemo(() => {
-    return [...groups.overdue, ...groups.dueToday].slice(0, 3);
-  }, [groups]);
+    return getTodayFocusTasks(groups, plants);
+  }, [groups, plants]);
 
   const completeTask = useCallback(
     async (task: PlantTask, options?: CompleteTaskOptions) => {
@@ -279,7 +287,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
           await markCareAction(task.plantId, "lastPrunedAt");
         } else if (task.taskType === "repot") {
           await markCareAction(task.plantId, "lastRepottedAt");
-        } else if (task.taskType === "scan" || task.taskType === "inspect") {
+        } else if (task.taskType === "scan" || task.taskType === "inspect" || task.taskType === "weekly_check") {
           await markCareAction(task.plantId, "lastHealthScanAt");
         } else if (task.taskType === "take_growth_photo") {
           await markCareAction(task.plantId, "lastGrowthPhotoAt");
@@ -324,7 +332,17 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!options?.silentToast) {
-        queueCompletionBurst(xpAmount, [task.title]);
+        let message = task.title;
+        if (options?.source === "lesson_quiz_passed") {
+          message = LESSON_COMPLETE_COPY;
+        } else if (task.taskType === "water") {
+          message = pickRandomCopy(WATER_COMPLETE_COPY);
+        } else if (task.taskType === "fertilize") {
+          message = pickRandomCopy(FERTILIZE_COMPLETE_COPY);
+        } else if (task.taskType === "weekly_check") {
+          message = WEEKLY_CHECK_COMPLETE_COPY;
+        }
+        queueCompletionBurst(xpAmount, [message]);
       }
     },
     [
@@ -391,7 +409,9 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       const plantId = (event as CustomEvent<{ plantId: string | null }>).detail?.plantId;
       const pending = [...groups.overdue, ...groups.dueToday, ...groups.upcoming].filter(
         (t) =>
-          (t.taskType === "scan" || t.taskType === "inspect") &&
+          (t.taskType === "scan" ||
+            t.taskType === "inspect" ||
+            t.taskType === "weekly_check") &&
           t.status === "pending" &&
           (!plantId || t.plantId === plantId || !t.plantId)
       );

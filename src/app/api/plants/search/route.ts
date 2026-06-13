@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   );
   if (!burst.allowed) {
     return NextResponse.json(
-      { ok: false, error: "Too many searches — wait a moment and try again." },
+      { ok: false, error: "Too many searches. Wait a moment and try again." },
       { status: 429 }
     );
   }

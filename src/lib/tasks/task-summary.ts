@@ -64,6 +64,7 @@ const GROUP_OF_TYPE: Record<TaskType, TaskGroupKey> = {
   repot: "repot",
   inspect: "health",
   scan: "health",
+  weekly_check: "health",
   take_growth_photo: "photo",
   harvest: "harvest",
   complete_lesson: "other",
@@ -259,7 +260,7 @@ export function buildGardenTaskView(
   }
   summaries.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]);
 
-  const maxGroups = plantCount <= 3 ? 3 : plantCount <= 10 ? 5 : 6;
+  const maxGroups = plantCount <= 1 ? 2 : plantCount <= 3 ? 3 : plantCount <= 10 ? 4 : 5;
   const visible = summaries.slice(0, maxGroups);
   const hiddenCount = summaries
     .slice(maxGroups)

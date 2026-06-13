@@ -19,6 +19,7 @@ import { DailyLessonCard } from "@/components/academy/daily-lesson-card";
 import { DashboardActivityFeed } from "@/components/social/dashboard-activity-feed";
 import { DashboardActiveChallenge } from "@/components/social/dashboard-active-challenge";
 import { GrowersNearYou } from "@/components/dashboard/growers-near-you";
+import { useDashboardIntelligence } from "@/lib/hooks/use-dashboard-intelligence";
 import { InviteFriendsCard } from "@/components/dashboard/invite-friends-card";
 import { DashboardEmptyState } from "@/components/dashboard/empty-state";
 import { PlantyGreetingCard } from "@/components/dashboard/planty-greeting-card";
@@ -58,6 +59,7 @@ export function DashboardHome() {
   }, []);
 
   const zipCode = profileZip || plants[0]?.zipCode || "";
+  const { context: dashboardIntel } = useDashboardIntelligence(zipCode);
 
   if (loading || !moatReady) {
     return <DashboardSkeleton />;
@@ -136,8 +138,8 @@ export function DashboardHome() {
         <DashboardContinueLearning />
 
         {/* 7. Trending near you + local growers */}
-        <DashboardTrending zipCode={zipCode} plants={plants} />
-        <GrowersNearYou zipCode={zipCode} />
+        <DashboardTrending zipCode={zipCode} plants={plants} intelligence={dashboardIntel} />
+        <GrowersNearYou zipCode={zipCode} intelligence={dashboardIntel} />
 
         {/* 8. Suggestions */}
         <DashboardSuggestions />

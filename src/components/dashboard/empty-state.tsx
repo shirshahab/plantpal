@@ -13,16 +13,18 @@ import { DashboardSuggestions } from "@/components/dashboard/suggestions-section
 import { DailyLessonCard } from "@/components/academy/daily-lesson-card";
 import { loadUserProfile } from "@/lib/profile/user-profile";
 import { PlantyAvatar } from "@/components/brand/planty";
-import { getPlantyMessage } from "@/lib/copy/planty-messages";
+import { pickPlantyMessage, plantyMoodToVariant } from "@/lib/copy/planty-messages-system";
+import { useDashboardIntelligence } from "@/lib/hooks/use-dashboard-intelligence";
 
 export function DashboardEmptyState() {
   const [zipCode, setZipCode] = useState("");
-  const [plantyMessage, setPlantyMessage] = useState("");
+  const [plantyWelcome, setPlantyWelcome] = useState(() => pickPlantyMessage("dashboard_welcome"));
 
   useEffect(() => {
     setZipCode(loadUserProfile().zipCode);
-    setPlantyMessage(getPlantyMessage());
   }, []);
+
+  const { context: dashboardIntel } = useDashboardIntelligence(zipCode);
 
   return (
     <div className="space-y-5 max-w-lg mx-auto pb-4">
@@ -35,13 +37,11 @@ export function DashboardEmptyState() {
 
       {/* Rotating Planty welcome + primary actions */}
       <Card padding="lg" className="text-center border-green-100 bg-gradient-to-b from-green-50/80 to-white">
-        <PlantyAvatar variant="happy" size={80} className="mx-auto" />
+        <PlantyAvatar variant={plantyMoodToVariant(plantyWelcome.mood)} size={80} className="mx-auto" />
         <p className="text-[10px] font-semibold uppercase tracking-wide text-green-700 mt-4">
           Planty says
         </p>
-        <h2 className="text-xl font-bold text-gray-900 mt-1">
-          {plantyMessage || "Add your first plant. I promise not to judge."}
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 mt-1">{plantyWelcome.text}</h2>
         <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto leading-relaxed">
           Add a plant, scan a problem, or knock out today&apos;s garden task.
         </p>
@@ -68,7 +68,7 @@ export function DashboardEmptyState() {
       </Card>
 
       {/* Trending near you — climate-based, clearly not "your plants" */}
-      <DashboardTrending zipCode={zipCode} plants={[]} />
+      <DashboardTrending zipCode={zipCode} plants={[]} intelligence={dashboardIntel} />
 
       {/* Today's lesson */}
       <DailyLessonCard />

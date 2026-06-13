@@ -172,7 +172,7 @@ export function LandscapeResultsMvp({
                         {item.suitability_score}% {item.suitability_label ?? ""}
                       </span>
                     ) : (
-                      <span className="text-xs text-gray-400">—</span>
+                      <span className="text-xs text-gray-400">None</span>
                     )}
                   </td>
                   <td className="py-2 text-right text-green-700 text-xs font-medium">
