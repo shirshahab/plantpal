@@ -3,6 +3,7 @@
 import { Sparkles, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSubscription } from "@/lib/store/subscription-provider";
+import { isDevUnlockAllFeatures } from "@/lib/billing/dev-unlock";
 
 interface BetaAccessBannerProps {
   className?: string;
@@ -12,11 +13,13 @@ interface BetaAccessBannerProps {
 export function BetaAccessBanner({ className, compact }: BetaAccessBannerProps) {
   const { founderMode } = useSubscription();
 
-  const title = founderMode ? "Founder Mode Active" : "Beta Access Enabled";
+  if (!founderMode && !isDevUnlockAllFeatures()) return null;
+
+  const title = founderMode ? "Founder Mode Active" : "Dev unlock active";
   const Icon = founderMode ? Crown : Sparkles;
   const description = founderMode
     ? "All Plus and Pro features are enabled. Upgrade prompts and paywalls are hidden."
-    : "All Plus and Family features are enabled for testing. Upgrade prompts are hidden.";
+    : "All Plus and Family features are enabled for local development only.";
 
   return (
     <div

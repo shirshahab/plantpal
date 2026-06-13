@@ -112,12 +112,12 @@ export default function TesterGuidePage() {
           <div>
             <p className="font-medium text-gray-900">When you&apos;re done</p>
             <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-              You&apos;ve helped us more than you know. Come back anytime. New features ship weekly
-              during beta.
+              You&apos;ve helped us more than you know. Come back anytime for new features and
+              fixes.
             </p>
-            <Link href="/beta-start" className="inline-block mt-3">
+            <Link href="/onboarding" className="inline-block mt-3">
               <Button size="sm" variant="secondary" className="touch-manipulation">
-                Back to beta start
+                Back to onboarding
               </Button>
             </Link>
           </div>

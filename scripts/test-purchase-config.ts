@@ -102,6 +102,15 @@ function testMobileBridgePresent() {
   console.log("✓ Expo mobile RevenueCat bridge present");
 }
 
+function testLocalTrialAutoStartRemoved() {
+  const src = readFile("src/lib/billing/subscription-state.ts");
+  assert.match(src, /loadVerifiedSubscriptionState/);
+  assert.doesNotMatch(src, /ensureLaunchTrial/);
+  const trialSrc = readFile("src/lib/billing/trial.ts");
+  assert.equal(trialSrc.includes("ensureLaunchTrial"), false);
+  console.log("✓ Local trial auto-start removed from production path");
+}
+
 function main() {
   testProductIdsDefined();
   testPurchaseAdapterExists();
@@ -112,6 +121,7 @@ function main() {
   testRestorePurchaseExists();
   testPaywallNoProductionMock();
   testMobileBridgePresent();
+  testLocalTrialAutoStartRemoved();
   console.log("\nAll purchase config tests passed.");
 }
 

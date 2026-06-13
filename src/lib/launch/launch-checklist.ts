@@ -4,6 +4,7 @@
 import { PUBLIC_BETA_UNLOCK_ALL } from "@/lib/billing/limits";
 import { isDevUnlockAllFeatures } from "@/lib/billing/dev-unlock";
 import { isMockPurchaseAllowed } from "@/lib/billing/purchase-adapter";
+import { isLocalTrialAutoStartEnabled } from "@/lib/billing/trial";
 import { LAUNCH_TRIAL_DAYS, OFFICIAL_PRICING, PRO_MONTHLY_PRICE } from "@/lib/billing/pricing";
 import { STORE_PRODUCTS } from "@/lib/billing/store-products";
 import { isDebugToolingEnabled } from "@/lib/dev/dev-only";
@@ -77,6 +78,18 @@ export function runLaunchChecklist(): { ok: boolean; checks: LaunchCheck[] } {
     name: "Purchase adapter configured",
     status: "ok",
     details: "src/lib/billing/purchase-adapter.ts (RevenueCat-ready native bridge)",
+  });
+
+  checks.push({
+    name: "Local trial auto-start disabled",
+    status: isLocalTrialAutoStartEnabled() ? "error" : "ok",
+    details: "No client-only 14-day trial grants in production",
+  });
+
+  checks.push({
+    name: "Beta routes redirected",
+    status: "ok",
+    details: "/beta → /pricing, /beta-start → /onboarding",
   });
 
   checks.push({

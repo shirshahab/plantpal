@@ -149,8 +149,8 @@ export default function CommunityPage() {
         </div>
         <p className="text-sm font-medium text-gray-900">Want to share your garden?</p>
         <p className="text-sm text-gray-500 max-w-md mx-auto">
-          Posting, questions, and success stories open up as the beta community grows. You&apos;ll
-          be among the first 20 growers in.
+          Posting, questions, and success stories open up as more growers join. Invite
+          friends to grow together.
         </p>
         <div className="flex flex-col sm:flex-row gap-2 justify-center pt-1">
           <Link href="/friends">

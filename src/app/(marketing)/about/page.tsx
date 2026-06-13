@@ -40,7 +40,7 @@ export default function AboutPage() {
             &ldquo;I shared it with growers and they said they&apos;ve never seen
             anything like it.&rdquo;
           </p>
-          <footer className="text-sm text-brand-text-secondary mt-3">Early beta tester</footer>
+          <footer className="text-sm text-brand-text-secondary mt-3">Early PlantPal user</footer>
         </blockquote>
 
         <div className="mt-12 flex flex-col sm:flex-row gap-3">
@@ -58,7 +58,7 @@ export default function AboutPage() {
 
         <div className="mt-12">
           <p className="text-sm font-medium text-brand-text mb-3">
-            Follow along for plant tips and beta updates.
+            Follow along for plant tips and product updates.
           </p>
           <SocialLinks showHandles />
         </div>

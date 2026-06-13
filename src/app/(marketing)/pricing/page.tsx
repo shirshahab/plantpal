@@ -5,11 +5,11 @@ import { absoluteUrl } from "@/lib/marketing/site";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "PlantPal is free during beta. Paid plans come later.",
+  description: "PlantPal Pro and Family plans with a 14-day free trial. Start caring for your plants the smart way.",
   alternates: { canonical: absoluteUrl("/pricing") },
   openGraph: {
     title: "PlantPal Pricing",
-    description: "PlantPal is free during beta. Paid plans come later.",
+    description: "PlantPal Pro and Family plans with a 14-day free trial.",
     url: absoluteUrl("/pricing"),
   },
 };
@@ -20,7 +20,7 @@ export default function PricingPage() {
       <PricingPageClient />
       <WaitlistCta
         heading="Free is a great price."
-        subheading="Get PlantPal free during beta."
+        subheading="Start with a 14-day free trial. Cancel anytime."
         source="pricing"
         className="mt-20 px-0 sm:px-0"
       />

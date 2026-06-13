@@ -10,7 +10,7 @@ import {
   isProTier,
 } from "./limits";
 import { isDevUnlockAllFeatures } from "./dev-unlock";
-import { hasLaunchTrialAccess } from "./trial";
+import { hasVerifiedStoreTrialAccess, getEffectiveTier } from "./trial";
 import type { UserSubscription } from "@/lib/types/billing";
 
 export interface AccessOptions {
@@ -23,9 +23,11 @@ export interface AccessOptions {
 
 export function isAccessUnrestricted(options: AccessOptions = {}): boolean {
   if (isDevUnlockAllFeatures()) return true;
-  if (options.trialFullAccess) return true;
-  if (options.subscription && hasLaunchTrialAccess(options.subscription)) return true;
-  return !!(options.betaUnlockAll || options.bypassLimits || options.founderMode);
+  if (options.founderMode) return true;
+  if (options.trialFullAccess && options.subscription) {
+    return hasVerifiedStoreTrialAccess(options.subscription);
+  }
+  return !!(options.betaUnlockAll || options.bypassLimits);
 }
 
 export function isFree(tier: Tier): boolean {
@@ -52,10 +54,7 @@ export function canAccessFeature(
 ): boolean {
   if (isAccessUnrestricted(options)) return true;
 
-  const gateTier =
-    options.subscription && hasLaunchTrialAccess(options.subscription)
-      ? AccountTier.FAMILY
-      : tier;
+  const gateTier = options.subscription ? getEffectiveTier(options.subscription) : tier;
 
   const normalized = normalizeFeature(feature);
   if (!normalized) return false;
@@ -82,19 +81,13 @@ export function canAccessAcademyPathForTier(
   options: AccessOptions = {}
 ): boolean {
   if (isAccessUnrestricted(options)) return true;
-  const gateTier =
-    options.subscription && hasLaunchTrialAccess(options.subscription)
-      ? AccountTier.FAMILY
-      : tier;
+  const gateTier = options.subscription ? getEffectiveTier(options.subscription) : tier;
   return canAccessAcademyPath(gateTier, pathId);
 }
 
 export function getPlantLimit(tier: Tier, options: AccessOptions = {}): number | null {
   if (isAccessUnrestricted(options)) return null;
-  const gateTier =
-    options.subscription && hasLaunchTrialAccess(options.subscription)
-      ? AccountTier.FAMILY
-      : tier;
+  const gateTier = options.subscription ? getEffectiveTier(options.subscription) : tier;
   return isFree(gateTier) ? FREE_PLANT_LIMIT : null;
 }
 

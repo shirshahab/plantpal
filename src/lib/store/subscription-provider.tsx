@@ -25,10 +25,12 @@ import {
   isFounderMode,
 } from "@/lib/billing/beta-unlock";
 import {
+  applyVerifiedSubscription,
   getEffectiveTier,
   isTrialActive,
+  isVerifiedSubscription,
   loadMockSubscription,
-  loadSubscriptionWithTrial,
+  loadVerifiedSubscriptionState,
   setMockTier,
   expireTrialIfNeeded,
   isMockPurchaseAllowed,
@@ -69,26 +71,45 @@ interface SubscriptionContextValue {
 
 const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);
 
+async function fetchServerSubscription(): Promise<Partial<UserSubscription> | null> {
+  try {
+    const res = await fetch("/api/billing/sync", { method: "GET", credentials: "include" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ok?: boolean; subscription?: Partial<UserSubscription> | null };
+    return data.ok && data.subscription ? data.subscription : null;
+  } catch {
+    return null;
+  }
+}
+
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [subscription, setSubscription] = useState<UserSubscription>(() => loadMockSubscription());
   const [accessRevision, setAccessRevision] = useState(0);
   const [scanRevision, setScanRevision] = useState(0);
   const { plants } = usePlants();
 
-  useEffect(() => {
-    hydrateFounderModeFromStorage();
+  const refreshSubscription = useCallback(() => {
     expireTrialIfNeeded();
-    setSubscription(loadSubscriptionWithTrial());
+    setSubscription(loadVerifiedSubscriptionState());
   }, []);
 
   useEffect(() => {
-    const refreshSub = () => {
-      expireTrialIfNeeded();
-      setSubscription(loadSubscriptionWithTrial());
-    };
+    hydrateFounderModeFromStorage();
+    refreshSubscription();
+
+    void (async () => {
+      const serverSub = await fetchServerSubscription();
+      if (serverSub) {
+        setSubscription(applyVerifiedSubscription(serverSub));
+      }
+    })();
+  }, [refreshSubscription]);
+
+  useEffect(() => {
+    const refreshSub = () => refreshSubscription();
     window.addEventListener("plantpal-subscription-updated", refreshSub);
     return () => window.removeEventListener("plantpal-subscription-updated", refreshSub);
-  }, []);
+  }, [refreshSubscription]);
 
   useEffect(() => {
     const refresh = () => setAccessRevision((n) => n + 1);
@@ -105,7 +126,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const betaUnlockAll = useMemo(() => isBetaUnlocked(), [accessRevision]);
   const founderMode = useMemo(() => isFounderMode(), [accessRevision]);
-  const trialActive = isTrialActive(subscription);
+  const verifiedTrialActive = isTrialActive(subscription) && isVerifiedSubscription(subscription);
   const effectiveTier = getEffectiveTier(subscription);
   const tier = effectiveTier;
 
@@ -114,16 +135,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       betaUnlockAll,
       bypassLimits: betaUnlockAll,
       founderMode,
-      trialFullAccess: trialActive,
+      trialFullAccess: verifiedTrialActive,
       subscription,
     }),
-    [betaUnlockAll, founderMode, trialActive, subscription]
+    [betaUnlockAll, founderMode, verifiedTrialActive, subscription]
   );
-
-  const refreshSubscription = useCallback(() => {
-    expireTrialIfNeeded();
-    setSubscription(loadSubscriptionWithTrial());
-  }, []);
 
   const setTier = useCallback(
     (next: AccountTier, billingCycle: UserSubscription["billingCycle"] = "monthly") => {
@@ -148,7 +164,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     [effectiveTier, plants.length, accessOptions]
   );
 
-  const unrestricted = betaUnlockAll || trialActive;
+  const unrestricted = betaUnlockAll || founderMode || verifiedTrialActive;
 
   const canScan = useCallback(
     () => canUseScan(effectiveTier, unrestricted),
@@ -178,8 +194,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       tier,
       effectiveTier,
       subscription,
-      trialActive,
-      trialDaysLeft: trialDaysRemaining(subscription),
+      trialActive: verifiedTrialActive,
+      trialDaysLeft: verifiedTrialActive ? trialDaysRemaining(subscription) : null,
       setTier,
       refreshSubscription,
       bypassLimits: unrestricted,
@@ -201,7 +217,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       tier,
       effectiveTier,
       subscription,
-      trialActive,
+      verifiedTrialActive,
       setTier,
       refreshSubscription,
       unrestricted,

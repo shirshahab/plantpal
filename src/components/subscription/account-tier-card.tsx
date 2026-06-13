@@ -9,7 +9,7 @@ import { BetaAccessBanner } from "@/components/billing/beta-access-banner";
 import { useSubscription } from "@/lib/store/subscription-provider";
 import { TIER_LABELS } from "@/lib/subscription/types";
 import { buildSubscriptionPlans } from "@/lib/subscription/plans";
-import { getEffectivePlanLabel } from "@/lib/billing/beta-unlock";
+import { getEffectivePlanLabel, isDevUnlockAllFeatures } from "@/lib/billing/beta-unlock";
 
 export function AccountTierCard() {
   const { tier, plantCount, plantLimit, plantsRemaining, betaUnlockAll, founderMode, subscription } =
@@ -33,8 +33,8 @@ export function AccountTierCard() {
               <p className="text-sm text-gray-500">
                 {founderMode
                   ? "Founder Mode Active"
-                  : betaUnlockAll
-                    ? "Beta Access Enabled"
+                  : isDevUnlockAllFeatures()
+                    ? "Dev unlock active"
                     : "Manage plan & usage"}
               </p>
             </div>

@@ -15,7 +15,7 @@ function WaitlistContent() {
           Get in before your plants give up.
         </h1>
         <p className="text-lg text-gray-500 mt-5 leading-relaxed">
-          Join the PlantPal beta and help shape the app that tells you what your plants
+          Join the PlantPal waitlist and help shape the app that tells you what your plants
           need before they turn into expensive compost.
         </p>
       </div>

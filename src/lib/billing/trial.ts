@@ -1,23 +1,53 @@
 /**
- * Launch trial entitlement — 14-day full access for new users.
+ * Store-managed trial helpers.
+ * Production access requires verified App Store / Play / RevenueCat entitlement.
  */
 import { AccountTier } from "./tier-config";
 import { isProTier } from "./limits";
-import type { TrialSource, TrialStatus, UserSubscription } from "@/lib/types/billing";
+import type { TrialStatus, UserSubscription } from "@/lib/types/billing";
 
 export const LAUNCH_TRIAL_DAYS = 14;
 
+/** @deprecated Legacy local trial key — purged on load. */
 export const TRIAL_STARTED_KEY = "plantpal-trial-started";
 
+/** Local auto-trial is disabled for App Store launch. */
+export function isLocalTrialAutoStartEnabled(): boolean {
+  return false;
+}
+
+/** Subscription backed by store / RevenueCat sync, not client-only mock state. */
+export function isVerifiedSubscription(sub: UserSubscription): boolean {
+  if (sub.subscriptionStatus === "mock") return false;
+
+  const hasStoreProof = Boolean(
+    sub.storePlatform ||
+      sub.storeProductId ||
+      sub.storeOriginalTransactionId ||
+      sub.storePurchaseToken
+  );
+
+  if (!hasStoreProof) return false;
+
+  if (sub.subscriptionStatus === "active" && isProTier(sub.tier)) return true;
+  if (sub.subscriptionStatus === "trialing" && isProTier(sub.tier)) return true;
+
+  return false;
+}
+
 export function isTrialActive(sub: UserSubscription): boolean {
-  if (sub.trialStatus !== "active") return false;
+  if (!isVerifiedSubscription(sub)) return false;
+  if (sub.subscriptionStatus !== "trialing" && sub.trialStatus !== "active") return false;
   if (!sub.trialEndsAt && !sub.planEndDate) return false;
   const end = sub.trialEndsAt ?? sub.planEndDate!;
   return new Date(end).getTime() > Date.now();
 }
 
 export function isTrialExpired(sub: UserSubscription): boolean {
-  if (sub.trialStatus !== "active") return sub.trialStatus === "expired";
+  if (!isVerifiedSubscription(sub)) return sub.trialStatus === "expired";
+  if (sub.trialStatus !== "active" && sub.subscriptionStatus !== "trialing") {
+    return sub.trialStatus === "expired";
+  }
   const end = sub.trialEndsAt ?? sub.planEndDate;
   if (!end) return false;
   return new Date(end).getTime() <= Date.now();
@@ -40,43 +70,26 @@ export function trialEndsLabel(sub: UserSubscription): string | null {
   });
 }
 
-/** During launch trial, unlock all Pro + Family features. */
+/** @deprecated Use isVerifiedSubscription + isTrialActive */
 export function hasLaunchTrialAccess(sub: UserSubscription): boolean {
-  return isTrialActive(sub);
+  return hasVerifiedStoreTrialAccess(sub);
 }
 
-/** Paid tier, or Family-equivalent during active launch trial. */
+export function hasVerifiedStoreTrialAccess(sub: UserSubscription): boolean {
+  return isVerifiedSubscription(sub) && isTrialActive(sub);
+}
+
+/** Effective tier from verified subscription only. */
 export function getEffectiveTier(sub: UserSubscription): AccountTier {
-  if (hasLaunchTrialAccess(sub)) return AccountTier.FAMILY;
-  if (sub.subscriptionStatus === "active" && isProTier(sub.tier)) return sub.tier;
-  if (sub.subscriptionStatus === "trialing" && isProTier(sub.tier)) return sub.tier;
+  if (!isVerifiedSubscription(sub)) return AccountTier.FREE;
+  if (isTrialExpired(sub)) return AccountTier.FREE;
+  if (isProTier(sub.tier)) return sub.tier;
   return AccountTier.FREE;
 }
 
-export function grantLaunchTrial(
-  sub: UserSubscription,
-  source: TrialSource = "launch"
-): UserSubscription {
-  const now = new Date();
-  const end = new Date(now);
-  end.setDate(end.getDate() + LAUNCH_TRIAL_DAYS);
-
-  return {
-    ...sub,
-    tier: AccountTier.PLUS,
-    trialStatus: "active" as TrialStatus,
-    subscriptionStatus: "trialing",
-    trialSource: source,
-    trialStartedAt: now.toISOString(),
-    trialEndsAt: end.toISOString(),
-    planStartDate: now.toISOString(),
-    planEndDate: end.toISOString(),
-  };
-}
-
 export function expireLaunchTrial(sub: UserSubscription): UserSubscription {
-  if (sub.subscriptionStatus === "active" && isProTier(sub.tier)) {
-    return { ...sub, trialStatus: "converted" };
+  if (sub.subscriptionStatus === "active" && isProTier(sub.tier) && isVerifiedSubscription(sub)) {
+    return { ...sub, trialStatus: "converted" as TrialStatus };
   }
 
   return {
@@ -84,6 +97,7 @@ export function expireLaunchTrial(sub: UserSubscription): UserSubscription {
     tier: AccountTier.FREE,
     trialStatus: "expired",
     subscriptionStatus: "expired",
+    planEndDate: sub.planEndDate ?? new Date().toISOString(),
   };
 }
 
@@ -95,29 +109,7 @@ export function markTrialConverted(sub: UserSubscription): UserSubscription {
   };
 }
 
-export function shouldAutoStartLaunchTrial(sub: UserSubscription): boolean {
-  if (typeof window === "undefined") return false;
-  if (sub.trialStatus !== "none") return false;
-  if (sub.subscriptionStatus === "active" && isProTier(sub.tier)) return false;
-  return localStorage.getItem(TRIAL_STARTED_KEY) !== "1";
-}
-
-export function ensureLaunchTrial(sub: UserSubscription): UserSubscription {
-  if (isTrialActive(sub)) return sub;
-  if (sub.trialStatus === "expired" || sub.trialStatus === "converted") return sub;
-  if (sub.subscriptionStatus === "active" && isProTier(sub.tier)) return sub;
-
-  if (isTrialExpired(sub)) {
-    return expireLaunchTrial(sub);
-  }
-
-  if (shouldAutoStartLaunchTrial(sub)) {
-    const next = grantLaunchTrial(sub);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(TRIAL_STARTED_KEY, "1");
-    }
-    return next;
-  }
-
-  return sub;
+export function purgeLegacyLocalTrialKeys(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(TRIAL_STARTED_KEY);
 }

@@ -50,7 +50,7 @@ export default function ContactPage() {
             <MessageSquare className="w-5 h-5 text-brand-primary" />
           </div>
           <div>
-            <h2 className="font-heading font-bold text-brand-text">Beta feedback</h2>
+            <h2 className="font-heading font-bold text-brand-text">Send feedback</h2>
             <p className="text-sm text-brand-text-secondary mt-1">
               Found a bug? Have an idea? We read every single note.
             </p>

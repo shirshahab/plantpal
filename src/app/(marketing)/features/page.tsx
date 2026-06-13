@@ -114,7 +114,7 @@ export default function FeaturesPage() {
       </div>
 
       <WaitlistCta
-        heading="Get PlantPal free during beta."
+        heading="Your plants deserve a lawyer."
         subheading="Join the waitlist and we'll send you in."
         source="features"
         className="mt-20 px-0 sm:px-0"

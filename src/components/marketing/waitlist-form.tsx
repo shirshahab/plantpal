@@ -84,7 +84,7 @@ export function WaitlistForm({ variant = "full", source = "website", className }
         </Link>
         <div className="mt-8 pt-6 border-t border-brand-sage/20">
           <p className="text-sm text-gray-500 mb-3">
-            Follow us for plant tips, beta updates, and fewer dead leaves.
+            Follow us for plant tips, product updates, and fewer dead leaves.
           </p>
           <SocialLinks className="justify-center" />
         </div>

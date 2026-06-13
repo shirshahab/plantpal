@@ -147,7 +147,7 @@ export function BillingDashboard() {
 
           {betaUnlockAll && (
             <p className="text-sm text-amber-800 bg-amber-50 rounded-xl px-4 py-3">
-              Beta / founder access. Limits are bypassed for testing.
+              Dev / founder access. Limits are bypassed for testing.
             </p>
           )}
         </CardContent>

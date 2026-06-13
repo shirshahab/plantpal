@@ -1,41 +1,18 @@
-import { AccountTier } from "@/lib/billing/tier-config";
-import type { TrialSource, UserSubscription } from "@/lib/types/billing";
-import {
-  grantLaunchTrial,
-  isTrialActive,
-  isTrialExpired,
-  LAUNCH_TRIAL_DAYS,
-} from "@/lib/billing/trial";
 import {
   expireTrialIfNeeded as expireStoredTrial,
-  loadMockSubscription,
-  saveMockSubscription,
+  loadVerifiedSubscriptionState,
 } from "@/lib/billing/subscription-state";
+import { isTrialActive, isTrialExpired } from "@/lib/billing/trial";
+import type { TrialSource, UserSubscription } from "@/lib/types/billing";
 
 export type { TrialSource };
 
+/** Referral perks must go through store billing — no client-only trial grants. */
 export function grantReferralTrial(
-  days = LAUNCH_TRIAL_DAYS,
-  source: TrialSource = "referral_invitee"
+  _days?: number,
+  _source?: TrialSource
 ): UserSubscription {
-  const current = loadMockSubscription();
-  if (isTrialActive(current)) return current;
-
-  const end = new Date();
-  end.setDate(end.getDate() + days);
-
-  const next = grantLaunchTrial(current, source);
-  const extended: UserSubscription = {
-    ...next,
-    trialEndsAt: end.toISOString(),
-    planEndDate: end.toISOString(),
-  };
-
-  saveMockSubscription(extended);
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event("plantpal-subscription-updated"));
-  }
-  return extended;
+  return loadVerifiedSubscriptionState();
 }
 
 export { isTrialExpired, isTrialActive };

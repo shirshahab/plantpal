@@ -39,9 +39,9 @@ const SECTIONS = [
     ],
   },
   {
-    title: "6. Subscriptions and beta features",
+    title: "6. Subscriptions",
     body: [
-      "Some features may require a paid subscription. Pricing and billing terms are presented before purchase. During beta periods, features may change, be interrupted, or be discontinued without notice.",
+      "Some features may require a paid subscription. Pricing and billing terms are presented before purchase. Features may change, be interrupted, or be discontinued as the product evolves.",
     ],
   },
   {

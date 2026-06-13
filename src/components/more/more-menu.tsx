@@ -85,15 +85,14 @@ function buildSections(hideUpgrade: boolean) {
     {
       title: "Account",
       items: [
-        { href: "/beta-start", label: "Beta Start", icon: Sparkles, desc: "Welcome & onboarding for testers" },
-        { href: "/tester-guide", label: "Tester Guide", icon: Target, desc: "5-step beta testing checklist" },
+        { href: "/tester-guide", label: "Tester Guide", icon: Target, desc: "Quick walkthrough of core features" },
         ...(hideUpgrade
           ? []
           : [
               { href: "/billing", label: "Billing & usage", icon: Sparkles, desc: "Plan, limits & monthly usage" },
               { href: "/upgrade", label: "Upgrade to Pro", icon: Sparkles, desc: "PlantPal Pro: $7.99/mo" },
             ]),
-        { href: "/invite", label: "Invite Friends", icon: Gift, desc: "Share PlantPal. Both get Plus trial" },
+        { href: "/invite", label: "Invite Friends", icon: Gift, desc: "Share PlantPal with other growers" },
         { href: "/settings#feedback", label: "Send Feedback", icon: MessageSquare, desc: "Report a bug or share an idea" },
         { href: "/support", label: "Help & Support", icon: Heart, desc: "Contact us · privacy · data deletion" },
         { href: "/settings", label: "Settings", icon: Settings, desc: "Profile & preferences" },

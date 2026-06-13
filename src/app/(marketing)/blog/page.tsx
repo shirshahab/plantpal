@@ -67,7 +67,7 @@ export default function BlogIndexPage() {
       </div>
 
       <WaitlistCta
-        heading="Join the beta before your fiddle leaf gives up."
+        heading="Get early access before your fiddle leaf gives up."
         source="blog-index"
         className="mt-20"
       />

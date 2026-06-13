@@ -166,7 +166,7 @@ export function SendFeedbackButton({
               </button>
             </div>
             <p className="text-sm text-gray-500 mb-4">
-              Help us improve the beta. We read every note.
+              Help us improve PlantPal. We read every note.
             </p>
             <BetaFeedbackForm
               defaultCategory={defaultCategory}

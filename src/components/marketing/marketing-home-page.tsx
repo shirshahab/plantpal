@@ -146,7 +146,7 @@ export function MarketingHomePage() {
             &ldquo;I shared it with growers and they said they&apos;ve never seen
             anything like it.&rdquo;
           </p>
-          <footer className="text-sm text-brand-text-secondary mt-4">Early beta tester</footer>
+          <footer className="text-sm text-brand-text-secondary mt-4">PlantPal grower</footer>
         </blockquote>
       </section>
 
@@ -184,7 +184,7 @@ export function MarketingHomePage() {
 
       {/* Email capture */}
       <WaitlistCta
-        heading="Join the beta before your fiddle leaf gives up."
+        heading="Get early access before your fiddle leaf gives up."
         source="homepage"
         className="pb-20 sm:pb-28"
       />

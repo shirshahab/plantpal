@@ -33,11 +33,22 @@
 
 ## Free trial
 
-- **Duration:** 14 days (`LAUNCH_TRIAL_DAYS` in `src/lib/billing/trial.ts`)
-- **Eligibility:** New subscribers (configured in App Store Connect / Play Console)
-- **Access during trial:** All Pro and Family features unlocked locally; store trial managed by Apple/Google/RevenueCat
+- **Duration:** 14 days, configured in **App Store Connect** and **Google Play Console**
+- **Verification:** Trial access comes from RevenueCat / store entitlements only
+- **No local auto-trial:** PlantPal does **not** grant production paid access through client-only `localStorage` trial state
+- **Paywall CTA:** "Start 14-day free trial" starts the native store purchase flow (RevenueCat)
 - **After trial:** Subscription renews automatically unless canceled in store settings
 - **Copy:** "After your free trial, your subscription renews automatically unless canceled."
+
+### How trial access works
+
+1. User taps **Start 14-day free trial** on the paywall (native app WebView or future fully native flow).
+2. App Store / Google Play applies the 14-day introductory offer.
+3. RevenueCat returns an active `trialing` entitlement with store proof (`storePlatform`, `storeProductId`).
+4. `/api/billing/sync` and the RevenueCat webhook update Supabase `user_subscriptions`.
+5. Feature gates unlock based on **verified** subscription state only.
+
+**Web/PWA:** Cannot start store billing. Shows "Store billing unavailable in web preview."
 
 ## IAP setup path (RevenueCat)
 
@@ -272,8 +283,8 @@ Dev logs (no secrets): filter Metro console for `[plantpal-purchases]`.
 
 ## QA checklist
 
-- [ ] New user receives 14-day local launch trial automatically
-- [ ] Trial unlocks Pro and Family features
+- [ ] New user without store subscription stays on Free tier
+- [ ] Store trial unlocks features after verified purchase
 - [ ] Trial banner shows days remaining
 - [ ] Expired trial locks Pro features and shows paywall
 - [ ] No Beta badge in header
@@ -315,4 +326,3 @@ Optional dev only:
 2. Run migration `034_subscription_store_fields.sql`
 3. EAS dev client or production build (not Expo Go) for IAP testing
 4. TestFlight + Play internal testing with sandbox purchases
-5. Remove or redirect legacy `/beta` routes if desired

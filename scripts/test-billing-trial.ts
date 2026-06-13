@@ -5,12 +5,17 @@
 import assert from "node:assert/strict";
 import { AccountTier } from "../src/lib/billing/tier-config";
 import {
-  grantLaunchTrial,
   getEffectiveTier,
   expireLaunchTrial,
   isTrialActive,
+  isVerifiedSubscription,
+  isLocalTrialAutoStartEnabled,
   LAUNCH_TRIAL_DAYS,
 } from "../src/lib/billing/trial";
+import {
+  loadVerifiedSubscriptionState,
+  sanitizeUnverifiedSubscription,
+} from "../src/lib/billing/subscription-state";
 import { canAccessFeature } from "../src/lib/billing/account-tiers";
 import { isDevUnlockAllFeatures } from "../src/lib/billing/dev-unlock";
 import { PUBLIC_BETA_UNLOCK_ALL } from "../src/lib/billing/limits";
@@ -28,35 +33,76 @@ const baseSub: UserSubscription = {
   planEndDate: null,
 };
 
-function testLaunchTrialGrantsAccess() {
-  const trialing = grantLaunchTrial(baseSub, "launch");
-  assert.equal(trialing.trialStatus, "active");
-  assert.equal(LAUNCH_TRIAL_DAYS, 14);
-  assert.ok(isTrialActive(trialing));
-  assert.equal(getEffectiveTier(trialing), AccountTier.FAMILY);
-  assert.ok(
-    canAccessFeature(AccountTier.FREE, "ai_doctor", { subscription: trialing })
-  );
-  console.log("✓ Launch trial grants full access");
+function verifiedTrialSub(overrides: Partial<UserSubscription> = {}): UserSubscription {
+  const end = new Date();
+  end.setDate(end.getDate() + LAUNCH_TRIAL_DAYS);
+  return {
+    ...baseSub,
+    tier: AccountTier.PLUS,
+    trialStatus: "active",
+    subscriptionStatus: "trialing",
+    trialStartedAt: new Date().toISOString(),
+    trialEndsAt: end.toISOString(),
+    planEndDate: end.toISOString(),
+    storePlatform: "ios",
+    storeProductId: "com.getplantpal.pro.monthly",
+    ...overrides,
+  };
 }
 
-function testExpiredTrialLocksPro() {
+function testNewUserWithoutStoreTrialStaysFree() {
+  const fresh = sanitizeUnverifiedSubscription(baseSub);
+  assert.equal(getEffectiveTier(fresh), AccountTier.FREE);
+  assert.equal(isTrialActive(fresh), false);
+  assert.ok(
+    !canAccessFeature(AccountTier.FREE, "ai_doctor", { subscription: fresh })
+  );
+  console.log("✓ New user without verified store trial stays Free");
+}
+
+function testVerifiedRevenueCatTrialUnlocksAccess() {
+  const trialing = verifiedTrialSub();
+  assert.ok(isVerifiedSubscription(trialing));
+  assert.ok(isTrialActive(trialing));
+  assert.equal(getEffectiveTier(trialing), AccountTier.PLUS);
+  assert.ok(
+    canAccessFeature(getEffectiveTier(trialing), "ai_doctor", { subscription: trialing })
+  );
+  console.log("✓ Verified RevenueCat trial unlocks paid access");
+}
+
+function testClientOnlyLocalTrialBlockedInProduction() {
+  const localOnly: UserSubscription = {
+    ...baseSub,
+    tier: AccountTier.PLUS,
+    trialStatus: "active",
+    subscriptionStatus: "trialing",
+    trialStartedAt: new Date().toISOString(),
+    trialEndsAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+    planEndDate: new Date(Date.now() + 7 * 86400000).toISOString(),
+  };
+  assert.equal(isVerifiedSubscription(localOnly), false);
+  const sanitized = sanitizeUnverifiedSubscription(localOnly);
+  assert.equal(getEffectiveTier(sanitized), AccountTier.FREE);
+
+  const prev = process.env.NODE_ENV;
+  process.env.NODE_ENV = "production";
+  assert.equal(isLocalTrialAutoStartEnabled(), false);
+  process.env.NODE_ENV = prev;
+  console.log("✓ Client-only local trial does not unlock in production");
+}
+
+function testExpiredVerifiedTrialLocksPro() {
   const expired = expireLaunchTrial(
-    grantLaunchTrial({
-      ...baseSub,
+    verifiedTrialSub({
       trialStartedAt: new Date(Date.now() - 20 * 86400000).toISOString(),
       trialEndsAt: new Date(Date.now() - 1 * 86400000).toISOString(),
-      trialStatus: "active",
       planEndDate: new Date(Date.now() - 1 * 86400000).toISOString(),
     })
   );
   assert.equal(expired.trialStatus, "expired");
   assert.equal(getEffectiveTier(expired), AccountTier.FREE);
-  assert.equal(
-    canAccessFeature(AccountTier.FREE, "ai_doctor", { subscription: expired }),
-    false
-  );
-  console.log("✓ Expired trial locks Pro features");
+  console.log("✓ Expired verified trial locks Pro features");
 }
 
 function testPaidProUnlocks() {
@@ -65,6 +111,8 @@ function testPaidProUnlocks() {
     tier: AccountTier.PLUS,
     subscriptionStatus: "active",
     trialStatus: "converted",
+    storePlatform: "ios",
+    storeProductId: "com.getplantpal.pro.monthly",
   };
   assert.equal(getEffectiveTier(paid), AccountTier.PLUS);
   assert.ok(canAccessFeature(AccountTier.PLUS, "ai_doctor", { subscription: paid }));
@@ -77,6 +125,8 @@ function testPaidFamilyUnlocksFamily() {
     tier: AccountTier.FAMILY,
     subscriptionStatus: "active",
     trialStatus: "converted",
+    storePlatform: "android",
+    storeProductId: "plantpal_family_monthly",
   };
   assert.ok(
     canAccessFeature(AccountTier.FAMILY, "family_sharing", { subscription: paid })
@@ -96,6 +146,18 @@ function testBetaUnlockOffInProduction() {
   console.log("✓ Dev unlock disabled in production");
 }
 
+function testLocalTrialAutoStartDisabled() {
+  assert.equal(isLocalTrialAutoStartEnabled(), false);
+  console.log("✓ Local trial auto-start disabled");
+}
+
+function testLoadVerifiedSubscriptionNeverAutoStarts() {
+  const loaded = loadVerifiedSubscriptionState();
+  assert.equal(loaded.subscriptionStatus, "mock");
+  assert.equal(loaded.tier, AccountTier.FREE);
+  console.log("✓ loadVerifiedSubscriptionState does not auto-start trial");
+}
+
 function testPaywallPrices() {
   const plans = buildPaywallPlans();
   assert.equal(plans.length, 4);
@@ -113,11 +175,15 @@ function testStoreProductIds() {
 
 function main() {
   console.log("=== PlantPal billing tests ===\n");
-  testLaunchTrialGrantsAccess();
-  testExpiredTrialLocksPro();
+  testNewUserWithoutStoreTrialStaysFree();
+  testVerifiedRevenueCatTrialUnlocksAccess();
+  testClientOnlyLocalTrialBlockedInProduction();
+  testExpiredVerifiedTrialLocksPro();
   testPaidProUnlocks();
   testPaidFamilyUnlocksFamily();
   testBetaUnlockOffInProduction();
+  testLocalTrialAutoStartDisabled();
+  testLoadVerifiedSubscriptionNeverAutoStarts();
   testPaywallPrices();
   testStoreProductIds();
   console.log("\nAll billing tests passed.");

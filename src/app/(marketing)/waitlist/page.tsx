@@ -4,11 +4,11 @@ import { absoluteUrl } from "@/lib/marketing/site";
 
 export const metadata: Metadata = {
   title: "Join Waitlist",
-  description: "Join the PlantPal beta and save a few plants along the way.",
+  description: "Join the PlantPal waitlist and save a few plants along the way.",
   alternates: { canonical: absoluteUrl("/waitlist") },
   openGraph: {
     title: "Join the PlantPal Waitlist",
-    description: "Join the PlantPal beta and save a few plants along the way.",
+    description: "Join the PlantPal waitlist and save a few plants along the way.",
     url: absoluteUrl("/waitlist"),
   },
 };

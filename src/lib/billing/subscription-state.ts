@@ -1,12 +1,14 @@
 import type { UserSubscription } from "@/lib/types/billing";
 import { AccountTier, type AccountTier as Tier } from "./tier-config";
+import { isProTier } from "./limits";
 import { setSubscriptionTierCookie } from "./subscription-cookie";
 import {
-  ensureLaunchTrial,
   expireLaunchTrial,
   getEffectiveTier,
   isTrialActive,
   isTrialExpired,
+  isVerifiedSubscription,
+  purgeLegacyLocalTrialKeys,
 } from "./trial";
 
 export const SUBSCRIPTION_STORAGE_KEY = "plantpal-subscription";
@@ -39,8 +41,25 @@ function normalizeSubscription(parsed: Partial<UserSubscription>): UserSubscript
               : "mock",
   };
 
-  if (isTrialExpired(sub)) {
+  if (isVerifiedSubscription(sub) && isTrialExpired(sub)) {
     sub = expireLaunchTrial(sub);
+  }
+
+  return sub;
+}
+
+/** Strip client-only trial or paid state that was not verified by a store. */
+export function sanitizeUnverifiedSubscription(sub: UserSubscription): UserSubscription {
+  if (isVerifiedSubscription(sub)) return sub;
+
+  const looksPaid =
+    isProTier(sub.tier) ||
+    sub.subscriptionStatus === "trialing" ||
+    sub.subscriptionStatus === "active" ||
+    sub.trialStatus === "active";
+
+  if (looksPaid) {
+    return { ...DEFAULT_SUBSCRIPTION };
   }
 
   return sub;
@@ -48,6 +67,8 @@ function normalizeSubscription(parsed: Partial<UserSubscription>): UserSubscript
 
 export function loadMockSubscription(): UserSubscription {
   if (typeof window === "undefined") return DEFAULT_SUBSCRIPTION;
+
+  purgeLegacyLocalTrialKeys();
 
   try {
     const raw = localStorage.getItem(SUBSCRIPTION_STORAGE_KEY);
@@ -78,14 +99,27 @@ export function saveMockSubscription(subscription: UserSubscription): void {
   window.dispatchEvent(new Event("plantpal-subscription-updated"));
 }
 
-/** Load subscription and auto-start 14-day launch trial for new users. */
-export function loadSubscriptionWithTrial(): UserSubscription {
-  const sub = loadMockSubscription();
-  const withTrial = ensureLaunchTrial(sub);
-  if (withTrial !== sub) {
-    saveMockSubscription(withTrial);
+/** Load subscription from local cache — never auto-starts a trial. */
+export function loadVerifiedSubscriptionState(): UserSubscription {
+  const raw = loadMockSubscription();
+  const sub = sanitizeUnverifiedSubscription(raw);
+
+  if (JSON.stringify(sub) !== JSON.stringify(raw)) {
+    saveMockSubscription(sub);
   }
-  return withTrial;
+
+  if (isVerifiedSubscription(sub) && isTrialExpired(sub)) {
+    const expired = expireLaunchTrial(sub);
+    saveMockSubscription(expired);
+    return expired;
+  }
+
+  return sub;
+}
+
+/** @deprecated Use loadVerifiedSubscriptionState */
+export function loadSubscriptionWithTrial(): UserSubscription {
+  return loadVerifiedSubscriptionState();
 }
 
 /** Mock upgrades are local-dev only; production must use verified store purchases. */
@@ -96,17 +130,19 @@ export function isMockPurchaseAllowed(): boolean {
 export function setMockTier(tier: Tier, billingCycle: UserSubscription["billingCycle"] = "monthly"): UserSubscription {
   if (!isMockPurchaseAllowed()) {
     console.warn("[billing] Mock tier changes are disabled in production");
-    return loadMockSubscription();
+    return loadVerifiedSubscriptionState();
   }
 
   const next: UserSubscription = {
-    ...loadMockSubscription(),
+    ...loadVerifiedSubscriptionState(),
     tier,
     billingCycle,
     subscriptionStatus: tier === AccountTier.FREE ? "mock" : "active",
     planStartDate: tier === AccountTier.FREE ? null : new Date().toISOString(),
     planEndDate: null,
     trialStatus: tier === AccountTier.FREE ? loadMockSubscription().trialStatus : "converted",
+    storePlatform: tier === AccountTier.FREE ? null : "web",
+    storeProductId: tier === AccountTier.FREE ? null : "dev-mock-product",
   };
   saveMockSubscription(next);
   return next;
@@ -114,7 +150,7 @@ export function setMockTier(tier: Tier, billingCycle: UserSubscription["billingC
 
 /** Apply verified store entitlement to local subscription cache (after purchase/restore/sync). */
 export function applyVerifiedSubscription(patch: Partial<UserSubscription>): UserSubscription {
-  const current = loadMockSubscription();
+  const current = loadVerifiedSubscriptionState();
   const next: UserSubscription = normalizeSubscription({
     ...current,
     ...patch,
@@ -127,8 +163,8 @@ export function applyVerifiedSubscription(patch: Partial<UserSubscription>): Use
 }
 
 export function expireTrialIfNeeded(): UserSubscription {
-  const sub = loadMockSubscription();
-  if (!isTrialActive(sub) && sub.trialStatus !== "active") return sub;
+  const sub = loadVerifiedSubscriptionState();
+  if (!isTrialActive(sub)) return sub;
   if (!isTrialExpired(sub)) return sub;
   const next = expireLaunchTrial(sub);
   saveMockSubscription(next);
@@ -145,4 +181,4 @@ export function saveSubscriptionTier(tier: Tier): void {
   setMockTier(tier);
 }
 
-export { getEffectiveTier, isTrialActive, isTrialExpired };
+export { getEffectiveTier, isTrialActive, isTrialExpired, isVerifiedSubscription };
