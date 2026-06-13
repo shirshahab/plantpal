@@ -76,7 +76,7 @@ async function main() {
   const scannerIssues = findScannerTaskRoutes();
   console.log("\nTask scanner routes:", scannerIssues.length ? scannerIssues : "none");
   console.log("Today caps: 1 plant =", todayTaskLimit(1), ", 6+ =", todayTaskLimit(6));
-  console.log("\nTotal Planty catalog:", ALL_PLANTY_MESSAGES.length);
+  console.log("\nTotal Planty catalog:", planty.count ?? ALL_PLANTY_MESSAGES.length);
 
   const copyAudit = auditPlantPalCopy();
   console.log("\nCopy audit:", copyAudit.violationCount, "violations");

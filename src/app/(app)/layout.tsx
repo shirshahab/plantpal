@@ -18,6 +18,7 @@ import { AnalyticsProvider } from "@/lib/store/analytics-provider";
 import { UpgradeModalProvider } from "@/components/billing/upgrade-modal-provider";
 import { FounderHydrator } from "@/components/billing/founder-hydrator";
 import { MoatProvider } from "@/lib/store/moat-provider";
+import { BackHandler } from "@/components/navigation/back-handler";
 import { OnboardingGuard } from "@/components/onboarding/onboarding-guard";
 import { GlobalErrorHandler } from "@/components/errors/global-error-handler";
 import { AuthDebug } from "@/components/dev/auth-debug";
@@ -45,6 +46,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                           <MoatProvider>
                           <GenomeProvider>
                             <OnboardingGuard>
+                              <BackHandler />
                               <AppShell>{children}</AppShell>
                               <AuthDebug />
                             </OnboardingGuard>

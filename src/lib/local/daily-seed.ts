@@ -6,6 +6,20 @@ export function getDailySeed(city: string, zone: string, date = new Date()): str
   return `${y}-${m}-${d}|${city.trim().toLowerCase()}|${zone.trim().toLowerCase()}`;
 }
 
+/** Daily seed extended with user / garden context for Planty rotation. */
+export function getPlantySeed(
+  city: string,
+  zone: string,
+  date = new Date(),
+  extras?: { userId?: string; plantCount?: number }
+): string {
+  const base = getDailySeed(city, zone, date);
+  const parts = [base];
+  if (extras?.userId?.trim()) parts.push(extras.userId.trim());
+  if (extras?.plantCount != null) parts.push(`plants:${extras.plantCount}`);
+  return parts.join("|");
+}
+
 export function seedIndex(seed: string, max: number): number {
   if (max <= 0) return 0;
   let hash = 0;

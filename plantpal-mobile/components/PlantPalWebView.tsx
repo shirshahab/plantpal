@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
+import { ActivityIndicator, BackHandler, Platform, StyleSheet, View } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { useAuth } from "@/providers/AuthProvider";
 import { getApiBaseUrl } from "@/lib/config";
@@ -73,6 +73,27 @@ export function PlantPalWebView({ path = "/" }: PlantPalWebViewProps) {
       `);
     }
   }, [normalizedPath, user?.id]);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      webRef.current?.injectJavaScript(`
+        (function() {
+          if (window.PlantPalBack && window.PlantPalBack.requestClose()) {
+            return;
+          }
+          window.dispatchEvent(new Event("plantpal:back"));
+          if (window.history.length > 1) {
+            window.history.back();
+            return;
+          }
+        })();
+        true;
+      `);
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
 
   return (
     <View style={styles.container}>

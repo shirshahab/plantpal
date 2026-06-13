@@ -33,6 +33,9 @@ import { useTasks } from "@/lib/store/tasks-provider";
 import { useMoat } from "@/lib/store/moat-provider";
 import { usePullToRefresh } from "@/lib/hooks/use-pull-to-refresh";
 import { useToast } from "@/lib/store/toast-provider";
+import { GardenSnapshotChips } from "@/components/dashboard/garden-snapshot-chips";
+import { buildGardenSnapshot } from "@/lib/garden/garden-snapshot";
+import { useAcademy } from "@/lib/store/academy-provider";
 import { loadUserProfile } from "@/lib/profile/user-profile";
 
 export function DashboardHome() {
@@ -40,6 +43,7 @@ export function DashboardHome() {
   const { groups: taskGroups, completeTask, ready: tasksReady } = useTasks();
   const { gardenHealth, seasonalTasks, ready: moatReady } = useMoat();
   const { toast } = useToast();
+  const { progress } = useAcademy();
   const [profileZip, setProfileZip] = useState("");
 
   useEffect(() => {
@@ -60,6 +64,16 @@ export function DashboardHome() {
 
   const zipCode = profileZip || plants[0]?.zipCode || "";
   const { context: dashboardIntel } = useDashboardIntelligence(zipCode);
+
+  const gardenSnapshot = useMemo(
+    () =>
+      buildGardenSnapshot({
+        plants,
+        streakDays: progress.currentStreak,
+        totalXp: progress.totalXp,
+      }),
+    [plants, progress.currentStreak, progress.totalXp]
+  );
 
   if (loading || !moatReady) {
     return <DashboardSkeleton />;
@@ -83,7 +97,7 @@ export function DashboardHome() {
 
       <PageHeader
         title={`${greeting}`}
-        description={`${plants.length} plant${plants.length === 1 ? "" : "s"} in your garden`}
+        description={<GardenSnapshotChips chips={gardenSnapshot.chips} />}
         action={
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <NotificationCenter />

@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
-import { useEffect } from "react";
 import { Button } from "./button";
+import { useOverlay } from "@/lib/navigation/use-overlay";
 
 interface ModalProps {
   open: boolean;
@@ -21,7 +22,10 @@ export function Modal({
   description,
   children,
   footer,
-}: ModalProps) {
+  overlayId = "modal",
+}: ModalProps & { overlayId?: string }) {
+  useOverlay(overlayId, open, onClose);
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";

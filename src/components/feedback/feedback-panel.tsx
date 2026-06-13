@@ -7,6 +7,7 @@ import { BetaFeedbackForm } from "@/components/feedback/send-feedback-button";
 import type { BetaFeedbackCategory } from "@/lib/feedback/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useOverlay } from "@/lib/navigation/use-overlay";
 
 export function FeedbackPanel({ className }: { className?: string }) {
   return (
@@ -38,6 +39,8 @@ export function FloatingFeedbackButton() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<BetaFeedbackCategory | undefined>();
+  const close = () => setOpen(false);
+  useOverlay("floating-feedback", open, close);
 
   // Hidden on auth/onboarding and on long forms/wizards where a floating
   // button blocks inputs and action rows. Feedback stays reachable from

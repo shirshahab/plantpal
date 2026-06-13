@@ -5,6 +5,7 @@ import type { Plant } from "@/lib/types";
 import { useJourney } from "@/lib/store/journey-provider";
 import { GoalPicker } from "@/components/journey/goal-picker";
 import { Button } from "@/components/ui/button";
+import { useOverlay } from "@/lib/navigation/use-overlay";
 
 interface EditGoalsModalProps {
   plant: Plant;
@@ -14,6 +15,7 @@ interface EditGoalsModalProps {
 
 export function EditGoalsModal({ plant, open, onClose }: EditGoalsModalProps) {
   const { getPlantGoals, getPrimaryGoal, updatePlantGoals } = useJourney();
+  useOverlay(`edit-goals-${plant.id}`, open, onClose);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [primaryId, setPrimaryId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);

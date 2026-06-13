@@ -14,6 +14,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useOverlay } from "@/lib/navigation/use-overlay";
 import {
   getTrendInsight,
   type TrendingPlant,
@@ -38,6 +39,7 @@ export function TrendingInsightModal({
   onClose: () => void;
 }) {
   const router = useRouter();
+  useOverlay("trending-insight", true, onClose);
   const insight = getTrendInsight(plant, zipCode);
 
   const rows = [

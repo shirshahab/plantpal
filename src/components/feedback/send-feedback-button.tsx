@@ -11,6 +11,7 @@ import {
   type BetaFeedbackCategory,
 } from "@/lib/feedback/types";
 import { cn } from "@/lib/utils";
+import { useOverlay } from "@/lib/navigation/use-overlay";
 
 interface BetaFeedbackFormProps {
   onSuccess?: () => void;
@@ -127,6 +128,8 @@ export function SendFeedbackButton({
   defaultCategory,
 }: SendFeedbackButtonProps) {
   const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+  useOverlay("feedback-sheet", open, close);
 
   return (
     <>

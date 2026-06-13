@@ -23,6 +23,8 @@ import Link from "next/link";
 import { useNotifications } from "@/lib/store/notifications-provider";
 import { recordNotificationEvent } from "@/lib/notifications/notification-analytics";
 import type { AppNotification, AppNotificationType } from "@/lib/types/notifications";
+import { useToast } from "@/lib/store/toast-provider";
+import { useOverlay } from "@/lib/navigation/use-overlay";
 import { cn } from "@/lib/utils";
 
 export const TYPE_META: Record<
@@ -44,62 +46,88 @@ export const TYPE_META: Record<
 function NotificationRow({
   notification,
   onOpen,
+  onDismiss,
 }: {
   notification: AppNotification;
   onOpen: (n: AppNotification) => void;
+  onDismiss: (n: AppNotification) => void;
 }) {
   const meta = TYPE_META[notification.type];
   const Icon = meta.icon;
 
   return (
-    <button
-      onClick={() => onOpen(notification)}
+    <div
       className={cn(
-        "w-full flex items-start gap-3 px-4 py-3 text-left transition-colors touch-manipulation",
-        notification.read ? "bg-white hover:bg-gray-50" : "bg-green-50/50 hover:bg-green-50"
+        "flex items-start gap-1 pr-1 transition-colors",
+        notification.read ? "bg-white" : "bg-green-50/50"
       )}
     >
-      <span
+      <button
+        onClick={() => onOpen(notification)}
         className={cn(
-          "mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
-          meta.bg,
-          meta.fg
+          "flex-1 flex items-start gap-3 px-4 py-3 text-left touch-manipulation min-w-0",
+          notification.read ? "hover:bg-gray-50" : "hover:bg-green-50"
         )}
       >
-        <Icon className="w-4 h-4" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-start gap-2">
-          <span
-            className={cn(
-              "text-sm break-words line-clamp-2 min-w-0",
-              notification.read ? "font-medium text-gray-700" : "font-semibold text-gray-900"
-            )}
-          >
-            {notification.title}
-          </span>
-          {notification.priority === "high" && !notification.read && (
-            <span className="shrink-0 mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-600 bg-rose-50 rounded-full px-1.5 py-0.5">
-              Urgent
-            </span>
+        <span
+          className={cn(
+            "mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
+            meta.bg,
+            meta.fg
           )}
+        >
+          <Icon className="w-4 h-4" />
         </span>
-        <span className="block text-xs text-gray-500 mt-0.5 line-clamp-2 break-words">
-          {notification.body}
+        <span className="min-w-0 flex-1">
+          <span className="flex items-start gap-2">
+            <span
+              className={cn(
+                "text-sm break-words line-clamp-2 min-w-0",
+                notification.read ? "font-medium text-gray-700" : "font-semibold text-gray-900"
+              )}
+            >
+              {notification.title}
+            </span>
+            {notification.priority === "high" && !notification.read && (
+              <span className="shrink-0 mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-600 bg-rose-50 rounded-full px-1.5 py-0.5">
+                Urgent
+              </span>
+            )}
+          </span>
+          <span className="block text-xs text-gray-500 mt-0.5 line-clamp-2 break-words">
+            {notification.body}
+          </span>
         </span>
-      </span>
-      {!notification.read && (
-        <span className="mt-1.5 w-2 h-2 rounded-full bg-green-600 shrink-0" aria-hidden />
-      )}
-    </button>
+        {!notification.read && (
+          <span className="mt-1.5 w-2 h-2 rounded-full bg-green-600 shrink-0" aria-hidden />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={() => onDismiss(notification)}
+        className="mt-2 mr-1 p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 touch-manipulation shrink-0"
+        aria-label="Dismiss notification"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
   );
 }
 
 export function NotificationCenter() {
-  const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
+  const { notifications, unreadCount, markRead, markAllRead, dismiss, dismissAll } =
+    useNotifications();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { toast } = useToast();
+
+  useOverlay("notification-center", open, () => setOpen(false));
+
+  const closeSheet = (message?: string) => {
+    setOpen(false);
+    if (message) toast(message);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -119,7 +147,6 @@ export function NotificationCenter() {
     };
   }, [open]);
 
-  // Lock background scroll while the mobile sheet is open.
   useEffect(() => {
     if (!open || window.innerWidth >= 768) return;
     const prev = document.body.style.overflow;
@@ -130,10 +157,31 @@ export function NotificationCenter() {
   }, [open]);
 
   const openNotification = (n: AppNotification) => {
-    markRead(n.id);
+    dismiss(n.id);
     recordNotificationEvent("opened", n.id, n.type);
-    setOpen(false);
+    closeSheet();
     router.push(n.href);
+  };
+
+  const dismissNotification = (n: AppNotification) => {
+    dismiss(n.id);
+    recordNotificationEvent("completed", n.id, n.type);
+    const remaining = notifications.filter((x) => x.id !== n.id).length;
+    closeSheet(remaining === 0 ? "Case closed." : "Case closed.");
+  };
+
+  const handleMarkAllRead = () => {
+    markAllRead();
+    closeSheet("No new complaints.");
+  };
+
+  const handleClearAll = () => {
+    if (notifications.length === 0) {
+      closeSheet();
+      return;
+    }
+    dismissAll();
+    closeSheet("Case closed.");
   };
 
   return (
@@ -161,17 +209,11 @@ export function NotificationCenter() {
 
       {open && (
         <>
-          {/* Mobile backdrop */}
           <div
-            className="fixed inset-0 z-50 bg-black/30 md:hidden"
+            className="fixed inset-0 z-50 bg-black/30"
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          {/*
-            Mobile: full-width bottom sheet pinned to the viewport so it can
-            never open half offscreen or hide behind the bottom nav.
-            Desktop: anchored popover under the bell.
-          */}
           <div
             role="dialog"
             aria-label="Notifications"
@@ -183,14 +225,24 @@ export function NotificationCenter() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
               <p className="font-semibold text-gray-900 text-sm">Notifications</p>
               <div className="flex items-center gap-1">
-                {unreadCount > 0 && (
-                  <button
-                    onClick={markAllRead}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-800 rounded-lg px-2 py-1.5 hover:bg-green-50 transition-colors touch-manipulation"
-                  >
-                    <CheckCheck className="w-3.5 h-3.5" />
-                    Mark all read
-                  </button>
+                {notifications.length > 0 && (
+                  <>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-800 rounded-lg px-2 py-1.5 hover:bg-green-50 transition-colors touch-manipulation"
+                      >
+                        <CheckCheck className="w-3.5 h-3.5" />
+                        Mark all read
+                      </button>
+                    )}
+                    <button
+                      onClick={handleClearAll}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-gray-600 hover:text-gray-800 rounded-lg px-2 py-1.5 hover:bg-gray-50 transition-colors touch-manipulation"
+                    >
+                      Clear all
+                    </button>
+                  </>
                 )}
                 <Link
                   href="/settings/notifications"
@@ -202,7 +254,7 @@ export function NotificationCenter() {
                 </Link>
                 <button
                   onClick={() => setOpen(false)}
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors touch-manipulation md:hidden"
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors touch-manipulation"
                   aria-label="Close notifications"
                 >
                   <X className="w-4 h-4" />
@@ -221,7 +273,12 @@ export function NotificationCenter() {
                 </div>
               ) : (
                 notifications.map((n) => (
-                  <NotificationRow key={n.id} notification={n} onOpen={openNotification} />
+                  <NotificationRow
+                    key={n.id}
+                    notification={n}
+                    onOpen={openNotification}
+                    onDismiss={dismissNotification}
+                  />
                 ))
               )}
             </div>

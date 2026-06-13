@@ -9,6 +9,7 @@ import {
 } from "react";
 import { UpgradeModal } from "./upgrade-modal";
 import { useSubscription } from "@/lib/store/subscription-provider";
+import { useOverlay } from "@/lib/navigation/use-overlay";
 
 interface UpgradeModalContextValue {
   showUpgradeModal: (options?: { headline?: string; copy?: string }) => void;
@@ -23,6 +24,9 @@ export function UpgradeModalProvider({ children }: { children: React.ReactNode }
   const [headline, setHeadline] = useState<string | undefined>();
   const [copy, setCopy] = useState<string | undefined>();
 
+  const hideUpgradeModal = useCallback(() => setOpen(false), []);
+  useOverlay("upgrade-modal", open && !betaUnlockAll, hideUpgradeModal);
+
   const showUpgradeModal = useCallback(
     (options?: { headline?: string; copy?: string }) => {
       if (betaUnlockAll) return;
@@ -32,8 +36,6 @@ export function UpgradeModalProvider({ children }: { children: React.ReactNode }
     },
     [betaUnlockAll]
   );
-
-  const hideUpgradeModal = useCallback(() => setOpen(false), []);
 
   const value = useMemo(
     () => ({ showUpgradeModal, hideUpgradeModal }),

@@ -11,9 +11,13 @@ import { PlantyLine } from "@/components/planty/planty-line";
 import { useTasks } from "@/lib/store/tasks-provider";
 import { usePlants } from "@/lib/store/plants-provider";
 import { getTodayFocusTasks, todayFocusCopy } from "@/lib/tasks/dedupe-tasks";
-import { pickPlantyMessage } from "@/lib/copy/planty-messages-system";
+import {
+  pickPlantyMessage,
+  buildPlantySignalsFromWeather,
+} from "@/lib/copy/planty-messages-system";
 import { loadUserProfile } from "@/lib/profile/user-profile";
 import { lookupZipRecord } from "@/lib/location/usda-zones";
+import { useWeather } from "@/lib/hooks/use-weather";
 import { InstallPrompt } from "@/components/mobile/install-prompt";
 import { SyncStatusBadge } from "@/components/sync/sync-status-badge";
 
@@ -30,15 +34,22 @@ export default function TodayPage() {
     return d.toDateString() === now.toDateString();
   });
 
+  const zip = loadUserProfile().zipCode || plants[0]?.zipCode || "91107";
+  const record = lookupZipRecord(zip);
+  const { weather } = useWeather(zip);
+
   const plantyMessage = useMemo(() => {
-    const zip = loadUserProfile().zipCode || "91107";
-    const record = lookupZipRecord(zip);
     return pickPlantyMessage("today_tasks", {
       taskCount: focusTasks.length,
       city: record.city,
       zone: record.usdaZone,
+      plantCount: plants.length,
+      userId: loadUserProfile().zipCode || undefined,
+      signals: buildPlantySignalsFromWeather(weather?.alerts ?? [], {
+        plantCount: plants.length,
+      }),
     });
-  }, [focusTasks.length]);
+  }, [focusTasks.length, plants.length, record.city, record.usdaZone, weather?.alerts]);
   if (plantsLoading || !ready) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -87,7 +98,7 @@ export default function TodayPage() {
           icon="✨"
           compact
           title="Nothing urgent today."
-          description="Your plants have not filed any new complaints."
+          description={plantyMessage.text}
           actionLabel="View Calendar"
           actionHref="/calendar"
         />

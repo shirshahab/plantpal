@@ -1,5 +1,6 @@
 import type { PlantyVariant } from "@/components/brand/planty";
-import { getDailySeed, seedIndex } from "@/lib/local/daily-seed";
+import { getDailySeed, getPlantySeed, seedIndex } from "@/lib/local/daily-seed";
+import { PLANTY_MESSAGE_BANK } from "./planty-message-bank";
 
 export type PlantyMood =
   | "happy"
@@ -8,118 +9,154 @@ export type PlantyMood =
   | "celebrating"
   | "warning"
   | "concerned"
-  | "niceWork";
+  | "niceWork"
+  | "detective"
+  | "lawyer"
+  | "weather"
+  | "sleepy"
+  | "proud"
+  | "shocked"
+  | "suspicious";
 
 export type PlantyMessageContext =
+  | "general"
   | "dashboard_greeting"
   | "dashboard_welcome"
   | "today_tasks"
   | "empty_today"
+  | "watering"
+  | "fertilizer"
+  | "weekly_check"
   | "plant_health"
-  | "general";
+  | "diagnosis"
+  | "weather"
+  | "fire_nearby"
+  | "heat_wave"
+  | "rain"
+  | "wind"
+  | "cold_frost"
+  | "streaks"
+  | "xp"
+  | "lessons"
+  | "community"
+  | "local_trends"
+  | "seasonal";
+
+export type PlantyGreetingCta = "today_task" | "scan" | "growth_photo" | "lesson";
+
+export interface PlantyMessageTriggers {
+  exactPlants?: number;
+  minPlants?: number;
+  maxPlants?: number;
+  fireNearby?: boolean;
+  heatWave?: boolean;
+  frost?: boolean;
+  rain?: boolean;
+  wind?: boolean;
+  healthConcern?: boolean;
+  minStreak?: number;
+  minXp?: number;
+}
 
 export interface PlantyMessage {
+  id: string;
   text: string;
   mood: PlantyMood;
   context: PlantyMessageContext;
+  priority?: number;
   weight?: number;
   target?: string;
+  cta?: PlantyGreetingCta;
+  triggers?: PlantyMessageTriggers;
 }
+
+export interface PlantySignals {
+  fireNearby?: boolean;
+  heatWave?: boolean;
+  frost?: boolean;
+  rain?: boolean;
+  wind?: boolean;
+  healthConcern?: boolean;
+  localTrend?: boolean;
+  plantCount?: number;
+  streakDays?: number;
+  xp?: number;
+}
+
+export interface PlantyPickOptions {
+  taskCount?: number;
+  plantCount?: number;
+  city?: string;
+  zone?: string;
+  date?: Date;
+  userId?: string;
+  signals?: PlantySignals;
+}
+
+const ALERT_CONTEXT_PRIORITY: PlantyMessageContext[] = [
+  "fire_nearby",
+  "cold_frost",
+  "heat_wave",
+  "rain",
+  "wind",
+  "weather",
+  "plant_health",
+  "diagnosis",
+  "local_trends",
+  "seasonal",
+];
 
 export function plantyMoodToVariant(mood: PlantyMood): PlantyVariant {
   switch (mood) {
     case "happy":
       return "happy";
     case "thinking":
+    case "weather":
+    case "sleepy":
       return "thinking";
     case "diagnosing":
+    case "detective":
+    case "lawyer":
+    case "suspicious":
       return "diagnosing";
     case "celebrating":
       return "celebrating";
     case "warning":
     case "concerned":
+    case "shocked":
       return "uhOh";
     case "niceWork":
+    case "proud":
       return "niceWork";
     default:
       return "main";
   }
 }
 
-const TODAY_WITH_TASKS: PlantyMessage[] = [
-  {
-    text: "Planty reviewed the evidence. Here's what matters.",
-    mood: "diagnosing",
-    context: "today_tasks",
-    target: "/today",
-  },
-  {
-    text: "Your garden called. It wants five minutes.",
-    mood: "happy",
-    context: "today_tasks",
-    target: "/today",
-  },
-  {
-    text: "One small task for you. One giant win for your basil.",
-    mood: "happy",
-    context: "today_tasks",
-    target: "/today",
-  },
-];
+export const ALL_PLANTY_MESSAGES: PlantyMessage[] = PLANTY_MESSAGE_BANK as PlantyMessage[];
 
-const TODAY_EMPTY: PlantyMessage[] = [
-  {
-    text: "Your plants have not filed any new complaints.",
-    mood: "celebrating",
-    context: "empty_today",
-    target: "/calendar",
-  },
-  {
-    text: "Your plants are mostly behaving.",
-    mood: "celebrating",
-    context: "empty_today",
-    target: "/calendar",
-  },
-  {
-    text: "No drama. Just the important stuff.",
-    mood: "happy",
-    context: "empty_today",
-    target: "/calendar",
-  },
-];
-
-const DASHBOARD_GREETINGS: PlantyMessage[] = [
-  { text: "Planty clocked in. Let's keep something alive.", mood: "happy", context: "dashboard_greeting", target: "/today", weight: 2 },
-  { text: "Your plants are dramatic. We brought notes.", mood: "diagnosing", context: "dashboard_greeting", target: "/today" },
-  { text: "Good news. Your garden still has a chance.", mood: "happy", context: "dashboard_greeting" },
-  { text: "Water first. Panic later.", mood: "thinking", context: "dashboard_greeting", target: "/today" },
-  { text: "Today's goal: fewer crispy leaves.", mood: "happy", context: "dashboard_greeting", target: "/today" },
-  { text: "Your plants can't text for help. That's why we're here.", mood: "thinking", context: "dashboard_greeting" },
-  { text: "Check the soil. Save the drama.", mood: "diagnosing", context: "dashboard_greeting", target: "/scanner" },
-  { text: "Planty believes in second chances.", mood: "happy", context: "dashboard_greeting" },
-  { text: "Some heroes wear capes. You checked the soil.", mood: "niceWork", context: "dashboard_greeting", target: "/today" },
-  { text: "If the leaves look sad, they probably are.", mood: "concerned", context: "dashboard_greeting", target: "/doctor" },
-  { text: "This basil has concerns.", mood: "thinking", context: "plant_health", target: "/dashboard" },
-  { text: "Leaves don't lie. Neither do we.", mood: "diagnosing", context: "dashboard_greeting", target: "/today" },
-  { text: "Today's lesson beats guessing. Trust Planty.", mood: "thinking", context: "dashboard_greeting", target: "/academy" },
-  { text: "Snap a growth pic. Future you will flex.", mood: "niceWork", context: "dashboard_greeting", target: "/scanner?tab=progress" },
-];
-
-const WELCOME_MESSAGES: PlantyMessage[] = [
-  { text: "Add your first plant. I promise not to judge.", mood: "happy", context: "dashboard_welcome", target: "/plants/new" },
-  { text: "Stop killing your plants.", mood: "warning", context: "dashboard_welcome", target: "/plants/new" },
-  { text: "Good news. Your plants still have a chance.", mood: "happy", context: "dashboard_welcome", target: "/plants/new" },
-  { text: "Planty clocked in. Let's keep something alive.", mood: "happy", context: "dashboard_welcome", target: "/plants/new" },
-];
-
-export const ALL_PLANTY_MESSAGES: PlantyMessage[] = [
-  ...TODAY_WITH_TASKS,
-  ...TODAY_EMPTY,
-  ...DASHBOARD_GREETINGS,
-  ...WELCOME_MESSAGES,
-];
+function matchesTriggers(msg: PlantyMessage, signals: PlantySignals): boolean {
+  const t = msg.triggers;
+  if (!t) return true;
+  const count = signals.plantCount ?? 0;
+  if (t.exactPlants != null && count !== t.exactPlants) return false;
+  if (t.minPlants != null && count < t.minPlants) return false;
+  if (t.maxPlants != null && count > t.maxPlants) return false;
+  if (t.fireNearby && !signals.fireNearby) return false;
+  if (t.heatWave && !signals.heatWave) return false;
+  if (t.frost && !signals.frost) return false;
+  if (t.rain && !signals.rain) return false;
+  if (t.wind && !signals.wind) return false;
+  if (t.healthConcern && !signals.healthConcern) return false;
+  if (t.minStreak != null && (signals.streakDays ?? 0) < t.minStreak) return false;
+  if (t.minXp != null && (signals.xp ?? 0) < t.minXp) return false;
+  return true;
+}
 
 function pickFromPool(pool: PlantyMessage[], seed: string): PlantyMessage {
+  if (pool.length === 0) {
+    return (PLANTY_MESSAGE_BANK[0] as PlantyMessage)!;
+  }
   const weighted: PlantyMessage[] = [];
   for (const msg of pool) {
     const w = msg.weight ?? 1;
@@ -128,40 +165,136 @@ function pickFromPool(pool: PlantyMessage[], seed: string): PlantyMessage {
   return weighted[seedIndex(seed, weighted.length)] ?? pool[0]!;
 }
 
+function poolForContext(context: PlantyMessageContext): PlantyMessage[] {
+  return PLANTY_MESSAGE_BANK.filter((m) => m.context === context) as PlantyMessage[];
+}
+
+function signalContexts(signals: PlantySignals): PlantyMessageContext[] {
+  const out: PlantyMessageContext[] = [];
+  if (signals.fireNearby) out.push("fire_nearby");
+  if (signals.frost) out.push("cold_frost");
+  if (signals.heatWave) out.push("heat_wave");
+  if (signals.rain) out.push("rain");
+  if (signals.wind) out.push("wind");
+  if (signals.healthConcern) out.push("plant_health");
+  if (signals.localTrend) out.push("local_trends");
+  return out;
+}
+
+function pickContextual(
+  contexts: PlantyMessageContext[],
+  seed: string,
+  signals: PlantySignals
+): PlantyMessage | null {
+  const ordered = [...new Set(contexts)].sort((a, b) => {
+    const ai = ALERT_CONTEXT_PRIORITY.indexOf(a);
+    const bi = ALERT_CONTEXT_PRIORITY.indexOf(b);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+
+  for (const ctx of ordered) {
+    const pool = poolForContext(ctx).filter((m) => matchesTriggers(m, signals));
+    if (pool.length > 0) {
+      const topPriority = Math.max(...pool.map((m) => m.priority ?? 50));
+      const top = pool.filter((m) => (m.priority ?? 50) >= topPriority - 5);
+      return pickFromPool(top, `${seed}|${ctx}`);
+    }
+  }
+  return null;
+}
+
 export function pickPlantyMessage(
   context: PlantyMessageContext,
-  options?: { taskCount?: number; city?: string; zone?: string; date?: Date }
+  options?: PlantyPickOptions
 ): PlantyMessage {
   const date = options?.date ?? new Date();
-  const seed = getDailySeed(options?.city ?? "local", options?.zone ?? "10a", date);
+  const city = options?.city ?? "local";
+  const zone = options?.zone ?? "10a";
+  const signals: PlantySignals = {
+    plantCount: options?.plantCount ?? 0,
+    ...options?.signals,
+  };
+  const seed = getPlantySeed(city, zone, date, {
+    userId: options?.userId,
+    plantCount: options?.plantCount,
+  });
 
   if (context === "today_tasks") {
     const count = options?.taskCount ?? 0;
     if (count === 0) {
-      return pickFromPool(TODAY_EMPTY, `${seed}|empty`);
+      return pickFromPool(
+        poolForContext("empty_today").filter((m) => matchesTriggers(m, signals)),
+        `${seed}|empty`
+      );
     }
-    return pickFromPool(TODAY_WITH_TASKS, `${seed}|tasks`);
+    const alert = pickContextual(signalContexts(signals), seed, signals);
+    if (alert) return alert;
+    return pickFromPool(
+      poolForContext("today_tasks").filter((m) => matchesTriggers(m, signals)),
+      `${seed}|tasks`
+    );
   }
 
   if (context === "empty_today") {
-    return pickFromPool(TODAY_EMPTY, `${seed}|empty`);
+    return pickFromPool(
+      poolForContext("empty_today").filter((m) => matchesTriggers(m, signals)),
+      `${seed}|empty`
+    );
   }
 
   if (context === "dashboard_welcome") {
-    return pickFromPool(WELCOME_MESSAGES, `${seed}|welcome`);
+    return pickFromPool(poolForContext("dashboard_welcome"), `${seed}|welcome`);
   }
 
-  const pool = DASHBOARD_GREETINGS.filter((m) => m.context === context || context === "dashboard_greeting");
-  return pickFromPool(pool.length ? pool : DASHBOARD_GREETINGS, `${seed}|dash`);
+  if (context === "dashboard_greeting") {
+    const alertCtx = signalContexts(signals);
+    const contextual = pickContextual(
+      [...alertCtx, "general", "dashboard_greeting", "seasonal", "streaks", "xp", "lessons"],
+      seed,
+      signals
+    );
+    if (contextual) return contextual;
+
+    const generalPool = [
+      ...poolForContext("dashboard_greeting"),
+      ...poolForContext("general"),
+    ].filter((m) => matchesTriggers(m, signals));
+
+    return pickFromPool(generalPool, `${seed}|dash`);
+  }
+
+  const pool = poolForContext(context).filter((m) => matchesTriggers(m, signals));
+  return pickFromPool(pool.length ? pool : poolForContext("general"), `${seed}|${context}`);
 }
 
-export function validatePlantyMessages(): { ok: boolean; errors: string[] } {
+export function validatePlantyMessages(): { ok: boolean; errors: string[]; count: number } {
   const errors: string[] = [];
+  const ids = new Set<string>();
   for (const msg of ALL_PLANTY_MESSAGES) {
-    if (!msg.text.trim()) errors.push("Empty Planty message text");
-    if (!msg.mood) errors.push(`Missing mood: ${msg.text.slice(0, 40)}`);
-    if (!msg.context) errors.push(`Missing context: ${msg.text.slice(0, 40)}`);
+    if (!msg.id) errors.push("Missing id");
+    if (ids.has(msg.id)) errors.push(`Duplicate id: ${msg.id}`);
+    ids.add(msg.id);
+    if (!msg.text.trim()) errors.push(`Empty text: ${msg.id}`);
+    if (!msg.mood) errors.push(`Missing mood: ${msg.id}`);
+    if (!msg.context) errors.push(`Missing context: ${msg.id}`);
     plantyMoodToVariant(msg.mood);
   }
-  return { ok: errors.length === 0, errors };
+  if (ALL_PLANTY_MESSAGES.length < 60) {
+    errors.push(`Expected 60+ messages, got ${ALL_PLANTY_MESSAGES.length}`);
+  }
+  return { ok: errors.length === 0, errors, count: ALL_PLANTY_MESSAGES.length };
+}
+
+export function buildPlantySignalsFromWeather(
+  alerts: Array<{ type: string }>,
+  extras?: Partial<PlantySignals>
+): PlantySignals {
+  return {
+    fireNearby: alerts.some((a) => a.type === "fire" || a.type === "smoke"),
+    heatWave: alerts.some((a) => a.type === "heat"),
+    frost: alerts.some((a) => a.type === "frost"),
+    rain: alerts.some((a) => a.type === "rain"),
+    wind: alerts.some((a) => a.type === "wind"),
+    ...extras,
+  };
 }

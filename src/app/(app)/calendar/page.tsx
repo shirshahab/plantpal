@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Droplets, Leaf, Scissors, Target } from "lucide-react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,20 +10,15 @@ import { LoadingState } from "@/components/loading-state";
 import { EmptyState } from "@/components/empty-state";
 import { useTasks } from "@/lib/store/tasks-provider";
 import { usePlants } from "@/lib/store/plants-provider";
-import type { PlantTask, TaskType } from "@/lib/types/tasks";
+import {
+  buildCareRoadmap,
+  mergeRoadmapWithTasks,
+  roadmapEventsForDay,
+  type CareRoadmapEvent,
+} from "@/lib/calendar/care-roadmap";
+import { lookupZipRecord } from "@/lib/location/usda-zones";
+import { loadUserProfile } from "@/lib/profile/user-profile";
 import { cn } from "@/lib/utils";
-
-const TYPE_DOT: Partial<Record<TaskType, string>> = {
-  water: "bg-blue-500",
-  fertilize: "bg-emerald-500",
-  prune: "bg-amber-500",
-  repot: "bg-purple-500",
-  harvest: "bg-orange-500",
-  scan: "bg-red-400",
-  take_growth_photo: "bg-pink-400",
-  inspect: "bg-gray-400",
-  complete_lesson: "bg-indigo-400",
-};
 
 function monthMatrix(year: number, month: number): (Date | null)[][] {
   const first = new Date(year, month, 1);
@@ -42,9 +38,15 @@ function monthMatrix(year: number, month: number): (Date | null)[][] {
   return weeks;
 }
 
-function tasksForDay(allTasks: PlantTask[], day: Date): PlantTask[] {
-  const key = day.toISOString().slice(0, 10);
-  return allTasks.filter((t) => t.dueDate.slice(0, 10) === key);
+function iconsForDay(events: CareRoadmapEvent[]): string[] {
+  const seen = new Set<string>();
+  const icons: string[] = [];
+  for (const e of events) {
+    if (seen.has(e.type)) continue;
+    seen.add(e.type);
+    icons.push(e.icon);
+  }
+  return icons;
 }
 
 export default function CalendarPage() {
@@ -57,6 +59,9 @@ export default function CalendarPage() {
     return t;
   });
 
+  const zip = plants[0]?.zipCode || loadUserProfile().zipCode || "91107";
+  const zone = lookupZipRecord(zip).usdaZone;
+
   const allTasks = useMemo(
     () => [
       ...groups.dueToday,
@@ -67,14 +72,26 @@ export default function CalendarPage() {
     [groups]
   );
 
+  const roadmapEvents = useMemo(() => {
+    if (plants.length === 0) return [];
+    const projected = buildCareRoadmap({
+      plants,
+      city: lookupZipRecord(zip).city,
+      zone,
+      startDate: new Date(),
+      months: 12,
+    });
+    return mergeRoadmapWithTasks(projected, allTasks);
+  }, [plants, zip, zone, allTasks]);
+
   const weeks = useMemo(
     () => monthMatrix(cursor.getFullYear(), cursor.getMonth()),
     [cursor]
   );
 
-  const selectedTasks = useMemo(
-    () => tasksForDay(allTasks, selected),
-    [allTasks, selected]
+  const selectedEvents = useMemo(
+    () => roadmapEventsForDay(roadmapEvents, selected),
+    [roadmapEvents, selected]
   );
 
   const monthLabel = cursor.toLocaleDateString(undefined, {
@@ -108,7 +125,7 @@ export default function CalendarPage() {
     <div className="space-y-5 max-w-lg mx-auto">
       <PageHeader
         title="Care Calendar"
-        description="Watering, feeding, missions, and seasonal tasks"
+        description="Your 12-month care roadmap"
       />
 
       <Card padding="md">
@@ -145,7 +162,8 @@ export default function CalendarPage() {
             <div key={wi} className="grid grid-cols-7 gap-1">
               {week.map((day, di) => {
                 if (!day) return <div key={di} className="aspect-square" />;
-                const dayTasks = tasksForDay(allTasks, day);
+                const dayEvents = roadmapEventsForDay(roadmapEvents, day);
+                const icons = iconsForDay(dayEvents);
                 const isSelected = day.toDateString() === selected.toDateString();
                 const isToday = day.toDateString() === new Date().toDateString();
                 return (
@@ -154,24 +172,23 @@ export default function CalendarPage() {
                     type="button"
                     onClick={() => setSelected(day)}
                     className={cn(
-                      "aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 touch-manipulation transition-colors",
+                      "aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 touch-manipulation transition-colors px-0.5",
                       isSelected && "bg-green-600 text-white",
                       !isSelected && isToday && "bg-green-50 text-green-700",
                       !isSelected && !isToday && "hover:bg-gray-50"
                     )}
                   >
                     <span className="text-sm font-medium">{day.getDate()}</span>
-                    {dayTasks.length > 0 && (
-                      <span className="flex gap-0.5">
-                        {dayTasks.slice(0, 3).map((t) => (
-                          <span
-                            key={t.id}
-                            className={cn(
-                              "w-1 h-1 rounded-full",
-                              isSelected ? "bg-white/80" : TYPE_DOT[t.taskType] ?? "bg-gray-300"
-                            )}
-                          />
+                    {icons.length > 0 && (
+                      <span className="flex gap-px text-[9px] leading-none max-w-full overflow-hidden">
+                        {icons.slice(0, 3).map((icon, i) => (
+                          <span key={i} aria-hidden>
+                            {icon}
+                          </span>
                         ))}
+                        {icons.length > 3 && (
+                          <span className={isSelected ? "text-white/90" : "text-gray-400"}>+</span>
+                        )}
                       </span>
                     )}
                   </button>
@@ -190,21 +207,28 @@ export default function CalendarPage() {
             day: "numeric",
           })}
         </h2>
-        {selectedTasks.length === 0 ? (
-          <p className="text-sm text-gray-400">No care tasks on this day.</p>
+        {selectedEvents.length === 0 ? (
+          <p className="text-sm text-gray-500">Nothing scheduled. Suspiciously peaceful.</p>
         ) : (
           <div className="space-y-2">
-            {selectedTasks.map((task) => (
-              <Card key={task.id} padding="sm" className="flex items-start gap-3">
-                <span
-                  className={cn(
-                    "w-2 h-2 rounded-full mt-2 shrink-0",
-                    TYPE_DOT[task.taskType] ?? "bg-gray-300"
+            {selectedEvents.map((event) => (
+              <Card key={event.id} padding="sm" className="flex items-start gap-3">
+                <span className="text-lg shrink-0 mt-0.5" aria-hidden>
+                  {event.icon}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900">{event.title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{event.plantName}</p>
+                  <p className="text-xs text-gray-600 mt-1 leading-relaxed">{event.description}</p>
+                  <p className="text-[11px] text-green-700 mt-1">{event.reason}</p>
+                  {event.plantId && (
+                    <Link
+                      href={`/plants/${event.plantId}`}
+                      className="inline-block text-xs font-medium text-green-700 mt-2 hover:underline"
+                    >
+                      View plant →
+                    </Link>
                   )}
-                />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
-                  <p className="text-xs text-gray-500">{task.plantName}</p>
                 </div>
               </Card>
             ))}
@@ -215,10 +239,12 @@ export default function CalendarPage() {
       <Card padding="md">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Legend</p>
         <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-          <span className="flex items-center gap-2"><Droplets className="w-3.5 h-3.5 text-blue-500" /> Watering</span>
-          <span className="flex items-center gap-2"><Leaf className="w-3.5 h-3.5 text-emerald-500" /> Fertilizer</span>
-          <span className="flex items-center gap-2"><Scissors className="w-3.5 h-3.5 text-amber-500" /> Pruning</span>
-          <span className="flex items-center gap-2"><Target className="w-3.5 h-3.5 text-green-600" /> Missions</span>
+          <span>💧 Watering</span>
+          <span>🍽️ Fertilizer</span>
+          <span>✂️ Pruning</span>
+          <span>🔍 Weekly check</span>
+          <span>🐛 Pest check</span>
+          <span>📸 Progress photo</span>
         </div>
       </Card>
     </div>

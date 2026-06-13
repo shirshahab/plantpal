@@ -8,6 +8,7 @@ import { Planty } from "@/components/academy/planty";
 import { getAcademyLessonById } from "@/lib/academy/lessons";
 import { ACADEMY_BADGES } from "@/lib/academy/badges";
 import type { LessonCompleteResult } from "@/lib/academy/types";
+import { useOverlay } from "@/lib/navigation/use-overlay";
 
 interface LessonCompleteModalProps {
   result: LessonCompleteResult;
@@ -15,6 +16,8 @@ interface LessonCompleteModalProps {
 }
 
 export function LessonCompleteModal({ result, onClose }: LessonCompleteModalProps) {
+  useOverlay("lesson-complete", true, onClose);
+
   const nextLesson = result.nextLessonId
     ? getAcademyLessonById(result.nextLessonId)
     : null;

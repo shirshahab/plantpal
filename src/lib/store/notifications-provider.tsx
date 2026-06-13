@@ -52,6 +52,7 @@ interface NotificationsContextValue {
   markAllRead: () => void;
   /** Remove a notification from the list (persists for daily IDs). */
   dismiss: (id: string) => void;
+  dismissAll: () => void;
   updatePrefs: (patch: Partial<NotificationPrefs>) => void;
 }
 
@@ -267,6 +268,24 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     [markSocialRead]
   );
 
+  const dismissAll = useCallback(() => {
+    const ids = notifications.map((n) => n.id);
+    if (ids.length === 0) return;
+    dismissNotifications(ids);
+    markNotificationsRead(ids);
+    if (notifications.some((n) => n.id.startsWith("social-"))) {
+      void fetch("/api/social/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "mark_read" }),
+      })
+        .then(() => refreshSocial())
+        .catch(() => {
+          /* best effort */
+        });
+    }
+  }, [notifications, refreshSocial]);
+
   const updatePrefs = useCallback((patch: Partial<NotificationPrefs>) => {
     setPrefs(saveNotificationPrefs(patch));
   }, []);
@@ -352,6 +371,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         markRead,
         markAllRead,
         dismiss,
+        dismissAll,
         updatePrefs,
       }}
     >
