@@ -18,8 +18,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { readClientSession } from "@/lib/auth/session";
-import { resolveOnboardingCompleteForUser } from "@/lib/auth/onboarding-state";
-import { traceAuthEvent } from "@/lib/auth/lifecycle-trace";
+import { logAuth, logRedirect } from "@/lib/auth/auth-log";
 import { useOptionalAuth } from "@/lib/store/auth-provider";
 import { trackEvent } from "@/lib/analytics/track";
 import {
@@ -69,77 +68,52 @@ export default function OnboardingPageClient() {
     if (ref) capturePendingReferral(ref);
   }, [searchParams]);
 
-  // Restore in-progress selections (refresh mid-onboarding shouldn't lose
-  // them) and skip onboarding entirely if it's already done, locally or in
-  // the cloud profile of the signed-in user.
+  // Restore in-progress selections only — no auto-redirects while auth stabilizes.
   useEffect(() => {
     let cancelled = false;
 
     async function bootstrap() {
-      const local = loadUserProfile();
-      if (local.ownerUserId && local.experienceLevel) setExperience(local.experienceLevel);
-      if (local.ownerUserId && local.zipCode) setZipCode(local.zipCode);
-      if (local.ownerUserId && local.growTypes.length > 0) setGrowTypes(local.growTypes);
+      if (!isSupabaseConfigured()) return;
 
-      if (!isSupabaseConfigured()) {
-        return;
-      }
+      if (auth?.loading || (auth && !auth.sessionReady)) return;
 
       const supabase = createClient();
       const session = await readClientSession(supabase);
-      if (!session.sessionExists || !session.user?.id) {
-        traceAuthEvent({
-          event: "REDIRECT_TO_LOGIN",
-          hasSession: false,
-          redirectTarget: "/login?next=/onboarding",
-          reason: "onboarding bootstrap no session",
-        });
+      if (cancelled) return;
+
+      logAuth("ONBOARDING_CHECK", {
+        sessionExists: session.sessionExists,
+        userId: session.user?.id ?? null,
+        reason: "onboarding page load",
+      });
+
+      if (!session.sessionExists) {
+        logRedirect("/login?next=/onboarding", "onboarding: no session after ready");
         router.replace("/login?next=/onboarding");
         return;
       }
 
-      const userId = session.user.id;
-      const snapshot = await hydrateProfileFromCloud();
-      if (cancelled) return;
+      const userId = session.user!.id;
+      const local = loadUserProfile();
+      if (local.ownerUserId === userId) {
+        if (local.experienceLevel) setExperience(local.experienceLevel);
+        if (local.zipCode) setZipCode(local.zipCode);
+        if (local.growTypes.length > 0) setGrowTypes(local.growTypes);
+      }
 
-      const onboarded = resolveOnboardingCompleteForUser(
-        userId,
-        snapshot.onboardingComplete
-      );
-
-      traceAuthEvent({
-        event: "ONBOARDING_STATUS",
-        hasSession: true,
-        userId,
-        onboardingComplete: onboarded,
-        reason: "onboarding bootstrap",
-      });
-
-      if (onboarded) {
-        traceAuthEvent({
-          event: "REDIRECT_TO_DASHBOARD",
-          hasSession: true,
+      void hydrateProfileFromCloud().then((snapshot) => {
+        if (cancelled) return;
+        logAuth("PROFILE_CHECK", {
+          sessionExists: true,
           userId,
-          onboardingComplete: true,
-          redirectTarget: "/dashboard",
-          reason: "already onboarded",
+          profileLoadResult: snapshot.status,
+          onboardingComplete: snapshot.onboardingComplete ?? false,
         });
-        router.replace("/dashboard");
-        return;
-      }
-
-      const hydrated = loadUserProfile();
-      if (hydrated.ownerUserId === userId) {
-        if (hydrated.experienceLevel) setExperience(hydrated.experienceLevel);
-        if (hydrated.zipCode) setZipCode(hydrated.zipCode);
-        if (hydrated.growTypes.length > 0) setGrowTypes(hydrated.growTypes);
-      }
+      });
     }
 
-    if (auth?.loading || (auth && !auth.sessionReady)) return;
-
     void bootstrap().catch((err) => {
-      console.warn("[onboarding] profile hydration skipped:", err);
+      console.warn("[onboarding] bootstrap:", err);
     });
 
     return () => {
@@ -259,18 +233,7 @@ export default function OnboardingPageClient() {
     setSaving(false);
     if (!ok) return;
 
-    const supabase = createClient();
-    const session = await readClientSession(supabase);
-    traceAuthEvent({
-      event: destination.includes("dashboard")
-        ? "REDIRECT_TO_DASHBOARD"
-        : "REDIRECT_TO_ONBOARDING",
-      hasSession: session.sessionExists,
-      userId: session.user?.id,
-      onboardingComplete: true,
-      redirectTarget: destination,
-      reason: "onboarding complete",
-    });
+    logRedirect(destination, "onboarding complete");
     router.replace(destination);
   }
 

@@ -28,6 +28,7 @@ import { SendFeedbackButton } from "@/components/feedback/send-feedback-button";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { TasksDebug } from "@/components/dev/tasks-debug";
 import { TrialBanner } from "@/components/billing/trial-banner";
+import { OnboardingSetupBanner } from "@/components/dashboard/onboarding-setup-banner";
 import { usePlants } from "@/lib/store/plants-provider";
 import { useTasks } from "@/lib/store/tasks-provider";
 import { useMoat } from "@/lib/store/moat-provider";
@@ -80,7 +81,12 @@ export function DashboardHome() {
   }
 
   if (plants.length === 0) {
-    return <DashboardEmptyState />;
+    return (
+      <div className="max-w-lg mx-auto pb-4">
+        <OnboardingSetupBanner />
+        <DashboardEmptyState />
+      </div>
+    );
   }
 
   return (
@@ -110,6 +116,8 @@ export function DashboardHome() {
       />
 
       <InstallPrompt />
+
+      <OnboardingSetupBanner />
 
       <div className="flex flex-col gap-5">
         <PlantyGreetingCard />

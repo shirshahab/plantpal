@@ -18,9 +18,11 @@ import { migrateLocalDataToCloud } from "@/lib/storage/local-to-cloud-migration"
 import { hydrateHealthReportsFromCloud } from "@/lib/health/report-storage";
 import { readClientSession } from "@/lib/auth/session";
 import {
+  logAuth,
+  logRedirect,
+  patchAuthDiagnostic,
   startSessionWatchdog,
-  traceAuthEvent,
-} from "@/lib/auth/lifecycle-trace";
+} from "@/lib/auth/auth-log";
 
 interface AuthContextValue {
   user: User | null;
@@ -78,6 +80,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const snapshot = await hydrateProfileFromCloud();
         setProfileSnapshot(snapshot);
+        logAuth("PROFILE_CHECK", {
+          sessionExists: true,
+          userId: nextUser.id,
+          profileLoadResult: snapshot.status,
+          onboardingComplete: snapshot.onboardingComplete ?? false,
+          error: snapshot.error,
+        });
+        patchAuthDiagnostic({
+          profileLoadResult: snapshot.status,
+          onboardingComplete: snapshot.onboardingComplete ?? false,
+        });
         await repairProfileOnLogin();
         void migrateLocalDataToCloud(nextUser.id);
         void hydrateHealthReportsFromCloud(nextUser.id);
@@ -93,11 +106,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function resolveSession() {
       try {
         const snapshot = await readClientSession(supabase);
-        traceAuthEvent({
-          event: snapshot.sessionExists ? "SESSION_CONFIRMED" : "ONBOARDING_STATUS",
-          hasSession: snapshot.sessionExists,
-          userId: snapshot.user?.id,
+        logAuth(snapshot.sessionExists ? "SESSION_AFTER_SIGNIN" : "ROUTE_DECISION", {
+          sessionExists: snapshot.sessionExists,
+          userId: snapshot.user?.id ?? null,
           reason: snapshot.errorMessage ?? "initial read",
+        });
+        patchAuthDiagnostic({
+          sessionExists: snapshot.sessionExists,
+          userId: snapshot.user?.id ?? null,
+          authLoading: false,
         });
 
         if (snapshot.sessionExists && snapshot.user) {
@@ -130,10 +147,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       const nextUser = session?.user ?? null;
 
-      traceAuthEvent({
-        event: "AUTH_STATE_CHANGED",
-        hasSession: Boolean(session),
-        userId: nextUser?.id,
+      logAuth("AUTH_STATE_CHANGED", {
+        sessionExists: Boolean(session),
+        userId: nextUser?.id ?? null,
         reason: event,
       });
 
@@ -163,18 +179,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         event === "USER_UPDATED"
       ) {
         if (event === "SIGNED_IN" && nextUser) {
-          traceAuthEvent({
-            event: "SIGN_IN_SUCCESS",
-            hasSession: true,
-            userId: nextUser.id,
+          logAuth("SIGN_IN_SUCCESS", { userId: nextUser.id, sessionExists: true });
+          startSessionWatchdog(async () => {
+            const { data } = await supabase.auth.getSession();
+            return Boolean(data.session?.user?.id);
           });
-          startSessionWatchdog(
-            async () => {
-              const { data } = await supabase.auth.getSession();
-              return Boolean(data.session?.user?.id);
-            },
-            { userId: nextUser.id }
-          );
         }
 
         // Never call Supabase auth APIs synchronously inside this callback (deadlock).

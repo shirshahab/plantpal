@@ -39,14 +39,19 @@ function main() {
   assert.match(onboardingState, /plantpal-onboarding:/);
   console.log("✓ Onboarding scoped per userId (plantpal-onboarding:{userId})");
 
-  assert.ok(exists("src/lib/auth/lifecycle-trace.ts"));
-  console.log("✓ Auth lifecycle trace module exists");
+  assert.ok(exists("src/lib/auth/auth-log.ts"), "auth-log module exists");
+  console.log("✓ [plantpal-auth] logging module exists");
 
   const loginClient = read("src/app/login/login-client.tsx");
   assert.match(loginClient, /signInWithPassword/);
-  assert.match(loginClient, /getSession|readClientSession/);
-  assert.match(loginClient, /clearPlantPalAppState/);
-  console.log("✓ Login confirms session before redirect");
+  assert.match(loginClient, /getSession/);
+  assert.match(loginClient, /router\.replace\("\/dashboard"\)/);
+  assert.match(loginClient, /\[plantpal-auth\]|logAuth|plantpal-auth/);
+  console.log("✓ Login goes straight to /dashboard after session confirmed");
+
+  const onboardingGuard = read("src/components/onboarding/onboarding-guard.tsx");
+  assert.doesNotMatch(onboardingGuard, /router\.replace\("\/onboarding"\)/);
+  console.log("✓ OnboardingGuard does not auto-redirect to onboarding");
 
   const authProvider = read("src/lib/store/auth-provider.tsx");
   assert.match(authProvider, /queueMicrotask/);

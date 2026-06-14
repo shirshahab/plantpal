@@ -51,7 +51,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthPage) {
     const next = safeNextPath(request.nextUrl.searchParams.get("next"));
-    const dest = next ?? "/onboarding";
+    const dest = next ?? "/dashboard";
     return NextResponse.redirect(new URL(dest, request.url));
   }
 

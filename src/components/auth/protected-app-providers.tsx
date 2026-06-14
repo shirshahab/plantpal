@@ -24,7 +24,7 @@ import { BackHandler } from "@/components/navigation/back-handler";
 import { AppShell } from "@/components/app-shell";
 import { AuthDebug } from "@/components/dev/auth-debug";
 import { useAuth } from "@/lib/store/auth-provider";
-import { markProviderMounted } from "@/lib/auth/lifecycle-trace";
+import { logAuth } from "@/lib/auth/auth-log";
 
 /**
  * Data providers that require a confirmed Supabase session.
@@ -35,7 +35,7 @@ export function ProtectedAppProviders({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     if (user || isMockMode) {
-      markProviderMounted("ProtectedAppProviders");
+      logAuth("ROUTE_DECISION", { reason: "ProtectedAppProviders mounted", userId: user?.id });
     }
   }, [user, isMockMode]);
 
