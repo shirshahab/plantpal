@@ -1,0 +1,11 @@
+{
+  "commit": "51c38f35726b061996f1edf14dd57c7cec8deb23",
+  "branch": "main",
+  "builtAt": "2026-06-14T00:46:49.910Z",
+  "version": "0.1.0",
+  "build": {
+    "supabaseUrlConfigured": false,
+    "supabaseAnonKeyConfigured": false,
+    "vercelEnv": null
+  }
+}
