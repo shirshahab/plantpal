@@ -43,6 +43,7 @@ import { useReminders } from "@/lib/store/reminders-provider";
 import { useActiveChallenges, useSocialNotifications } from "@/lib/social/hooks";
 import { useWeather } from "@/lib/hooks/use-weather";
 import { isOnboardingComplete, loadUserProfile } from "@/lib/profile/user-profile";
+import { useAuth } from "@/lib/store/auth-provider";
 
 interface NotificationsContextValue {
   notifications: AppNotification[];
@@ -86,6 +87,7 @@ function socialToAppNotification(row: SocialNotification): AppNotification {
 }
 
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const { groups, ready: tasksReady } = useTasks();
   const { plants } = usePlants();
   const { progress } = useAcademy();
@@ -106,8 +108,8 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     setZipCode(loadUserProfile().zipCode);
     setPrefs(getNotificationPrefs());
-    setSetupComplete(isOnboardingComplete());
-  }, []);
+    setSetupComplete(isOnboardingComplete(user?.id));
+  }, [user?.id]);
 
   // Active diagnoses give recovery reminders their specific copy
   // ("day 3 of your recovery plan", issue names).

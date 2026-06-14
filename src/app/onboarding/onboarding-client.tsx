@@ -18,6 +18,8 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { readClientSession } from "@/lib/auth/session";
+import { resolveOnboardingCompleteForUser } from "@/lib/auth/onboarding-state";
+import { traceAuthEvent } from "@/lib/auth/lifecycle-trace";
 import { useOptionalAuth } from "@/lib/store/auth-provider";
 import { trackEvent } from "@/lib/analytics/track";
 import {
@@ -75,42 +77,66 @@ export default function OnboardingPageClient() {
 
     async function bootstrap() {
       const local = loadUserProfile();
-      if (local.experienceLevel) setExperience(local.experienceLevel);
-      if (local.zipCode) setZipCode(local.zipCode);
-      if (local.growTypes.length > 0) setGrowTypes(local.growTypes);
+      if (local.ownerUserId && local.experienceLevel) setExperience(local.experienceLevel);
+      if (local.ownerUserId && local.zipCode) setZipCode(local.zipCode);
+      if (local.ownerUserId && local.growTypes.length > 0) setGrowTypes(local.growTypes);
 
       if (!isSupabaseConfigured()) {
-        if (local.onboardingComplete) router.replace("/dashboard");
         return;
       }
 
       const supabase = createClient();
       const session = await readClientSession(supabase);
-      if (!session.sessionExists) {
+      if (!session.sessionExists || !session.user?.id) {
+        traceAuthEvent({
+          event: "REDIRECT_TO_LOGIN",
+          hasSession: false,
+          redirectTarget: "/login?next=/onboarding",
+          reason: "onboarding bootstrap no session",
+        });
         router.replace("/login?next=/onboarding");
         return;
       }
 
-      if (local.onboardingComplete && local.ownerUserId === session.user?.id) {
-        router.replace("/dashboard");
-        return;
-      }
-
+      const userId = session.user.id;
       const snapshot = await hydrateProfileFromCloud();
       if (cancelled) return;
 
-      if (snapshot.onboardingComplete) {
+      const onboarded = resolveOnboardingCompleteForUser(
+        userId,
+        snapshot.onboardingComplete
+      );
+
+      traceAuthEvent({
+        event: "ONBOARDING_STATUS",
+        hasSession: true,
+        userId,
+        onboardingComplete: onboarded,
+        reason: "onboarding bootstrap",
+      });
+
+      if (onboarded) {
+        traceAuthEvent({
+          event: "REDIRECT_TO_DASHBOARD",
+          hasSession: true,
+          userId,
+          onboardingComplete: true,
+          redirectTarget: "/dashboard",
+          reason: "already onboarded",
+        });
         router.replace("/dashboard");
         return;
       }
 
       const hydrated = loadUserProfile();
-      if (hydrated.experienceLevel) setExperience(hydrated.experienceLevel);
-      if (hydrated.zipCode) setZipCode(hydrated.zipCode);
-      if (hydrated.growTypes.length > 0) setGrowTypes(hydrated.growTypes);
+      if (hydrated.ownerUserId === userId) {
+        if (hydrated.experienceLevel) setExperience(hydrated.experienceLevel);
+        if (hydrated.zipCode) setZipCode(hydrated.zipCode);
+        if (hydrated.growTypes.length > 0) setGrowTypes(hydrated.growTypes);
+      }
     }
 
-    if (auth?.loading || (auth && !auth.profileReady)) return;
+    if (auth?.loading || (auth && !auth.sessionReady)) return;
 
     void bootstrap().catch((err) => {
       console.warn("[onboarding] profile hydration skipped:", err);
@@ -119,7 +145,7 @@ export default function OnboardingPageClient() {
     return () => {
       cancelled = true;
     };
-  }, [auth?.loading, auth?.profileReady, router]);
+  }, [auth?.loading, auth?.sessionReady, router]);
 
   /** Save in-progress answers locally so a refresh doesn't wipe them. */
   function persistStepDraft() {
@@ -172,17 +198,14 @@ export default function OnboardingPageClient() {
   async function persistProfile(
     extra: { firstPlantAdded?: boolean; firstPlantSkipped?: boolean } = {}
   ): Promise<boolean> {
+    const supabase = createClient();
+    const session = await readClientSession(supabase);
+    if (!session.sessionExists || !session.user?.id) {
+      setSaveError("Your session expired. Sign in again to save your profile.");
+      return false;
+    }
+    const userId = session.user.id;
     const mainGoal = deriveMainGoal(growTypes);
-    saveUserProfile({
-      ownerUserId: loadUserProfile().ownerUserId,
-      onboardingComplete: true,
-      growTypes,
-      experienceLevel: experience,
-      zipCode: zipCode.trim(),
-      mainGoal,
-      completedAt: new Date().toISOString(),
-      ...extra,
-    });
 
     const sync = await syncProfileToCloud({
       zipCode,
@@ -192,10 +215,21 @@ export default function OnboardingPageClient() {
     });
     if (!sync.ok) {
       setSaveError(
-        `We couldn't save your profile to your account: ${sync.error}. Your answers are saved on this device. Tap again to retry.`
+        `We couldn't save your profile to your account: ${sync.error}. Tap again to retry.`
       );
       return false;
     }
+
+    saveUserProfile({
+      ownerUserId: userId,
+      onboardingComplete: true,
+      growTypes,
+      experienceLevel: experience,
+      zipCode: zipCode.trim(),
+      mainGoal,
+      completedAt: new Date().toISOString(),
+      ...extra,
+    });
     setSaveError(null);
 
     trackEvent("onboarding_complete", {
@@ -223,7 +257,21 @@ export default function OnboardingPageClient() {
     setSaving(true);
     const ok = await persistProfile(extra);
     setSaving(false);
-    if (ok) router.push(destination);
+    if (!ok) return;
+
+    const supabase = createClient();
+    const session = await readClientSession(supabase);
+    traceAuthEvent({
+      event: destination.includes("dashboard")
+        ? "REDIRECT_TO_DASHBOARD"
+        : "REDIRECT_TO_ONBOARDING",
+      hasSession: session.sessionExists,
+      userId: session.user?.id,
+      onboardingComplete: true,
+      redirectTarget: destination,
+      reason: "onboarding complete",
+    });
+    router.replace(destination);
   }
 
   function handleAddPlant() {

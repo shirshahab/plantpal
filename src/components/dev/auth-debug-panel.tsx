@@ -4,9 +4,15 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { isOnboardingComplete, loadUserProfile } from "@/lib/profile/user-profile";
+import { loadUserProfile } from "@/lib/profile/user-profile";
 import { useOptionalAuth } from "@/lib/store/auth-provider";
 import { readClientSession } from "@/lib/auth/session";
+import { resolveOnboardingCompleteForUser } from "@/lib/auth/onboarding-state";
+import {
+  getAuthTraceLog,
+  getAuthTraceMeta,
+  isAuthDebugEnabled,
+} from "@/lib/auth/lifecycle-trace";
 
 interface DebugPanelState {
   sessionExists: boolean;
@@ -15,6 +21,7 @@ interface DebugPanelState {
   onboardingComplete: boolean;
   redirectTarget: string;
   lastAuthError: string | null;
+  ownerUserId: string | null;
 }
 
 function computeRedirectTarget(input: {
@@ -26,9 +33,6 @@ function computeRedirectTarget(input: {
   return "/dashboard";
 }
 
-/**
- * Dev-only or ?debugAuth=1 auth readout. No secrets — email only when session exists.
- */
 export function AuthDebugPanel() {
   const searchParams = useSearchParams();
   const enabled =
@@ -41,13 +45,21 @@ function AuthDebugPanelInner() {
   const auth = useOptionalAuth();
   const [open, setOpen] = useState(true);
   const [state, setState] = useState<DebugPanelState | null>(null);
+  const [traceTick, setTraceTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => setTraceTick((t) => t + 1), 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function read() {
-      const localOnboarded = isOnboardingComplete();
-      const authLoading = auth ? auth.loading || !auth.profileReady : false;
+      const authLoading = auth ? auth.loading || !auth.sessionReady : false;
+      const userId = auth?.user?.id ?? null;
+      const cloudOnboarded = auth?.cloudOnboardingComplete === true;
+      const onboardingComplete = resolveOnboardingCompleteForUser(userId, cloudOnboarded);
 
       if (!isSupabaseConfigured()) {
         if (!cancelled) {
@@ -55,12 +67,10 @@ function AuthDebugPanelInner() {
             sessionExists: false,
             userEmail: null,
             authLoading,
-            onboardingComplete: localOnboarded,
-            redirectTarget: computeRedirectTarget({
-              sessionExists: false,
-              onboardingComplete: localOnboarded,
-            }),
+            onboardingComplete: false,
+            redirectTarget: "/login",
             lastAuthError: null,
+            ownerUserId: loadUserProfile().ownerUserId ?? null,
           });
         }
         return;
@@ -68,8 +78,6 @@ function AuthDebugPanelInner() {
 
       const supabase = createClient();
       const snapshot = await readClientSession(supabase);
-      const cloudOnboarded = auth?.cloudOnboardingComplete === true;
-      const onboardingComplete = cloudOnboarded || localOnboarded;
 
       if (!cancelled) {
         setState({
@@ -82,6 +90,7 @@ function AuthDebugPanelInner() {
             onboardingComplete,
           }),
           lastAuthError: snapshot.errorMessage,
+          ownerUserId: loadUserProfile().ownerUserId ?? null,
         });
       }
     }
@@ -92,9 +101,12 @@ function AuthDebugPanelInner() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [auth]);
+  }, [auth, traceTick]);
 
   if (!state) return null;
+
+  const trace = isAuthDebugEnabled() ? getAuthTraceLog().slice(-6) : [];
+  const meta = getAuthTraceMeta();
 
   if (!open) {
     return (
@@ -118,7 +130,7 @@ function AuthDebugPanelInner() {
   );
 
   return (
-    <div className="fixed bottom-24 left-2 z-[90] rounded-xl bg-gray-900/90 text-white text-[10px] font-mono px-3 py-2 space-y-1 w-56 shadow-lg">
+    <div className="fixed bottom-24 left-2 z-[90] rounded-xl bg-gray-900/90 text-white text-[10px] font-mono px-3 py-2 space-y-1 w-64 max-h-[50vh] overflow-y-auto shadow-lg">
       <div className="flex items-center justify-between">
         <span className="font-semibold text-gray-300">AUTH DEBUG</span>
         <button type="button" onClick={() => setOpen(false)} className="text-gray-400">
@@ -138,7 +150,21 @@ function AuthDebugPanelInner() {
       />
       <Row label="redirect" value={state.redirectTarget} />
       <Row label="last error" value={state.lastAuthError ?? "none"} ok={!state.lastAuthError} />
-      <Row label="local profile" value={loadUserProfile().ownerUserId?.slice(0, 8) ?? "none"} />
+      <Row
+        label="owner id"
+        value={state.ownerUserId ? state.ownerUserId.slice(0, 8) : "none"}
+      />
+      {meta.lastRedirect && <Row label="last go" value={meta.lastRedirect} />}
+      {trace.length > 0 && (
+        <div className="pt-1 border-t border-gray-700 mt-1 space-y-0.5">
+          <p className="text-gray-500">trace</p>
+          {trace.map((entry) => (
+            <p key={entry.ts} className="text-[9px] text-gray-300 truncate">
+              {entry.event} s={entry.hasSession ? "1" : "0"} → {entry.redirectTarget ?? entry.reason}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

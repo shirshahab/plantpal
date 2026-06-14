@@ -11,7 +11,8 @@ import { isMockAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
 import { BRAND } from "@/lib/brand/tokens";
 import { capturePendingReferral } from "@/lib/referrals/index";
-import { isOnboardingComplete, ensureProfileForUser } from "@/lib/profile/user-profile";
+import { ensureProfileForUser } from "@/lib/profile/user-profile";
+import { resolveOnboardingCompleteForUser } from "@/lib/auth/onboarding-state";
 import {
   hydrateProfileFromCloud,
   type CloudProfileSnapshot,
@@ -19,6 +20,11 @@ import {
 import { trackEvent } from "@/lib/analytics/track";
 import { reportFeatureFailure } from "@/lib/errors/report-error";
 import { readClientSession, resolvePostAuthPath, safeNextPath } from "@/lib/auth/session";
+import { clearPlantPalAppState } from "@/lib/auth/clear-app-state";
+import {
+  startSessionWatchdog,
+  traceAuthEvent,
+} from "@/lib/auth/lifecycle-trace";
 import { AuthDebugPanel } from "@/components/dev/auth-debug-panel";
 
 interface LoginAuthDiag {
@@ -52,8 +58,11 @@ export default function LoginPageClient() {
       redirectingRef.current = true;
 
       const next = safeNextPath(searchParams.get("next"));
-      const onboarded =
-        snapshot.onboardingComplete === true || isOnboardingComplete();
+      const userId = snapshot.userId ?? null;
+      const onboarded = resolveOnboardingCompleteForUser(
+        userId,
+        snapshot.onboardingComplete
+      );
       const target = resolvePostAuthPath({ onboardingComplete: onboarded, next });
 
       if (isSignup) {
@@ -65,19 +74,29 @@ export default function LoginPageClient() {
       setAuthDiag({
         authError: null,
         sessionExists: sessionOk,
-        userIdExists: Boolean(snapshot.userId),
+        userIdExists: Boolean(userId),
         nextParam: next,
         redirectTarget: target,
       });
 
-      if (process.env.NODE_ENV === "development" || debugAuth) {
-        console.info("[login] redirect", {
-          sessionExists: sessionOk,
-          userIdExists: Boolean(snapshot.userId),
-          next,
-          target,
-          onboarded,
-        });
+      traceAuthEvent({
+        event: onboarded ? "REDIRECT_TO_DASHBOARD" : "REDIRECT_TO_ONBOARDING",
+        hasSession: sessionOk,
+        userId,
+        onboardingComplete: onboarded,
+        redirectTarget: target,
+        reason: onboarded ? "onboarding complete" : "onboarding incomplete",
+      });
+
+      if (sessionOk && userId) {
+        startSessionWatchdog(
+          async () => {
+            const supabase = createClient();
+            const snap = await readClientSession(supabase);
+            return snap.sessionExists;
+          },
+          { userId, onboardingComplete: onboarded }
+        );
       }
 
       router.replace(target);
@@ -296,6 +315,12 @@ export default function LoginPageClient() {
   const showLoginDiag =
     (process.env.NODE_ENV === "development" || debugAuth) && authDiag !== null;
 
+  function handleClearAppState() {
+    const removed = clearPlantPalAppState();
+    setNotice(`Cleared ${removed} PlantPal app keys (Supabase auth keys untouched).`);
+    setError("");
+  }
+
   return (
     <div className="min-h-screen bg-brand-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -329,6 +354,20 @@ export default function LoginPageClient() {
               <p>user id: {authDiag.userIdExists ? "yes" : "no"}</p>
               <p>next: {authDiag.nextParam ?? "none"}</p>
               <p>redirect: {authDiag.redirectTarget ?? "pending"}</p>
+            </div>
+          )}
+
+          {debugAuth && (
+            <div className="mb-4">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-xs"
+                onClick={handleClearAppState}
+              >
+                Clear PlantPal local app state
+              </Button>
             </div>
           )}
 

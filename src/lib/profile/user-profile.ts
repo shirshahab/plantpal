@@ -1,10 +1,13 @@
 import type { UserProfile } from "@/lib/types/profile";
 import { DEFAULT_PROFILE } from "@/lib/types/profile";
 import { isProtectedAuthStorageKey } from "@/lib/storage/safe-local-storage";
+import {
+  isOnboardingCompleteForUser,
+  markUserOnboardingComplete,
+} from "@/lib/auth/onboarding-state";
 
 export const PROFILE_STORAGE_KEY = "plantpal-user-profile";
 
-/** Legacy demo-mode keys — purged on load (Phase 37.5: public beta, no demo mode). */
 const LEGACY_DEMO_KEYS = ["plantpal-demo-mode"];
 
 function purgeLegacyDemoState(): void {
@@ -42,10 +45,13 @@ export function loadUserProfile(): UserProfile {
 export function saveUserProfile(profile: Partial<UserProfile>): UserProfile {
   const next = { ...loadUserProfile(), ...profile };
   localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(next));
+  if (next.ownerUserId && next.onboardingComplete) {
+    markUserOnboardingComplete(next.ownerUserId);
+  }
   return next;
 }
 
-/** Drop stale onboarding flags when a different account signs in on this browser. */
+/** Reset app profile cache when a different Supabase user signs in. */
 export function ensureProfileForUser(userId: string): UserProfile {
   const current = loadUserProfile();
   if (current.ownerUserId === userId) return current;
@@ -54,22 +60,31 @@ export function ensureProfileForUser(userId: string): UserProfile {
   return fresh;
 }
 
-export function isOnboardingComplete(): boolean {
-  return loadUserProfile().onboardingComplete;
-}
-
-export function hasFirstPlant(): boolean {
-  return loadUserProfile().firstPlantAdded === true;
-}
-
-export function markFirstPlantAdded(): UserProfile {
-  return saveUserProfile({ firstPlantAdded: true });
-}
-
 /**
- * Clears the locally cached profile on sign-out so a different account on
- * the same browser doesn't inherit onboarding flags, ZIP, or founder mode.
+ * Onboarding complete for a specific user only.
+ * Never returns true without a userId — stale generic local state is ignored.
  */
+export function isOnboardingComplete(userId?: string | null): boolean {
+  if (!userId) return false;
+  if (isOnboardingCompleteForUser(userId)) return true;
+  const profile = loadUserProfile();
+  if (profile.ownerUserId === userId && profile.onboardingComplete) return true;
+  return false;
+}
+
+export function hasFirstPlant(userId?: string | null): boolean {
+  const profile = loadUserProfile();
+  if (userId && profile.ownerUserId && profile.ownerUserId !== userId) return false;
+  return profile.firstPlantAdded === true;
+}
+
+export function markFirstPlantAdded(userId?: string | null): UserProfile {
+  return saveUserProfile({
+    ...(userId ? { ownerUserId: userId } : {}),
+    firstPlantAdded: true,
+  });
+}
+
 export function clearLocalProfile(): void {
   if (typeof window === "undefined") return;
   try {
@@ -80,17 +95,13 @@ export function clearLocalProfile(): void {
   }
 }
 
-/** Keys that are allowed to survive sign-out (UI prefs, not user data). */
 const SIGNOUT_KEEP_KEYS = new Set([
   "plantpal-install-dismissed",
   "plantpal-qa-checklist",
   "plantpal-beta-welcome-dismissed",
 ]);
 
-/**
- * Clears all user-owned localStorage on sign-out so the next account on
- * this browser does not inherit plants, tasks, diagnoses, or social data.
- */
+/** Explicit sign-out only — never called from guards or hydration. */
 export function clearAllUserLocalData(): void {
   if (typeof window === "undefined") return;
   try {

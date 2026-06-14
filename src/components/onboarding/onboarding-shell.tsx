@@ -16,9 +16,9 @@ export function OnboardingShell({ children }: { children: React.ReactNode }) {
 }
 
 function OnboardingSessionReady({ children }: { children: React.ReactNode }) {
-  const { loading, profileReady, isMockMode } = useAuth();
+  const { loading, sessionReady, isMockMode } = useAuth();
 
-  if (!isMockMode && (loading || !profileReady)) {
+  if (!isMockMode && (loading || !sessionReady)) {
     return <AuthLoadingScreen message="Checking your garden paperwork…" />;
   }
 
