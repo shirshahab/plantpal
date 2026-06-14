@@ -1,4 +1,5 @@
 import { saveUserProfile, loadUserProfile } from "@/lib/profile/user-profile";
+import { readLocalJson } from "@/lib/storage/safe-local-storage";
 import { grantReferralTrial } from "@/lib/referrals/referral-trial";
 import { trackEvent } from "@/lib/analytics/track";
 
@@ -14,12 +15,7 @@ export interface ReferralRecord {
 
 function loadReferrals(): Record<string, ReferralRecord> {
   if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(REFERRAL_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
+  return readLocalJson(REFERRAL_STORAGE_KEY, {} as Record<string, ReferralRecord>);
 }
 
 function saveReferrals(map: Record<string, ReferralRecord>): void {

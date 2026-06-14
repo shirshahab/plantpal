@@ -77,17 +77,21 @@ export default function OnboardingPageClient() {
       return;
     }
 
-    void hydrateProfileFromCloud().then((snapshot) => {
-      if (cancelled) return;
-      if (snapshot.onboardingComplete) {
-        router.replace("/dashboard");
-        return;
-      }
-      const hydrated = loadUserProfile();
-      if (hydrated.experienceLevel) setExperience(hydrated.experienceLevel);
-      if (hydrated.zipCode) setZipCode(hydrated.zipCode);
-      if (hydrated.growTypes.length > 0) setGrowTypes(hydrated.growTypes);
-    });
+    void hydrateProfileFromCloud()
+      .then((snapshot) => {
+        if (cancelled) return;
+        if (snapshot.onboardingComplete) {
+          router.replace("/dashboard");
+          return;
+        }
+        const hydrated = loadUserProfile();
+        if (hydrated.experienceLevel) setExperience(hydrated.experienceLevel);
+        if (hydrated.zipCode) setZipCode(hydrated.zipCode);
+        if (hydrated.growTypes.length > 0) setGrowTypes(hydrated.growTypes);
+      })
+      .catch((err) => {
+        console.warn("[onboarding] profile hydration skipped:", err);
+      });
 
     return () => {
       cancelled = true;
@@ -127,12 +131,16 @@ export default function OnboardingPageClient() {
   /** Stable per-device key so referral redemption can't repeat on reload. */
   function getReferralUserKey(): string {
     const KEY = "plantpal-referral-user-key";
-    let key = localStorage.getItem(KEY);
-    if (!key) {
-      key = crypto.randomUUID();
-      localStorage.setItem(KEY, key);
+    try {
+      let key = localStorage.getItem(KEY);
+      if (!key) {
+        key = crypto.randomUUID();
+        localStorage.setItem(KEY, key);
+      }
+      return key;
+    } catch {
+      return "local-anonymous";
     }
-    return key;
   }
 
   /**

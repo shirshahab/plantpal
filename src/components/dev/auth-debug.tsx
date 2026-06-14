@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { loadUserProfile, isOnboardingComplete } from "@/lib/profile/user-profile";
-import { useAuth } from "@/lib/store/auth-provider";
+import { useOptionalAuth } from "@/lib/store/auth-provider";
 
 interface DebugState {
   session: boolean;
@@ -20,15 +20,23 @@ interface DebugState {
 
 /**
  * Development-only auth state readout. Renders nothing in production.
+ * Safe on routes outside AuthProvider (e.g. /onboarding).
  */
 export function AuthDebug() {
-  const { profileSnapshot, cloudOnboardingComplete, profileReady } = useAuth();
+  if (process.env.NODE_ENV !== "development") return null;
+  return <AuthDebugInner />;
+}
+
+function AuthDebugInner() {
+  const auth = useOptionalAuth();
   const [state, setState] = useState<DebugState | null>(null);
   const [open, setOpen] = useState(true);
 
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "development") return;
+  const profileSnapshot = auth?.profileSnapshot ?? null;
+  const cloudOnboardingComplete = auth?.cloudOnboardingComplete ?? null;
+  const profileReady = auth?.profileReady ?? true;
 
+  useEffect(() => {
     let cancelled = false;
 
     async function read() {
@@ -106,7 +114,7 @@ export function AuthDebug() {
     };
   }, [profileSnapshot, cloudOnboardingComplete, profileReady]);
 
-  if (process.env.NODE_ENV !== "development" || !state) return null;
+  if (!state) return null;
 
   if (!open) {
     return (
@@ -137,6 +145,9 @@ export function AuthDebug() {
           ×
         </button>
       </div>
+      {!auth && (
+        <p className="text-amber-400 text-[9px]">no AuthProvider (ok on /onboarding)</p>
+      )}
       <Row label="session" ok={state.session} />
       <Row label="user id" ok={!!state.userId} value={state.userId ? state.userId.slice(0, 8) : "none"} />
       <Row label="profile loaded" ok={state.profileLoaded} />

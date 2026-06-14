@@ -65,9 +65,33 @@ function main() {
   assert.match(errorPage, /\/login/);
   console.log("✓ Error page offers login recovery");
 
+  const onboardingClient = read("src/app/onboarding/onboarding-client.tsx");
+  assert.doesNotMatch(onboardingClient, /useAuth\(\)/);
+  console.log("✓ Onboarding page does not require AuthProvider hooks");
+
+  assert.ok(exists("src/app/onboarding/layout.tsx"), "Onboarding layout exists");
+  const onboardingLayout = read("src/app/onboarding/layout.tsx");
+  assert.match(onboardingLayout, /OnboardingShell/);
+  console.log("✓ Onboarding has standalone safe layout");
+
+  const authDebug = read("src/components/dev/auth-debug.tsx");
+  assert.match(authDebug, /useOptionalAuth/);
+  assert.match(authDebug, /NODE_ENV !== "development"/);
+  console.log("✓ AuthDebug safe outside AuthProvider");
+
+  assert.ok(exists("src/app/signup/page.tsx"), "Signup route exists");
+  console.log("✓ Signup route exists");
+
   const middleware = read("src/lib/supabase/middleware.ts");
   assert.match(middleware, /url\.pathname = "\/login"/);
   console.log("✓ Middleware redirects protected routes to /login");
+
+  assert.doesNotMatch(middleware, /"\/onboarding"/);
+  console.log("✓ /onboarding is public (not middleware-protected)");
+
+  const onboardingGuard = read("src/components/onboarding/onboarding-guard.tsx");
+  assert.match(onboardingGuard, /"\/onboarding"/);
+  console.log("✓ OnboardingGuard bypasses /onboarding");
 
   console.log("\nAuth debug OK.");
 }

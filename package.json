@@ -14,6 +14,7 @@
     "debug:plantpal": "npx tsx scripts/debug-plantpal.ts",
     "debug:calendar": "npx tsx scripts/debug-calendar.ts",
     "debug:auth": "npx tsx scripts/debug-auth.ts",
+    "debug:homepage": "npx tsx scripts/debug-homepage.ts",
     "audit:copy": "npx tsx scripts/audit-plantpal-copy.ts",
     "test:billing": "npx tsx scripts/test-billing-trial.ts",
     "test:purchases": "npx tsx scripts/test-purchase-config.ts",
