@@ -1,5 +1,11 @@
 export const EXPECTED_PROJECT_REF = "fxmxkmqgxlhggqngsxja";
 
+function parseEnvFlag(value: string | undefined): boolean {
+  if (!value) return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "true" || normalized === "1" || normalized === "yes";
+}
+
 /** Returns true when Supabase env vars are set and look valid. */
 export function isSupabaseConfigured(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
@@ -13,9 +19,28 @@ export function isSupabaseConfigured(): boolean {
   return true;
 }
 
-/** True when running without Supabase — uses localStorage + mock data. */
+/**
+ * Dev-only fake auth bypass. Requires explicit opt-in:
+ * NODE_ENV=development AND NEXT_PUBLIC_ENABLE_MOCK_AUTH=true
+ * Never enabled in production.
+ */
+export function isMockAuthEnabled(): boolean {
+  if (process.env.NODE_ENV === "production") return false;
+  return parseEnvFlag(process.env.NEXT_PUBLIC_ENABLE_MOCK_AUTH);
+}
+
+/** @deprecated Use isMockAuthEnabled — true only when dev mock auth flag is explicitly on. */
 export function isMockMode(): boolean {
-  return !isSupabaseConfigured();
+  return isMockAuthEnabled();
+}
+
+/** Throws during production builds if mock auth is enabled. */
+export function assertProductionAuthConfig(): void {
+  if (process.env.NODE_ENV === "production" && isMockAuthEnabled()) {
+    throw new Error(
+      "[auth] NEXT_PUBLIC_ENABLE_MOCK_AUTH must not be enabled in production"
+    );
+  }
 }
 
 export function getSupabasePublicConfig() {

@@ -89,13 +89,20 @@ export async function updateSession(request: NextRequest) {
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    const returnPath = request.nextUrl.pathname + request.nextUrl.search;
+    if (!url.searchParams.has("next")) {
+      url.searchParams.set("next", returnPath);
+    }
     return NextResponse.redirect(url);
   }
 
   if (user && isAuthPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    const next = request.nextUrl.searchParams.get("next");
+    const dest =
+      next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/login")
+        ? next
+        : "/dashboard";
+    return NextResponse.redirect(new URL(dest, request.url));
   }
 
   supabaseResponse = applySubscriptionMiddleware(request, supabaseResponse);

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
-import { isMockMode } from "@/lib/supabase/config";
+import { isMockAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
 import { reportFeatureFailure } from "@/lib/errors/report-error";
 
@@ -24,8 +24,12 @@ export default function ResetPasswordPage() {
   const [hasSession, setHasSession] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (isMockMode()) {
+    if (isMockAuthEnabled()) {
       setHasSession(true);
+      return;
+    }
+    if (!isSupabaseConfigured()) {
+      setHasSession(false);
       return;
     }
     const supabase = createClient();
@@ -49,8 +53,14 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
 
-    if (isMockMode()) {
+    if (isMockAuthEnabled()) {
       router.push("/dashboard");
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      setError("Password reset is not available right now.");
+      setLoading(false);
       return;
     }
 

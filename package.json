@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run assert:production-auth && next build",
+    "assert:production-auth": "npx tsx scripts/assert-production-auth.ts",
     "lint": "eslint .",
     "start": "next start",
     "db:migrate": "supabase db query --linked -f supabase/migrations/002_phase2_schema.sql",

@@ -1,25 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { isMockMode } from "@/lib/supabase/config";
+import { isMockAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
 import { BRAND } from "@/lib/brand/tokens";
 import { capturePendingReferral } from "@/lib/referrals/index";
 import { isOnboardingComplete } from "@/lib/profile/user-profile";
-import { hydrateProfileFromCloud } from "@/lib/profile/cloud-profile";
+import {
+  hydrateProfileFromCloud,
+  type CloudProfileSnapshot,
+} from "@/lib/profile/cloud-profile";
 import { trackEvent } from "@/lib/analytics/track";
 import { reportFeatureFailure } from "@/lib/errors/report-error";
+
+function safeNextPath(next: string | null): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
+  if (next.startsWith("/login") || next.startsWith("/signup")) return null;
+  return next;
+}
 
 export default function LoginPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const mock = isMockMode();
+  const mockAuth = isMockAuthEnabled();
+  const supabaseReady = isSupabaseConfigured();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,46 +39,64 @@ export default function LoginPageClient() {
   const [notice, setNotice] = useState("");
   const [showResend, setShowResend] = useState(false);
 
+  const redirectAfterAuth = useCallback(
+    (snapshot: CloudProfileSnapshot, isSignup: boolean) => {
+      const next = safeNextPath(searchParams.get("next"));
+      const onboarded =
+        snapshot.onboardingComplete === true || isOnboardingComplete();
+
+      if (isSignup) {
+        trackEvent("signup", { method: mockAuth ? "mock" : "email" });
+      } else {
+        trackEvent("login", { method: mockAuth ? "mock" : "email" });
+      }
+
+      if (!onboarded) {
+        router.push("/onboarding");
+      } else if (next) {
+        router.push(next);
+      } else {
+        router.push("/dashboard");
+      }
+      router.refresh();
+    },
+    [mockAuth, router, searchParams]
+  );
+
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) capturePendingReferral(ref);
     if (searchParams.get("signup") === "1") setMode("signup");
     if (searchParams.get("error") === "confirmation_failed") {
-      setError("That confirmation link expired or was already used. Try signing in, or sign up again to get a fresh link.");
+      setError(
+        "That confirmation link expired or was already used. Try signing in, or sign up again to get a fresh link."
+      );
     }
     if (searchParams.get("confirmed") === "1") {
       setNotice("Email confirmed! Sign in below.");
     }
   }, [searchParams]);
 
-  function postAuthRedirect(isSignup: boolean) {
-    if (isSignup) {
-      trackEvent("signup", { method: mock ? "mock" : "email" });
-      router.push("/onboarding");
-    } else if (!isOnboardingComplete()) {
-      router.push("/onboarding");
-    } else {
-      router.push("/dashboard");
-    }
-    router.refresh();
-  }
-
   /** Translate raw Supabase auth errors into clear, actionable copy. */
-  function friendlyAuthError(message: string): string {
+  function friendlyAuthError(message: string, isLogin: boolean): string {
     const m = message.toLowerCase();
+    if (isLogin && m.includes("invalid login credentials")) {
+      return "That login did not work. Check your email and password.";
+    }
     if (m.includes("email not confirmed")) {
       return "Your email isn't confirmed yet. Check your inbox for the confirmation link, then sign in.";
     }
-    if (m.includes("invalid login credentials")) {
-      return "Email or password is incorrect. If you just signed up, confirm your email first.";
-    }
     if (m.includes("rate limit")) {
       return "Too many attempts. Wait a minute and try again.";
+    }
+    if (isLogin) {
+      return "That login did not work. Check your email and password.";
     }
     return message;
   }
 
   async function handleForgotPassword() {
+    if (!supabaseReady) return;
     if (!email) {
       setError("Enter your email above first, then tap “Forgot password?” again.");
       return;
@@ -79,7 +107,7 @@ export default function LoginPageClient() {
     });
     if (resetError) {
       reportFeatureFailure("auth", resetError.message, "auth_failure");
-      setError(friendlyAuthError(resetError.message));
+      setError(friendlyAuthError(resetError.message, true));
     } else {
       setError("");
       setNotice(
@@ -95,7 +123,7 @@ export default function LoginPageClient() {
       email,
     });
     if (resendError) {
-      setError(friendlyAuthError(resendError.message));
+      setError(friendlyAuthError(resendError.message, true));
     } else {
       setNotice(`Confirmation email re-sent to ${email}. Check your inbox (and spam).`);
       setShowResend(false);
@@ -109,9 +137,15 @@ export default function LoginPageClient() {
     setShowResend(false);
     setLoading(true);
 
-    if (mock) {
+    if (!supabaseReady && !mockAuth) {
+      setError("Sign-in is not available right now. Please try again later.");
+      setLoading(false);
+      return;
+    }
+
+    if (mockAuth) {
       setTimeout(() => {
-        postAuthRedirect(mode === "signup");
+        redirectAfterAuth({ status: "local", onboardingComplete: false }, mode === "signup");
         setLoading(false);
       }, 400);
       return;
@@ -130,13 +164,11 @@ export default function LoginPageClient() {
       });
       if (signUpError) {
         reportFeatureFailure("auth", signUpError.message, "auth_failure");
-        setError(friendlyAuthError(signUpError.message));
+        setError(friendlyAuthError(signUpError.message, false));
         setLoading(false);
         return;
       }
 
-      // Supabase returns success with empty identities when the email is
-      // already registered (anti-enumeration).
       if (data.user && data.user.identities?.length === 0) {
         setError("This email is already registered. Sign in instead.");
         setMode("login");
@@ -144,41 +176,42 @@ export default function LoginPageClient() {
         return;
       }
 
-      // No session means the project requires email confirmation — the user
-      // is NOT logged in yet. Don't pretend they are.
       if (!data.session) {
         trackEvent("signup", { method: "email", pendingConfirmation: true });
-        setNotice(
-          `Almost there! We sent a confirmation link to ${email}. Click it, then sign in here.`
-        );
+        setNotice("Check your email to confirm your account.");
         setMode("login");
         setLoading(false);
         return;
       }
 
-      postAuthRedirect(true);
+      const snapshot = await hydrateProfileFromCloud();
+      redirectAfterAuth(snapshot, true);
     } else {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (signInError) {
         reportFeatureFailure("auth", signInError.message, "auth_failure");
-        setError(friendlyAuthError(signInError.message));
+        setError(friendlyAuthError(signInError.message, true));
         if (signInError.message.toLowerCase().includes("email not confirmed")) {
           setShowResend(true);
         }
         setLoading(false);
         return;
       }
-      trackEvent("login", { method: "email" });
-      // Restore onboarding/profile state from the cloud BEFORE deciding
-      // where to send the user. Errors are reported, not swallowed.
+
+      if (!data.session) {
+        setError("That login did not work. Check your email and password.");
+        setLoading(false);
+        return;
+      }
+
       const snapshot = await hydrateProfileFromCloud();
       if (snapshot.status === "error") {
         reportFeatureFailure("auth", `profile hydration: ${snapshot.error}`, "auth_failure");
       }
-      postAuthRedirect(false);
+      redirectAfterAuth(snapshot, false);
     }
 
     setLoading(false);
@@ -203,6 +236,12 @@ export default function LoginPageClient() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/40 p-8 border border-gray-100">
+          {!supabaseReady && !mockAuth && (
+            <div className="bg-amber-50 text-amber-900 text-sm px-4 py-3 rounded-xl mb-4">
+              Sign-in is temporarily unavailable. Please try again later.
+            </div>
+          )}
+
           <div className="flex rounded-xl bg-gray-50 p-1 mb-6">
             {(["login", "signup"] as const).map((m) => (
               <button
@@ -253,7 +292,7 @@ export default function LoginPageClient() {
               minLength={6}
             />
 
-            {mode === "login" && !mock && (
+            {mode === "login" && supabaseReady && (
               <div className="text-right -mt-1">
                 <button
                   type="button"
@@ -286,15 +325,19 @@ export default function LoginPageClient() {
               </div>
             )}
 
-            <Button type="submit" loading={loading} className="w-full" size="lg">
+            <Button
+              type="submit"
+              loading={loading}
+              className="w-full"
+              size="lg"
+              disabled={!supabaseReady && !mockAuth}
+            >
               {mode === "login" ? "Sign In" : "Create Account"}
             </Button>
           </form>
 
           <p className="text-center text-xs text-gray-400 mt-6">
-            {mock
-              ? "Mock mode: any credentials will work until Supabase is connected"
-              : "Your plants are saved securely to your account"}
+            Your plants are saved securely to your account
           </p>
 
           <p className="text-center text-xs text-gray-400 mt-3">
