@@ -33,6 +33,8 @@ export interface UserProfile {
   referralCode?: string;
   /** Referral code used at signup, if any. */
   referredBy?: string;
+  /** Supabase user id that owns this local profile cache. */
+  ownerUserId?: string;
   /** Founder Mode — unrestricted access for testing (local only). */
   founderMode?: boolean;
   /** Default visibility for garden activity. Defaults to private. */

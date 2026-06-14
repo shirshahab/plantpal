@@ -5,46 +5,7 @@ import {
   applySubscriptionMiddleware,
   ensureSubscriptionCookie,
 } from "@/lib/billing/subscription-middleware";
-
-const PROTECTED_PREFIXES = [
-  "/dashboard",
-  "/today",
-  "/calendar",
-  "/plants",
-  "/scanner",
-  "/learn",
-  "/academy",
-  "/database",
-  "/settings",
-  "/more",
-  "/activity",
-  "/beta-start",
-  "/tester-guide",
-  "/doctor",
-  "/achievements",
-  "/gallery",
-  "/harvest",
-  "/shop-assistant",
-  "/property",
-  "/collection",
-  "/community",
-  "/upgrade",
-  "/billing",
-  "/ar",
-  "/price-checker",
-  "/garden-map",
-  "/design-studio",
-  "/family",
-  "/seasonal",
-  "/missions",
-  "/marketplace",
-  "/landscape",
-  "/landscape-designer",
-  "/friends",
-  "/invite",
-  "/concierge",
-  "/notifications",
-];
+import { safeNextPath } from "@/lib/auth/session";
 
 export async function updateSession(request: NextRequest) {
   if (!isSupabaseConfigured()) {
@@ -77,31 +38,20 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  // Refresh session cookies — do not use this for protected-route redirects.
+  // Client-side AuthSessionGate reads the same browser session without a
+  // server/client mismatch when cookies lag behind signInWithPassword.
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAuthPage = request.nextUrl.pathname.startsWith("/login");
-  const isProtected = PROTECTED_PREFIXES.some((p) =>
-    request.nextUrl.pathname.startsWith(p)
-  );
-
-  if (!user && isProtected) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    const returnPath = request.nextUrl.pathname + request.nextUrl.search;
-    if (!url.searchParams.has("next")) {
-      url.searchParams.set("next", returnPath);
-    }
-    return NextResponse.redirect(url);
-  }
+  const isAuthPage =
+    request.nextUrl.pathname.startsWith("/login") ||
+    request.nextUrl.pathname.startsWith("/signup");
 
   if (user && isAuthPage) {
-    const next = request.nextUrl.searchParams.get("next");
-    const dest =
-      next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/login")
-        ? next
-        : "/dashboard";
+    const next = safeNextPath(request.nextUrl.searchParams.get("next"));
+    const dest = next ?? "/onboarding";
     return NextResponse.redirect(new URL(dest, request.url));
   }
 

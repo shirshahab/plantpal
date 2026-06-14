@@ -11,24 +11,18 @@ import {
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { isMockMode } from "@/lib/supabase/config";
-import { clearLocalProfile, clearAllUserLocalData } from "@/lib/profile/user-profile";
+import { clearAllUserLocalData } from "@/lib/profile/user-profile";
 import { hydrateProfileFromCloud, type CloudProfileSnapshot } from "@/lib/profile/cloud-profile";
 import { repairProfileOnLogin } from "@/lib/social/repair-profile";
 import { migrateLocalDataToCloud } from "@/lib/storage/local-to-cloud-migration";
 import { hydrateHealthReportsFromCloud } from "@/lib/health/report-storage";
 import { purgeCorruptPlantPalStorage } from "@/lib/storage/safe-local-storage";
+import { readClientSession } from "@/lib/auth/session";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
-  /**
-   * True once the local profile has been synced with the cloud profile for
-   * the current session. Guards must wait for this before deciding whether
-   * the user needs onboarding, otherwise a freshly signed-in user with an
-   * empty localStorage gets bounced to onboarding before hydration lands.
-   */
   profileReady: boolean;
-  /** Cloud onboarding flag after hydration. Logged-in users: cloud always wins. */
   cloudOnboardingComplete: boolean | null;
   profileSnapshot: CloudProfileSnapshot | null;
   isMockMode: boolean;
@@ -45,7 +39,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profileSnapshot, setProfileSnapshot] = useState<CloudProfileSnapshot | null>(
     mock ? { status: "local", onboardingComplete: false } : null
   );
-  // Avoid re-hydrating on every TOKEN_REFRESHED event for the same user.
   const hydratedForUser = useRef<string | null>(null);
 
   useEffect(() => {
@@ -69,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfileReady(true);
         return;
       }
+      setProfileReady(false);
       const snapshot = await hydrateProfileFromCloud();
       setProfileSnapshot(snapshot);
       await repairProfileOnLogin();
@@ -86,22 +80,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function resolveSession() {
       try {
-        const { data, error } = await supabase.auth.getUser();
-        if (error) {
-          console.warn("[auth] session check failed:", error.message);
-          purgeCorruptPlantPalStorage();
-          await supabase.auth.signOut({ scope: "local" });
-          setUser(null);
-          setProfileReady(true);
+        const snapshot = await readClientSession(supabase);
+        if (snapshot.sessionExists && snapshot.user) {
+          setUser(snapshot.user);
           setLoading(false);
+          await syncFor(snapshot.user);
           return;
         }
-        setUser(data.user);
+
+        // No local session cookie — user is logged out.
+        setUser(null);
+        setProfileReady(true);
         setLoading(false);
-        await syncFor(data.user);
       } catch (err) {
-        console.warn("[auth] session recovery:", err);
-        purgeCorruptPlantPalStorage();
+        console.warn("[auth] session read failed:", err);
         setUser(null);
         setProfileReady(true);
         setLoading(false);
@@ -116,7 +108,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const nextUser = session?.user ?? null;
       setUser(nextUser);
       setLoading(false);
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+
+      if (event === "SIGNED_OUT") {
+        hydratedForUser.current = null;
+        setProfileSnapshot(null);
+        setProfileReady(true);
+        return;
+      }
+
+      if (
+        event === "SIGNED_IN" ||
+        event === "INITIAL_SESSION" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "USER_UPDATED"
+      ) {
         void syncFor(nextUser);
       }
     });
@@ -131,6 +136,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAllUserLocalData();
     hydratedForUser.current = null;
     setUser(null);
+    setProfileSnapshot(null);
+    setProfileReady(true);
   }, [mock]);
 
   const cloudOnboardingComplete =

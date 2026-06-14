@@ -14,6 +14,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   loadUserProfile,
   saveUserProfile,
+  ensureProfileForUser,
 } from "@/lib/profile/user-profile";
 import type { UserProfile } from "@/lib/types/profile";
 
@@ -55,9 +56,12 @@ export async function hydrateProfileFromCloud(): Promise<CloudProfileSnapshot> {
   try {
     const supabase = createClient();
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return { status: "no-user" };
+
+    ensureProfileForUser(user.id);
 
     const { data, error } = await supabase
       .from("profiles")
@@ -66,7 +70,16 @@ export async function hydrateProfileFromCloud(): Promise<CloudProfileSnapshot> {
       .single<CloudProfileRow>();
 
     if (error && error.code !== NO_ROWS_CODE) {
-      return { status: "error", userId: user.id, error: error.message };
+      console.warn("[profile] cloud read failed:", error.message);
+      const local = loadUserProfile();
+      return {
+        status: "ok",
+        userId: user.id,
+        profileExists: false,
+        onboardingComplete: local.onboardingComplete,
+        onboardingSource: "local",
+        error: error.message,
+      };
     }
 
     // Self-heal: if the signup trigger missed (no row) or left email empty,
@@ -141,9 +154,14 @@ export async function hydrateProfileFromCloud(): Promise<CloudProfileSnapshot> {
       onboardingSource: "none",
     };
   } catch (err) {
+    const message = err instanceof Error ? err.message : "Profile hydration failed";
+    console.warn("[profile] hydration error:", message);
+    const local = loadUserProfile();
     return {
-      status: "error",
-      error: err instanceof Error ? err.message : "Profile hydration failed",
+      status: "ok",
+      onboardingComplete: local.onboardingComplete,
+      onboardingSource: "local",
+      error: message,
     };
   }
 }
@@ -175,8 +193,9 @@ export async function syncProfileToCloud(
   try {
     const supabase = createClient();
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return { ok: true, skipped: "no-user" };
 
     const { error } = await supabase.from("profiles").upsert(

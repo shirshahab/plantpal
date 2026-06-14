@@ -84,7 +84,8 @@ export function purgeCorruptPlantPalStorage(): number {
     const keys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key?.startsWith("plantpal-")) keys.push(key);
+      if (!key) continue;
+      if (key.startsWith("plantpal-")) keys.push(key);
     }
     for (const key of keys) {
       const raw = localStorage.getItem(key);
@@ -101,4 +102,14 @@ export function purgeCorruptPlantPalStorage(): number {
     /* ignore */
   }
   return removed;
+}
+
+/** Never touch Supabase auth keys — used by defensive cleanup elsewhere. */
+export function isProtectedAuthStorageKey(key: string): boolean {
+  const lower = key.toLowerCase();
+  return (
+    lower.startsWith("sb-") ||
+    lower.startsWith("supabase") ||
+    lower.includes("supabase.auth")
+  );
 }

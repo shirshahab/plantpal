@@ -1,5 +1,6 @@
 import type { UserProfile } from "@/lib/types/profile";
 import { DEFAULT_PROFILE } from "@/lib/types/profile";
+import { isProtectedAuthStorageKey } from "@/lib/storage/safe-local-storage";
 
 export const PROFILE_STORAGE_KEY = "plantpal-user-profile";
 
@@ -42,6 +43,15 @@ export function saveUserProfile(profile: Partial<UserProfile>): UserProfile {
   const next = { ...loadUserProfile(), ...profile };
   localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(next));
   return next;
+}
+
+/** Drop stale onboarding flags when a different account signs in on this browser. */
+export function ensureProfileForUser(userId: string): UserProfile {
+  const current = loadUserProfile();
+  if (current.ownerUserId === userId) return current;
+  const fresh: UserProfile = { ...DEFAULT_PROFILE, ownerUserId: userId };
+  localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(fresh));
+  return fresh;
 }
 
 export function isOnboardingComplete(): boolean {
@@ -87,7 +97,9 @@ export function clearAllUserLocalData(): void {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith("plantpal-") && !SIGNOUT_KEEP_KEYS.has(key)) {
+      if (!key) continue;
+      if (isProtectedAuthStorageKey(key)) continue;
+      if (key.startsWith("plantpal-") && !SIGNOUT_KEEP_KEYS.has(key)) {
         keysToRemove.push(key);
       }
     }

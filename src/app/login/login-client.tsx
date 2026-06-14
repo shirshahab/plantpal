@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -11,18 +11,22 @@ import { isMockAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { PlantPalLogo } from "@/components/brand/plantpal-logo";
 import { BRAND } from "@/lib/brand/tokens";
 import { capturePendingReferral } from "@/lib/referrals/index";
-import { isOnboardingComplete } from "@/lib/profile/user-profile";
+import { isOnboardingComplete, ensureProfileForUser } from "@/lib/profile/user-profile";
 import {
   hydrateProfileFromCloud,
   type CloudProfileSnapshot,
 } from "@/lib/profile/cloud-profile";
 import { trackEvent } from "@/lib/analytics/track";
 import { reportFeatureFailure } from "@/lib/errors/report-error";
+import { readClientSession, resolvePostAuthPath, safeNextPath } from "@/lib/auth/session";
+import { AuthDebugPanel } from "@/components/dev/auth-debug-panel";
 
-function safeNextPath(next: string | null): string | null {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
-  if (next.startsWith("/login") || next.startsWith("/signup")) return null;
-  return next;
+interface LoginAuthDiag {
+  authError: string | null;
+  sessionExists: boolean;
+  userIdExists: boolean;
+  nextParam: string | null;
+  redirectTarget: string | null;
 }
 
 export default function LoginPageClient() {
@@ -30,6 +34,7 @@ export default function LoginPageClient() {
   const searchParams = useSearchParams();
   const mockAuth = isMockAuthEnabled();
   const supabaseReady = isSupabaseConfigured();
+  const debugAuth = searchParams.get("debugAuth") === "1";
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,12 +43,18 @@ export default function LoginPageClient() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [showResend, setShowResend] = useState(false);
+  const [authDiag, setAuthDiag] = useState<LoginAuthDiag | null>(null);
+  const redirectingRef = useRef(false);
 
   const redirectAfterAuth = useCallback(
-    (snapshot: CloudProfileSnapshot, isSignup: boolean) => {
+    (snapshot: CloudProfileSnapshot, isSignup: boolean, sessionOk: boolean) => {
+      if (redirectingRef.current) return;
+      redirectingRef.current = true;
+
       const next = safeNextPath(searchParams.get("next"));
       const onboarded =
         snapshot.onboardingComplete === true || isOnboardingComplete();
+      const target = resolvePostAuthPath({ onboardingComplete: onboarded, next });
 
       if (isSignup) {
         trackEvent("signup", { method: mockAuth ? "mock" : "email" });
@@ -51,16 +62,27 @@ export default function LoginPageClient() {
         trackEvent("login", { method: mockAuth ? "mock" : "email" });
       }
 
-      if (!onboarded) {
-        router.push("/onboarding");
-      } else if (next) {
-        router.push(next);
-      } else {
-        router.push("/dashboard");
+      setAuthDiag({
+        authError: null,
+        sessionExists: sessionOk,
+        userIdExists: Boolean(snapshot.userId),
+        nextParam: next,
+        redirectTarget: target,
+      });
+
+      if (process.env.NODE_ENV === "development" || debugAuth) {
+        console.info("[login] redirect", {
+          sessionExists: sessionOk,
+          userIdExists: Boolean(snapshot.userId),
+          next,
+          target,
+          onboarded,
+        });
       }
-      router.refresh();
+
+      router.replace(target);
     },
-    [mockAuth, router, searchParams]
+    [debugAuth, mockAuth, router, searchParams]
   );
 
   useEffect(() => {
@@ -77,7 +99,6 @@ export default function LoginPageClient() {
     }
   }, [searchParams]);
 
-  /** Translate raw Supabase auth errors into clear, actionable copy. */
   function friendlyAuthError(message: string, isLogin: boolean): string {
     const m = message.toLowerCase();
     if (isLogin && m.includes("invalid login credentials")) {
@@ -130,12 +151,31 @@ export default function LoginPageClient() {
     }
   }
 
+  async function confirmSessionBeforeRedirect(
+    supabase: ReturnType<typeof createClient>,
+    userId?: string
+  ): Promise<boolean> {
+    const snapshot = await readClientSession(supabase);
+    if (userId) ensureProfileForUser(userId);
+    if (snapshot.errorMessage) {
+      setAuthDiag({
+        authError: snapshot.errorMessage,
+        sessionExists: snapshot.sessionExists,
+        userIdExists: snapshot.userIdExists,
+        nextParam: safeNextPath(searchParams.get("next")),
+        redirectTarget: null,
+      });
+    }
+    return snapshot.sessionExists;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setNotice("");
     setShowResend(false);
     setLoading(true);
+    redirectingRef.current = false;
 
     if (!supabaseReady && !mockAuth) {
       setError("Sign-in is not available right now. Please try again later.");
@@ -145,7 +185,7 @@ export default function LoginPageClient() {
 
     if (mockAuth) {
       setTimeout(() => {
-        redirectAfterAuth({ status: "local", onboardingComplete: false }, mode === "signup");
+        redirectAfterAuth({ status: "local", onboardingComplete: false }, mode === "signup", true);
         setLoading(false);
       }, 400);
       return;
@@ -165,6 +205,13 @@ export default function LoginPageClient() {
       if (signUpError) {
         reportFeatureFailure("auth", signUpError.message, "auth_failure");
         setError(friendlyAuthError(signUpError.message, false));
+        setAuthDiag({
+          authError: signUpError.message,
+          sessionExists: false,
+          userIdExists: false,
+          nextParam: safeNextPath(searchParams.get("next")),
+          redirectTarget: null,
+        });
         setLoading(false);
         return;
       }
@@ -184,8 +231,15 @@ export default function LoginPageClient() {
         return;
       }
 
+      const sessionOk = await confirmSessionBeforeRedirect(supabase, data.user?.id);
+      if (!sessionOk) {
+        setError("Sign-in succeeded but the session did not persist. Try again.");
+        setLoading(false);
+        return;
+      }
+
       const snapshot = await hydrateProfileFromCloud();
-      redirectAfterAuth(snapshot, true);
+      redirectAfterAuth(snapshot, true, sessionOk);
     } else {
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -193,7 +247,15 @@ export default function LoginPageClient() {
       });
       if (signInError) {
         reportFeatureFailure("auth", signInError.message, "auth_failure");
-        setError(friendlyAuthError(signInError.message, true));
+        const friendly = friendlyAuthError(signInError.message, true);
+        setError(friendly);
+        setAuthDiag({
+          authError: signInError.message,
+          sessionExists: false,
+          userIdExists: false,
+          nextParam: safeNextPath(searchParams.get("next")),
+          redirectTarget: null,
+        });
         if (signInError.message.toLowerCase().includes("email not confirmed")) {
           setShowResend(true);
         }
@@ -203,19 +265,36 @@ export default function LoginPageClient() {
 
       if (!data.session) {
         setError("That login did not work. Check your email and password.");
+        setAuthDiag({
+          authError: "signInWithPassword returned no session",
+          sessionExists: false,
+          userIdExists: false,
+          nextParam: safeNextPath(searchParams.get("next")),
+          redirectTarget: null,
+        });
+        setLoading(false);
+        return;
+      }
+
+      const sessionOk = await confirmSessionBeforeRedirect(supabase, data.user?.id);
+      if (!sessionOk) {
+        setError("Sign-in succeeded but the session did not persist. Try again.");
         setLoading(false);
         return;
       }
 
       const snapshot = await hydrateProfileFromCloud();
-      if (snapshot.status === "error") {
-        reportFeatureFailure("auth", `profile hydration: ${snapshot.error}`, "auth_failure");
+      if (snapshot.error) {
+        console.warn("[login] profile hydration warning:", snapshot.error);
       }
-      redirectAfterAuth(snapshot, false);
+      redirectAfterAuth(snapshot, false, sessionOk);
     }
 
     setLoading(false);
   }
+
+  const showLoginDiag =
+    (process.env.NODE_ENV === "development" || debugAuth) && authDiag !== null;
 
   return (
     <div className="min-h-screen bg-brand-bg flex items-center justify-center p-4">
@@ -239,6 +318,17 @@ export default function LoginPageClient() {
           {!supabaseReady && !mockAuth && (
             <div className="bg-amber-50 text-amber-900 text-sm px-4 py-3 rounded-xl mb-4">
               Sign-in is temporarily unavailable. Please try again later.
+            </div>
+          )}
+
+          {showLoginDiag && authDiag && (
+            <div className="bg-gray-900 text-gray-100 text-[10px] font-mono rounded-xl px-3 py-2 mb-4 space-y-1">
+              <p className="text-gray-400 font-semibold">LOGIN AUTH DIAG</p>
+              <p>error: {authDiag.authError ?? "none"}</p>
+              <p>session: {authDiag.sessionExists ? "yes" : "no"}</p>
+              <p>user id: {authDiag.userIdExists ? "yes" : "no"}</p>
+              <p>next: {authDiag.nextParam ?? "none"}</p>
+              <p>redirect: {authDiag.redirectTarget ?? "pending"}</p>
             </div>
           )}
 
@@ -353,6 +443,8 @@ export default function LoginPageClient() {
           </p>
         </div>
       </div>
+
+      <AuthDebugPanel />
     </div>
   );
 }

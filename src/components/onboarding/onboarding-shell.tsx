@@ -1,53 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen";
-import { createClient } from "@/lib/supabase/client";
-import { isMockMode, isSupabaseConfigured } from "@/lib/supabase/config";
-import { purgeCorruptPlantPalStorage } from "@/lib/storage/safe-local-storage";
+import { AuthProvider, useAuth } from "@/lib/store/auth-provider";
 
 /**
- * Lightweight onboarding wrapper — verifies session state without mounting app providers.
- * Onboarding is public; logged-out users can complete local steps and sign up later.
+ * Onboarding wrapper — mounts AuthProvider so session state matches the app shell.
+ * Never signs the user out on transient auth read failures.
  */
 export function OnboardingShell({ children }: { children: React.ReactNode }) {
-  const mock = isMockMode();
-  const [ready, setReady] = useState(mock);
+  return (
+    <AuthProvider>
+      <OnboardingSessionReady>{children}</OnboardingSessionReady>
+    </AuthProvider>
+  );
+}
 
-  useEffect(() => {
-    if (mock) return;
+function OnboardingSessionReady({ children }: { children: React.ReactNode }) {
+  const { loading, profileReady, isMockMode } = useAuth();
 
-    let cancelled = false;
-
-    async function bootstrap() {
-      try {
-        purgeCorruptPlantPalStorage();
-        if (!isSupabaseConfigured()) {
-          if (!cancelled) setReady(true);
-          return;
-        }
-
-        const supabase = createClient();
-        const { error } = await supabase.auth.getUser();
-        if (error) {
-          console.warn("[onboarding] session check failed:", error.message);
-          await supabase.auth.signOut({ scope: "local" });
-        }
-      } catch (err) {
-        console.warn("[onboarding] bootstrap recovery:", err);
-        purgeCorruptPlantPalStorage();
-      } finally {
-        if (!cancelled) setReady(true);
-      }
-    }
-
-    void bootstrap();
-    return () => {
-      cancelled = true;
-    };
-  }, [mock]);
-
-  if (!ready) {
+  if (!isMockMode && (loading || !profileReady)) {
     return <AuthLoadingScreen message="Checking your garden paperwork…" />;
   }
 

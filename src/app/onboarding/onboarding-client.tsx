@@ -8,13 +8,17 @@ import { PlantyAvatar } from "@/components/brand/planty";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { AuthDebug } from "@/components/dev/auth-debug";
+import { AuthDebugPanel } from "@/components/dev/auth-debug-panel";
 import { cn } from "@/lib/utils";
 import { loadUserProfile, saveUserProfile } from "@/lib/profile/user-profile";
 import {
   hydrateProfileFromCloud,
   syncProfileToCloud,
 } from "@/lib/profile/cloud-profile";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { readClientSession } from "@/lib/auth/session";
+import { useOptionalAuth } from "@/lib/store/auth-provider";
 import { trackEvent } from "@/lib/analytics/track";
 import {
   capturePendingReferral,
@@ -49,6 +53,7 @@ function deriveMainGoal(growTypes: GrowType[]): MainGoal {
 export default function OnboardingPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const auth = useOptionalAuth();
   const [step, setStep] = useState(0);
   const [growTypes, setGrowTypes] = useState<GrowType[]>([]);
   const [experience, setExperience] = useState<ExperienceLevel | null>(null);
@@ -68,37 +73,53 @@ export default function OnboardingPageClient() {
   useEffect(() => {
     let cancelled = false;
 
-    const local = loadUserProfile();
-    if (local.experienceLevel) setExperience(local.experienceLevel);
-    if (local.zipCode) setZipCode(local.zipCode);
-    if (local.growTypes.length > 0) setGrowTypes(local.growTypes);
-    if (local.onboardingComplete) {
-      router.replace("/dashboard");
-      return;
+    async function bootstrap() {
+      const local = loadUserProfile();
+      if (local.experienceLevel) setExperience(local.experienceLevel);
+      if (local.zipCode) setZipCode(local.zipCode);
+      if (local.growTypes.length > 0) setGrowTypes(local.growTypes);
+
+      if (!isSupabaseConfigured()) {
+        if (local.onboardingComplete) router.replace("/dashboard");
+        return;
+      }
+
+      const supabase = createClient();
+      const session = await readClientSession(supabase);
+      if (!session.sessionExists) {
+        router.replace("/login?next=/onboarding");
+        return;
+      }
+
+      if (local.onboardingComplete && local.ownerUserId === session.user?.id) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      const snapshot = await hydrateProfileFromCloud();
+      if (cancelled) return;
+
+      if (snapshot.onboardingComplete) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      const hydrated = loadUserProfile();
+      if (hydrated.experienceLevel) setExperience(hydrated.experienceLevel);
+      if (hydrated.zipCode) setZipCode(hydrated.zipCode);
+      if (hydrated.growTypes.length > 0) setGrowTypes(hydrated.growTypes);
     }
 
-    void hydrateProfileFromCloud()
-      .then((snapshot) => {
-        if (cancelled) return;
-        if (snapshot.onboardingComplete) {
-          router.replace("/dashboard");
-          return;
-        }
-        const hydrated = loadUserProfile();
-        if (hydrated.experienceLevel) setExperience(hydrated.experienceLevel);
-        if (hydrated.zipCode) setZipCode(hydrated.zipCode);
-        if (hydrated.growTypes.length > 0) setGrowTypes(hydrated.growTypes);
-      })
-      .catch((err) => {
-        console.warn("[onboarding] profile hydration skipped:", err);
-      });
+    if (auth?.loading || (auth && !auth.profileReady)) return;
+
+    void bootstrap().catch((err) => {
+      console.warn("[onboarding] profile hydration skipped:", err);
+    });
 
     return () => {
       cancelled = true;
     };
-    // Run once on mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [auth?.loading, auth?.profileReady, router]);
 
   /** Save in-progress answers locally so a refresh doesn't wipe them. */
   function persistStepDraft() {
@@ -153,6 +174,7 @@ export default function OnboardingPageClient() {
   ): Promise<boolean> {
     const mainGoal = deriveMainGoal(growTypes);
     saveUserProfile({
+      ownerUserId: loadUserProfile().ownerUserId,
       onboardingComplete: true,
       growTypes,
       experienceLevel: experience,
@@ -441,7 +463,7 @@ export default function OnboardingPageClient() {
         </Link>
       </p>
 
-      <AuthDebug />
+      <AuthDebugPanel />
     </div>
   );
 }

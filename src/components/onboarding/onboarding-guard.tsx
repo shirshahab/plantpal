@@ -43,7 +43,12 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     if (authLoading || !profileReady) return;
 
     if (!user && !isMockMode) {
-      router.replace("/login");
+      const next = encodeURIComponent(pathname || "/dashboard");
+      router.replace(`/login?next=${next}`);
+      return;
+    }
+
+    if (pathname.startsWith("/onboarding")) {
       return;
     }
 
